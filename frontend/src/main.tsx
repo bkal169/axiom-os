@@ -5,6 +5,7 @@ import './index.css';
 import App from './AxiomOS_v17.jsx';
 import AppV1 from './v1/AppV1';
 import { DebugErrorBoundary } from './components/DebugErrorBoundary';
+import { Analytics } from '@vercel/analytics/react';
 
 const rootElement = document.getElementById('root');
 
@@ -23,6 +24,7 @@ try {
     <StrictMode>
       <DebugErrorBoundary>
         <ActiveApp />
+        <Analytics />
       </DebugErrorBoundary>
     </StrictMode>,
   );
