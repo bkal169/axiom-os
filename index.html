@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Axiom OS — AI-Powered Real Estate Development Intelligence Platform" />
+    <title>Axiom OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --c-gold: #D4A843;
+        --c-gold2: #B8922A;
+        --c-bg: #0D0F13;
+        --c-bg2: #111318;
+        --c-bg3: #161A22;
+        --c-bg4: #1C2030;
+        --c-border: rgba(212,168,67,0.15);
+        --c-border2: rgba(255,255,255,0.08);
+        --c-dim: #4A5568;
+        --c-text: #E2E8F0;
+        --c-muted: #AAB0BB;
+        --c-sub: #718096;
+        --c-green: #48BB78;
+        --c-blue: #4299E1;
+        --c-purple: #9F7AEA;
+        --c-red: #FC8181;
+        --c-amber: #ED8936;
+        --c-teal: #38B2AC;
+      }
+      .light-mode {
+        --c-bg: #F7F8FA;
+        --c-bg2: #FFFFFF;
+        --c-bg3: #F0F2F5;
+        --c-bg4: #E8EBF0;
+        --c-border: rgba(212,168,67,0.2);
+        --c-border2: rgba(0,0,0,0.1);
+        --c-dim: #A0AEC0;
+        --c-text: #1A202C;
+        --c-muted: #4A5568;
+        --c-sub: #718096;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--c-bg); color: var(--c-text); font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+      ::-webkit-scrollbar { width: 5px; height: 5px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.3); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(212,168,67,0.5); }
+      input, select, textarea { font-family: inherit; }
+      button { font-family: inherit; cursor: pointer; }
+      a { color: var(--c-gold); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

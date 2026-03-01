@@ -1,24 +1,27 @@
 import os
 
-# Original clean content
+# This script creates the .env file for the backend.
+# Copy .env.example and fill in your own values — never commit real keys.
+
 content = """# Axiom Backend Environment Variables
+# Copy this to .env and fill in your real values. Never commit .env to git.
 
 # AI Integration (Required for Axiom Brain)
-OPENAI_API_KEY=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
+OPENAI_API_KEY=your-openai-api-key-here
 
 # Stripe Integration (Required for Webhooks)
 STRIPE_WEBHOOK_SECRET=whsec_your-stripe-webhook-secret-here
 
 # FRED API Key (Market Data)
-FRED_API_KEY=0b6bb3bf6081e0658b454287e6459191
+FRED_API_KEY=your-fred-api-key-here
 
 # Supabase Admin (For Webhooks)
-SUPABASE_URL=https://ubdhpacoqmlxudcvhyuu.supabase.co
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGhwYWNvcW1seHVkY3ZoeXV1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTQ2MDM0MiwiZXhwIjoyMDg3MDM2MzQyfQ.V804xM_snbTsrrt8vPNjQ9bQNK-x-_kS5eXCGM-mFxo
+SUPABASE_URL=your-supabase-url-here
+SUPABASE_SERVICE_KEY=your-supabase-service-key-here
 """
 
-file_path = "c:\\Users\\bkala\\.gemini\\antigravity\\scratch\\axiom\\backend\\.env"
+file_path = os.path.join(os.path.dirname(__file__), ".env")
 
 with open(file_path, "w", encoding="utf-8") as f:
     f.write(content)
-    print("Updated .env with Supabase credentials")
+    print("Created .env template — fill in your real values before running the server.")
