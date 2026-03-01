@@ -40,7 +40,6 @@ Thumbs.db
 *.zip
 frontend/AxiomOS_v*.tsx
 frontend/AxiomOS_v*.jsx
-frontend/src/AxiomOS_v*.jsx
 frontend/src/pages/fix.js
 frontend/src/pages/fix_axiom.py
 verification_test.py
