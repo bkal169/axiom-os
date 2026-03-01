@@ -1,28 +1,31 @@
-import { useProject } from "../../context/ProjectContext";
+import { useProjectState } from "../../hooks/useProjectState";
 import { Card, KPI, Field } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 
-export function Infrastructure() {
-    const {
-        utilities = [], setUtilities,
-        env = {}, setEnv
-    } = useProject() as any;
+interface Props { projectId: string; }
+
+const DEFAULT_UTILITIES = [
+    { name: "Water", provider: "", status: "Verify" },
+    { name: "Sewer", provider: "", status: "Verify" },
+    { name: "Electric", provider: "", status: "Verify" },
+    { name: "Gas", provider: "", status: "Verify" },
+    { name: "Telecom", provider: "", status: "Verify" },
+];
+
+export function Infrastructure({ projectId }: Props) {
+    const { project, updateProject } = useProjectState(projectId);
+
+    const utilities: any[] = project.utilities?.length ? project.utilities : DEFAULT_UTILITIES;
+    const env: any = project.env ?? {};
 
     const upd = (i: number, k: string, v: string) => {
         const d = [...utilities];
         d[i] = { ...d[i], [k]: v };
-        setUtilities(d);
+        updateProject({ utilities: d });
     };
 
-    const eu = (k: string) => (e: any) => setEnv({ ...env, [k]: e.target.value });
-
-    const services = utilities.length > 0 ? utilities : [
-        { name: "Water", provider: "", status: "Verify" },
-        { name: "Sewer", provider: "", status: "Verify" },
-        { name: "Electric", provider: "", status: "Verify" },
-        { name: "Gas", provider: "", status: "Verify" },
-        { name: "Telecom", provider: "", status: "Verify" },
-    ];
+    const eu = (k: string) => (e: any) =>
+        updateProject({ env: { ...env, [k]: e.target.value } });
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -38,7 +41,7 @@ export function Infrastructure() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {services.map((s: any, i: number) => (
+                                {utilities.map((s: any, i: number) => (
                                     <tr key={i} className="premium-hover">
                                         <td className="axiom-td" style={{ color: "var(--c-gold)", fontWeight: 700 }}>{s.name}</td>
                                         <td className="axiom-td">

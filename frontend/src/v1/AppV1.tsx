@@ -60,16 +60,16 @@ function AppContent() {
                 </nav>
             </div>
             <div className="axiom-main">
-                {view === "dashboard" && <Dashboard />}
+                {view === "dashboard" && <Dashboard projectId="default" />}
                 {view === "contacts" && <Contacts />}
                 {view === "deals" && <Deals />}
-                {view === "market" && <MarketIntel />}
-                {view === "analysis" && <SiteAnalysis />}
+                {view === "market" && <MarketIntel projectId="default" />}
+                {view === "analysis" && <SiteAnalysis projectId="default" />}
                 {view === "agents" && <NeuralAgents />}
                 {view === "hub" && <AgentHub />}
                 {view === "financials" && <Financials />}
-                {view === "process" && <ProjectManagement />}
-                {view === "risk" && <RiskRegistry />}
+                {view === "process" && <ProjectManagement projectId="default" />}
+                {view === "risk" && <RiskRegistry projectId="default" />}
                 {view === "reports" && <Reports />}
                 {view === "settings" && <Settings />}
                 {view === "connectors" && <Connectors />}

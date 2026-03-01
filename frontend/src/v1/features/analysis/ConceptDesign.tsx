@@ -1,11 +1,15 @@
-import { useProject } from "../../context/ProjectContext";
+import { useProjectState } from "../../hooks/useProjectState";
 import { Card, KPI, Field, Button } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { fmt } from "../../lib/utils";
 
-export function ConceptDesign() {
-    const { fin = {}, setFin } = useProject() as any;
+interface Props { projectId: string; }
+
+export function ConceptDesign({ projectId }: Props) {
+    const { project, updateProject } = useProjectState(projectId);
+    const fin: any = project.financials ?? {};
+    const setFin = (next: any) => updateProject({ financials: next });
 
     // Simplified yield calculation for V1
     const grossAcres = fin.grossAcres || 10;

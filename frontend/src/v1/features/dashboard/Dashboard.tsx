@@ -32,9 +32,9 @@ export function Dashboard({ projectId }: Props) {
         return { totalCost, revenue, profit, margin, irr, constMonths };
     }, [fin]);
 
-    const openRisks = risks.filter(r => r.status === "Open").length;
+    const openRisks = risks.filter((r: any) => r.status === "Open").length;
     const ddDone = Object.values(ddChecks).filter(Boolean).length;
-    const approvedPm = permits.filter(p => p.status === "Approved").length;
+    const approvedPm = permits.filter((p: any) => p.status === "Approved").length;
 
     return (
         <div className="axiom-stack-32">

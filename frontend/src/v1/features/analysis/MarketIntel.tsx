@@ -115,7 +115,7 @@ export function MarketIntel({ projectId }: Props) {
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.map((c: any, i: number) => (
+                            {filtered.map((c: any) => (
                                 <tr key={c.id} className="premium-hover">
                                     <td className="axiom-td">
                                         <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 600 }}>{c.name}</div>
