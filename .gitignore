@@ -1,0 +1,46 @@
+# Axiom OS — gitignore
+
+# Dependencies
+node_modules/
+venv/
+backend/venv/
+.venv/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.*.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temp / zip artifacts
+*.zip
+frontend/AxiomOS_v*.tsx
+frontend/AxiomOS_v*.jsx
+frontend/src/AxiomOS_v*.jsx
+frontend/src/pages/fix.js
+frontend/src/pages/fix_axiom.py
+verification_test.py

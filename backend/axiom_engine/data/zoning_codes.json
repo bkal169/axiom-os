@@ -1,0 +1,37 @@
+{
+    "T6-8": {
+        "name": "Urban Core Zone",
+        "far": 5.0,
+        "max_height": 8,
+        "units_per_acre": 150,
+        "description": "High-density mixed-use development."
+    },
+    "MU-3": {
+        "name": "Mixed Use 3",
+        "far": 3.0,
+        "max_height": 5,
+        "units_per_acre": 80,
+        "description": "Medium-density commercial and residential."
+    },
+    "RM-1": {
+        "name": "Residential Multi-Family",
+        "far": 1.5,
+        "max_height": 3,
+        "units_per_acre": 25,
+        "description": "Low-to-medium density apartment buildings."
+    },
+    "CG": {
+        "name": "Commercial General",
+        "far": 2.0,
+        "max_height": 4,
+        "units_per_acre": 0,
+        "description": "General retail and office use."
+    },
+    "IL": {
+        "name": "Industrial Light",
+        "far": 1.0,
+        "max_height": 3,
+        "units_per_acre": 0,
+        "description": "Light manufacturing and warehousing."
+    }
+}

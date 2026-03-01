@@ -1,0 +1,11 @@
+id,address,city,state,zip,asset_class,sqft,lot_size,year_built,zoning_code,status,ask_price,noi_year1,market,county
+P-0001,1200 Main St,Sarasota,FL,34236,mixed_use,18000,0.9,1988,DT-MU,for_sale,4200000,320000,Sarasota, Sarasota
+P-0002,55 Commerce Blvd,Tampa,FL,33602,industrial,52000,3.2,2004,IND-1,for_sale,7800000,560000,Tampa, Hillsborough
+P-0003,900 Retail Row,Fort Myers,FL,33901,retail,26000,2.1,1996,CG,off_market,5100000,340000,Fort Myers, Lee
+P-0004,14 Bayfront Ave,St Petersburg,FL,33701,office,12000,0.6,1979,DC-1,for_sale,2950000,190000,St Petersburg, Pinellas
+P-0005,7000 Gateway Pkwy,Orlando,FL,32819,multifamily,90000,4.8,2012,MF-3,for_sale,21500000,1450000,Orlando, Orange
+P-0006,2300 Pine Rd,Port Charlotte,FL,33952,land,0,12.4,0,RMF-10,for_sale,2600000,0,Port Charlotte, Charlotte
+P-0007,88 Harbor St,Bradenton,FL,34205,mixed_use,22000,1.3,2001,GC,for_sale,6100000,410000,Bradenton, Manatee
+P-0008,3100 Eastline Dr,Jacksonville,FL,32202,industrial,74000,5.1,1998,IL,for_sale,10400000,730000,Jacksonville, Duval
+P-0009,450 Central Ave,Naples,FL,34102,retail,15000,0.7,1985,CC,off_market,4600000,300000,Naples, Collier
+P-0010,1600 Lakeside Blvd,Charlotte,NC,28202,office,30000,1.9,1992,UMUD,for_sale,6800000,430000,Charlotte, Mecklenburg

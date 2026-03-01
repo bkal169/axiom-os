@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  zoom: 1.1;
+}
+
+.progress-fill {
+  width: var(--progress-width, 0%);
+}
