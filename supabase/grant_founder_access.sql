@@ -2,7 +2,7 @@
 -- Grants full ADMIN privileges to the founder email.
 UPDATE public.user_profiles
 SET role = 'ADMIN_INTERNAL',
-    subscription_tier = 'PRO_PLUS'
+    subscription_tier = 'enterprise'
 FROM auth.users
 WHERE public.user_profiles.id = auth.users.id
     AND auth.users.email = 'bkalan169@gmail.com';
