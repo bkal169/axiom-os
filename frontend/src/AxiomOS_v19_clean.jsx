@@ -306,7 +306,7 @@ function TierProvider({ children }) {
   }, []);
 
   const startCheckout = useCallback(async (planId) => {
-    if (!supa.configured() || !supa.token || !auth?.user) return;
+    if (!supa.configured() || !supa.token || !auth?.user) { alert("Please log in to manage billing."); return; }
     try {
       const r = await fetch(`${supa.url}/functions/v1/stripe-checkout`, {
         method: "POST",
@@ -315,11 +315,12 @@ function TierProvider({ children }) {
       });
       const data = await r.json();
       if (data.url) window.location.href = data.url;
-    } catch (e) { console.error("Checkout failed:", e); }
+      else if (data.error) alert(`Checkout Error: ${data.error}`);
+    } catch (e) { alert("Checkout failed to connect. Try again later."); }
   }, [auth?.user]);
 
   const openPortal = useCallback(async () => {
-    if (!supa.configured() || !supa.token || !auth?.user) return;
+    if (!supa.configured() || !supa.token || !auth?.user) { alert("Please log in to manage billing."); return; }
     try {
       const r = await fetch(`${supa.url}/functions/v1/stripe-checkout`, {
         method: "POST",
@@ -328,7 +329,8 @@ function TierProvider({ children }) {
       });
       const data = await r.json();
       if (data.url) window.location.href = data.url;
-    } catch (e) { console.error("Portal failed:", e); }
+      else if (data.error) alert(`Portal Error: ${data.error}`);
+    } catch (e) { alert("Portal failed to connect. Try again later."); }
   }, [auth?.user]);
 
   const value = { tier, tierName: TIER_NAMES[tier] || "Free", config, canUse, tierFor, dealLimit: config.dealLimit, aiDailyLimit: config.aiDailyLimit, teamLimit: config.teamLimit, startCheckout, openPortal };
@@ -4028,8 +4030,14 @@ function BillingPlans() {
             {auth?.userProfile?.stripe_current_period_end && <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>Renews: {new Date(auth.userProfile.stripe_current_period_end).toLocaleDateString()}</div>}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
-            <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Manage Billing</button>
-            <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Update Payment</button>
+            {tier === "free" ? (
+              <button className="premium-hover" style={{ ...S.btn("gold"), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={() => startCheckout("pro")}>Upgrade to Pro</button>
+            ) : (
+              <>
+                <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Manage Billing</button>
+                <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Update Payment</button>
+              </>
+            )}
           </div>
         </div>
       </Card>
