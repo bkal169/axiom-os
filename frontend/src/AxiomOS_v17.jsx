@@ -160,10 +160,10 @@ function useLS(key, init) {
 // Fallback to localStorage for self-hosted / dev mode
 const SUPA_URL = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL)
   ? import.meta.env.VITE_SUPABASE_URL
-  : (localStorage.getItem("axiom_supa_url") || "");
+  : "https://ubdhpacoqmlxudcvhyuu.supabase.co";
 const SUPA_KEY = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY)
   ? import.meta.env.VITE_SUPABASE_ANON_KEY
-  : (localStorage.getItem("axiom_supa_key") || "");
+  : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGhwYWNvcW1seHVkY3ZoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjAzNDIsImV4cCI6MjA4NzAzNjM0Mn0.2qZBBWis2GUarglN6Lv2OuHpkfdQTkV25m20p3bjOwQ";
 const IS_PROD_CONFIGURED = !!(
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL)
 );
