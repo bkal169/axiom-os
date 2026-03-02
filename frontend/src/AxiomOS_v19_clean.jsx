@@ -352,7 +352,7 @@ function TierGate({ feature, requiredTier, children, compact = false }) {
 
 function UpgradeButton({ plan, label }) {
   const { startCheckout } = useTier();
-  return <button style={S.btn("gold")} onClick={() => startCheckout(plan)}>{label || `Upgrade to ${TIER_NAMES[plan]} →`}</button>;
+  return <button className="premium-hover" style={{ ...S.btn("gold"), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={() => startCheckout(plan)}>{label || `Upgrade to ${TIER_NAMES[plan]} →`}</button>;
 }
 
 function useAiUsage() {
@@ -3983,11 +3983,12 @@ function BillingPlans() {
           return (
             <div key={t.id} style={{ background: C.bg3, border: `1px solid ${isCurrent ? C.green : t.recommended ? C.gold : C.border}`, borderRadius: 4, padding: 20, position: "relative", display: "flex", flexDirection: "column" }}>
               {isCurrent && <div style={{ position: "absolute", top: -8, right: 12, ...S.tag(C.green), fontSize: 8 }}>CURRENT</div>}
-              {t.recommended && !isCurrent && <div style={{ position: "absolute", top: -8, right: 12, ...S.tag(C.gold), fontSize: 8 }}>POPULAR</div>}
+              {t.recommended && !isCurrent && <div style={{ position: "absolute", top: 0, right: 0, padding: "4px 8px", background: C.gold, color: "#000", fontSize: 9, fontWeight: 800, letterSpacing: 1, borderTopRightRadius: 3, borderBottomLeftRadius: 4 }}>POPULAR</div>}
               <div style={{ fontSize: 16, color: C.text, fontWeight: 700 }}>{t.name}</div>
               <div style={{ marginTop: 8 }}><span style={{ fontSize: 32, color: t.color, fontWeight: 700 }}>${t.price}</span><span style={{ fontSize: 12, color: C.dim }}>/mo</span></div>
               <div style={{ fontSize: 12, color: C.dim, marginTop: 6 }}>{t.desc}</div>
-              <button style={{ ...S.btn(isCurrent ? "" : "gold"), marginTop: 14, width: "100%", opacity: isCurrent ? 0.5 : 1 }}
+              <button className="premium-hover" style={{ ...S.btn(isCurrent ? "" : "gold"), marginTop: 14, width: "100%", opacity: isCurrent ? 0.5 : 1, transition: "transform 0.1s, filter 0.1s", cursor: isCurrent ? "default" : "pointer" }}
+                onMouseDown={e => { if (!isCurrent) e.currentTarget.style.transform = "scale(0.98)"; }} onMouseUp={e => { if (!isCurrent) e.currentTarget.style.transform = "scale(1)"; }} onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.transform = "scale(1)"; }}
                 onClick={() => { if (!isCurrent && t.id !== "free") startCheckout(t.id); else if (!isCurrent) openPortal(); }} disabled={isCurrent}>
                 {isCurrent ? "Current Plan" : t.id === "free" ? "Free Forever" : `Upgrade to ${t.name}`}
               </button>
@@ -4015,8 +4016,8 @@ function BillingPlans() {
               </div>
             </div>
           ))}
-          <div><div style={S.lbl}>Exports</div><div style={{ fontSize: 14, color: TIER_CONFIG[tier]?.features.exports ? C.green : C.dim, fontWeight: 600 }}>{TIER_CONFIG[tier]?.features.exports ? "✓ Enabled" : "🔒 Pro"}</div></div>
-          <div><div style={S.lbl}>AI Agents</div><div style={{ fontSize: 14, color: TIER_CONFIG[tier]?.features.ai_agents ? C.green : C.dim, fontWeight: 600 }}>{TIER_CONFIG[tier]?.features.ai_agents ? "✓ Enabled" : "🔒 Pro"}</div></div>
+          {!TIER_CONFIG[tier]?.features.exports && <div><div style={S.lbl}>Exports</div><div style={{ fontSize: 14, color: C.dim, fontWeight: 600 }}>🔒 Upgrade to Pro</div></div>}
+          {!TIER_CONFIG[tier]?.features.ai_agents && <div><div style={S.lbl}>AI Agents</div><div style={{ fontSize: 14, color: C.dim, fontWeight: 600 }}>🔒 Upgrade to Pro</div></div>}
         </div>
       </Card>
       <Card title="Subscription">
