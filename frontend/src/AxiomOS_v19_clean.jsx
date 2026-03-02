@@ -4028,8 +4028,8 @@ function BillingPlans() {
             {auth?.userProfile?.stripe_current_period_end && <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>Renews: {new Date(auth.userProfile.stripe_current_period_end).toLocaleDateString()}</div>}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
-            <button style={S.btn()} onClick={openPortal}>Manage Billing</button>
-            <button style={S.btn()} onClick={openPortal}>Update Payment</button>
+            <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Manage Billing</button>
+            <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Update Payment</button>
           </div>
         </div>
       </Card>
