@@ -2,8 +2,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Analytics } from '@vercel/analytics/react';
 import './index.css';
-// @ts-ignore - AxiomOS_v17.jsx is not typed
-import App from './AxiomOS_v17.jsx';
+// @ts-ignore - AxiomOS_v19_clean.jsx is not typed
+import App from './AxiomOS_v19_clean.jsx';
 import AppV1 from './v1/AppV1';
 import { DebugErrorBoundary } from './components/DebugErrorBoundary';
 
