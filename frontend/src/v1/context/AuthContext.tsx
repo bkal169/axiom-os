@@ -129,7 +129,7 @@ export const useTier = () => useContext(TierCtx);
 
 export function TierProvider({ children }: { children: React.ReactNode }) {
     const auth = useAuth();
-    const tier = auth?.userProfile?.subscription_tier || "free";
+    const tier = (auth?.userProfile?.subscription_tier || "free").toLowerCase();
     const config = TIER_CONFIG[tier] || TIER_CONFIG.free;
 
     const canUse = useCallback((feature: string) => !!config.features[feature], [config]);
