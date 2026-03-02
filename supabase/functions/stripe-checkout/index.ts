@@ -30,15 +30,15 @@ serve(async (req) => {
         const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-            {
-                global: { headers: { Authorization: authHeader } },
-            }
+            { global: { headers: { Authorization: authHeader } } }
         );
 
-        // Get the user from the JWT
-        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+        // Supabase JS v2 explicitly requires passing the JWT into getUser() within Edge Functions
+        const jwt = authHeader.replace("Bearer ", "");
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
+
         if (userError || !user) {
-            throw new Error("Unauthorized");
+            throw new Error(`Unauthorized: ${userError?.message || "User not found"}`);
         }
 
         // Now initialize Supabase Service Role client to fetch user profile details
@@ -67,8 +67,6 @@ serve(async (req) => {
             const sessionConfig: Stripe.Checkout.SessionCreateParams = {
                 payment_method_types: ["card"],
                 billing_address_collection: "required",
-                customer: customerId ? customerId : undefined,
-                customer_email: customerId ? undefined : (profile?.email || user.email),
                 line_items: [
                     {
                         price: price_id,
@@ -87,6 +85,12 @@ serve(async (req) => {
                     user_id: user.id, // Ensure we tie this checkout session back to the Supabase user
                 },
             };
+
+            if (customerId) {
+                sessionConfig.customer = customerId;
+            } else {
+                sessionConfig.customer_email = profile?.email || user.email;
+            }
 
             const session = await stripe.checkout.sessions.create(sessionConfig);
 
