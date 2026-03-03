@@ -1,10 +1,6 @@
 // @ts-nocheck
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect, useCallback, createContext, useContext, useRef } from "react";
-import { ScenarioDeck } from "./components/ScenarioDeck";
-import { DecisionPackagePanel } from "./components/DecisionPackagePanel";
-import { NewsAndSignalsPanel } from "./components/NewsAndSignalsPanel";
-import { SecurityStatusBadge } from "./components/SecurityStatusBadge";
 import {
   BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -160,14 +156,17 @@ function useLS(key, init) {
 }
 
 // ─── SUPABASE CLIENT (zero-dependency REST) ────────────────────
-// Production: reads VITE_ env vars baked by Vercel at build time (via window.__ENV__)
+// Production: reads VITE_ env vars baked by Vercel at build time
 // Fallback to localStorage for self-hosted / dev mode
-const _ENV = (() => {
-  try { return (typeof __VITE_ENV__ !== "undefined" && __VITE_ENV__) || {}; } catch { return {}; }
-})();
-const SUPA_URL = _ENV.VITE_SUPABASE_URL || "https://ubdhpacoqmlxudcvhyuu.supabase.co";
-const SUPA_KEY = _ENV.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGhwYWNvcW1seHVkY3ZoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjAzNDIsImV4cCI6MjA4NzAzNjM0Mn0.2qZBBWis2GUarglN6Lv2OuHpkfdQTkV25m20p3bjOwQ";
-const IS_PROD_CONFIGURED = !!_ENV.VITE_SUPABASE_URL;
+const SUPA_URL = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL)
+  ? import.meta.env.VITE_SUPABASE_URL
+  : (localStorage.getItem("axiom_supa_url") || "");
+const SUPA_KEY = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY)
+  ? import.meta.env.VITE_SUPABASE_ANON_KEY
+  : (localStorage.getItem("axiom_supa_key") || "");
+const IS_PROD_CONFIGURED = !!(
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL)
+);
 
 const supa = {
   url: SUPA_URL,
@@ -215,7 +214,7 @@ const supa = {
     return r.json();
   },
   async logout() {
-    if (this.token) await fetch(`${this.url}/auth/v1/logout`, { method: "POST", headers: this.headers() }).catch(() => { });
+    if (this.token) await fetch(`${this.url}/auth/v1/logout`, { method: "POST", headers: this.headers() }).catch(() => {});
     this.token = null;
     localStorage.removeItem("axiom_supa_token");
     localStorage.removeItem("axiom_supa_refresh");
@@ -292,11 +291,11 @@ const TIER_CONFIG = {
   enterprise: { level: 3, dealLimit: 999, aiDailyLimit: 999, teamLimit: 999, features: { basic_calcs: true, pipeline: true, contacts: true, market_data: true, exports: true, ai_agents: true, mls: true, team: true, api_access: true } },
 };
 const TIER_NAMES = { free: "Free", pro: "Pro", pro_plus: "Pro+", enterprise: "Enterprise" };
-const TIER_PRICES = { free: 0, pro: 29, pro_plus: 99, enterprise: 499 };
+const TIER_PRICES = { free: 0, pro: 29, pro_plus: 99, enterprise: 299 };
 const TIER_PRICE_IDS = {
-  pro: _ENV.VITE_STRIPE_PRO_PRICE_ID || "price_1T6CbrIXCHwjUw9LoHzI5csk",
-  pro_plus: _ENV.VITE_STRIPE_PRO_PLUS_PRICE_ID || "price_1T6CbtIXCHwjUw9LAPBaPM4y",
-  enterprise: _ENV.VITE_STRIPE_ENTERPRISE_PRICE_ID || "price_1T6CbqIXCHwjUw9LsqExucPa",
+  pro: (typeof import.meta !== "undefined" && import.meta.env?.VITE_STRIPE_STARTER_PRICE_ID) || "price_PRO_REPLACE_ME",
+  pro_plus: (typeof import.meta !== "undefined" && import.meta.env?.VITE_STRIPE_PRO_PRICE_ID) || "price_PRO_PLUS_REPLACE_ME",
+  enterprise: (typeof import.meta !== "undefined" && import.meta.env?.VITE_STRIPE_INST_PRICE_ID) || "price_ENTERPRISE_REPLACE_ME",
 };
 
 function TierProvider({ children }) {
@@ -309,19 +308,8 @@ function TierProvider({ children }) {
     return "enterprise";
   }, []);
 
-  const [paymentPlan, setPaymentPlan] = useState(null); // plan id or null
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-
-  // Show modal first — confirmCheckout does the actual Stripe redirect
-  const startCheckout = useCallback((planId) => {
-    if (!supa.configured() || !supa.token || !auth?.user) { alert("Please log in to upgrade."); return; }
-    setPaymentPlan(planId);
-  }, [auth?.user]);
-
-  const confirmCheckout = useCallback(async (planId) => {
+  const startCheckout = useCallback(async (planId) => {
     if (!supa.configured() || !supa.token || !auth?.user) return;
-    setCheckoutLoading(true);
     try {
       const r = await fetch(`${supa.url}/functions/v1/stripe-checkout`, {
         method: "POST",
@@ -330,14 +318,11 @@ function TierProvider({ children }) {
       });
       const data = await r.json();
       if (data.url) window.location.href = data.url;
-      else if (data.error) { alert(`Checkout Error: ${data.error}`); setPaymentPlan(null); }
-    } catch (e) { alert("Checkout failed to connect. Try again later."); setPaymentPlan(null); }
-    finally { setCheckoutLoading(false); }
+    } catch (e) { console.error("Checkout failed:", e); }
   }, [auth?.user]);
 
   const openPortal = useCallback(async () => {
-    if (!supa.configured() || !supa.token || !auth?.user) { alert("Please log in to manage billing."); return; }
-    setPortalLoading(true);
+    if (!supa.configured() || !supa.token || !auth?.user) return;
     try {
       const r = await fetch(`${supa.url}/functions/v1/stripe-checkout`, {
         method: "POST",
@@ -346,25 +331,11 @@ function TierProvider({ children }) {
       });
       const data = await r.json();
       if (data.url) window.location.href = data.url;
-      else if (data.error) alert(`Portal Error: ${data.error}`);
-    } catch (e) { alert("Portal failed to connect. Try again later."); }
-    finally { setPortalLoading(false); }
+    } catch (e) { console.error("Portal failed:", e); }
   }, [auth?.user]);
 
   const value = { tier, tierName: TIER_NAMES[tier] || "Free", config, canUse, tierFor, dealLimit: config.dealLimit, aiDailyLimit: config.aiDailyLimit, teamLimit: config.teamLimit, startCheckout, openPortal };
-  return (
-    <TierCtx.Provider value={value}>
-      {children}
-      <PaymentModal plan={paymentPlan} loading={checkoutLoading} onClose={() => setPaymentPlan(null)} onConfirm={confirmCheckout} />
-      {portalLoading && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 9999, backdropFilter: "blur(8px)" }}>
-          <div style={{ fontSize: 28, marginBottom: 12 }}>🔗</div>
-          <div style={{ color: C.text, fontSize: 16, fontWeight: 600 }}>Opening Billing Portal…</div>
-          <div style={{ color: C.dim, fontSize: 13, marginTop: 6 }}>Redirecting to Stripe securely</div>
-        </div>
-      )}
-    </TierCtx.Provider>
-  );
+  return <TierCtx.Provider value={value}>{children}</TierCtx.Provider>;
 }
 
 function TierGate({ feature, requiredTier, children, compact = false }) {
@@ -384,55 +355,7 @@ function TierGate({ feature, requiredTier, children, compact = false }) {
 
 function UpgradeButton({ plan, label }) {
   const { startCheckout } = useTier();
-  return <button className="premium-hover" style={{ ...S.btn("gold"), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={() => startCheckout(plan)}>{label || `Upgrade to ${TIER_NAMES[plan]} →`}</button>;
-}
-
-function PaymentModal({ plan, loading, onClose, onConfirm }) {
-  if (!plan) return null;
-  const name = TIER_NAMES[plan] || plan;
-  const price = TIER_PRICES[plan] || 0;
-  const tierFeatures = {
-    pro: ["50 Active Deals", "25 AI Sessions / Day", "CSV & PDF Exports", "IC Memo Generator", "MLS Data Feeds", "Email Support"],
-    pro_plus: ["Unlimited Deals & AI", "Team Collaboration (5 seats)", "White-Label Reports", "API Access", "Jurisdiction Intel", "Priority Support"],
-    enterprise: ["Everything in Pro+", "Unlimited Seats", "Custom AI Model Training", "99.9% Uptime SLA", "Dedicated Success Manager", "On-Premise Deployment Option"],
-  };
-  const features = tierFeatures[plan] || [];
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: C.bg3, border: `1px solid ${C.gold}50`, borderRadius: 8, padding: 36, width: 440, maxWidth: "90vw", boxShadow: `0 24px 64px rgba(0,0,0,0.7), 0 0 40px ${C.gold}15`, position: "relative", animation: "fadeIn 0.2s ease" }}>
-        <button onClick={onClose} style={{ position: "absolute", top: 14, right: 16, background: "none", border: "none", color: C.dim, fontSize: 20, cursor: "pointer", lineHeight: 1 }}>✕</button>
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 11, color: C.gold, letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>Upgrade Plan</div>
-          <div style={{ fontSize: 30, fontWeight: 800, color: C.text }}>{name}</div>
-          <div style={{ marginTop: 8 }}>
-            <span style={{ fontSize: 42, fontWeight: 800, color: C.gold }}>${price}</span>
-            <span style={{ fontSize: 14, color: C.dim }}> / month</span>
-          </div>
-          <div style={{ fontSize: 12, color: C.dim, marginTop: 6 }}>Billed monthly · Cancel anytime</div>
-        </div>
-        <div style={{ marginBottom: 28 }}>
-          {features.map((f, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderBottom: i < features.length - 1 ? `1px solid ${C.border}` : "none" }}>
-              <span style={{ color: C.green, fontSize: 14, flexShrink: 0 }}>✓</span>
-              <span style={{ fontSize: 13, color: C.sub }}>{f}</span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={() => onConfirm(plan)}
-          disabled={loading}
-          className="premium-hover"
-          style={{ ...S.btn("gold"), width: "100%", padding: "14px", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, opacity: loading ? 0.7 : 1, cursor: loading ? "wait" : "pointer", transition: "transform 0.1s, filter 0.1s" }}
-          onMouseDown={e => { if (!loading) e.currentTarget.style.transform = "scale(0.98)"; }}
-          onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
-          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-        >
-          {loading ? "Connecting to Stripe…" : `🔒 Continue to Secure Checkout →`}
-        </button>
-        <div style={{ textAlign: "center", fontSize: 11, color: C.dim, marginTop: 12 }}>Powered by Stripe · 256-bit SSL encryption</div>
-      </div>
-    </div>
-  );
+  return <button style={S.btn("gold")} onClick={() => startCheckout(plan)}>{label || `Upgrade to ${TIER_NAMES[plan]} →`}</button>;
 }
 
 function useAiUsage() {
@@ -805,7 +728,7 @@ function Agent({ id, system, placeholder }) {
       if (monthlyIRR !== null) irrPct = ((Math.pow(1 + monthlyIRR, 12) - 1) * 100).toFixed(1) + "%";
       const npvVal = calcNPV(0.08 / 12, cf);
       npvStr = "$" + (npvVal / 1e6).toFixed(2) + "M";
-    } catch { }
+    } catch {}
     // Risk summary
     const openRisks = (risks || []).filter(r => r.status === "Open" || !r.status);
     const highRisks = openRisks.filter(r => r.severity === "High" || r.severity === "Critical");
@@ -817,11 +740,11 @@ function Agent({ id, system, placeholder }) {
     const ctx = [
       `\n\n--- ACTIVE PROJECT CONTEXT ---`,
       `Project: ${project.name || "Unnamed"} | Location: ${loc} | Address: ${project.address || "N/A"}`,
-      `Lots: ${fin.totalLots} | Land Cost: $${(fin.landCost / 1e6).toFixed(2)}M | Total Cost: $${(tc / 1e6).toFixed(2)}M | Revenue: $${(rev / 1e6).toFixed(2)}M`,
+      `Lots: ${fin.totalLots} | Land Cost: $${(fin.landCost/1e6).toFixed(2)}M | Total Cost: $${(tc/1e6).toFixed(2)}M | Revenue: $${(rev/1e6).toFixed(2)}M`,
       `Hard Cost/Lot: $${fin.hardCostPerLot.toLocaleString()} | Sale Price/Lot: $${fin.salesPricePerLot.toLocaleString()} | Absorption: ${fin.absorbRate}/mo`,
-      `Profit: $${(profit / 1e6).toFixed(2)}M | Margin: ${margin}% | Sellout: ~${months} months`,
+      `Profit: $${(profit/1e6).toFixed(2)}M | Margin: ${margin}% | Sellout: ~${months} months`,
       `IRR (Newton-Raphson): ${irrPct} | NPV (8% discount): ${npvStr}`,
-      `Debt: $${(loanAmt / 1e6).toFixed(2)}M (${loan?.ltc || 70}% LTC @ ${loan?.rate || 9.5}%) | Equity: $${(equityNeed / 1e6).toFixed(2)}M (GP ${equity?.gpPct || 10}% / LP ${equity?.lpPct || 90}%)`,
+      `Debt: $${(loanAmt/1e6).toFixed(2)}M (${loan?.ltc || 70}% LTC @ ${loan?.rate || 9.5}%) | Equity: $${(equityNeed/1e6).toFixed(2)}M (GP ${equity?.gpPct || 10}% / LP ${equity?.lpPct || 90}%)`,
       riskLine,
       permitLine,
     ];
@@ -853,7 +776,7 @@ function Agent({ id, system, placeholder }) {
           setInp("");
           return;
         }
-      } catch (e) { /* Network issue - fall through to client-side check */ }
+      } catch(e) { /* Network issue - fall through to client-side check */ }
     }
 
     const um = { role: "user", content: inp };
@@ -1209,7 +1132,10 @@ function Connectors() {
 }
 
 function SiteEntitlements() {
-  const { site, setSite, zon, setZon, sur, setSur, altaA, setAltaA } = useCtx();
+  const [site, setSite] = useLS("axiom_site", { address: "", apn: "", grossAcres: "", netAcres: "", jurisdiction: "", county: "", state: "", generalPlan: "", existingUse: "", proposedUse: "SFR Subdivision", shape: "Rectangular", frontage: "", access: "", legalDesc: "" });
+  const [zon, setZon] = useLS("axiom_zoning", { zone: "", overlay: "", du_ac: "", maxHeight: "", minLotSize: "", minLotWidth: "", minLotDepth: "", frontSetback: "", rearSetback: "", sideSetback: "", maxLot: "", parkingRatio: "", entitlementType: "Tentative Map", entitlementStatus: "Not Started", notes: "" });
+  const [sur, setSur] = useLS("axiom_survey", { altaOrdered: "No", altaDate: "", surveyorName: "", easements: "", encroachments: "", soilType: "", percRate: "", slopeMax: "", cutFill: "", expansiveSoil: "No", liquefaction: "No" });
+  const [altaA, setAltaA] = useLS("axiom_alta", ["1-Monuments", "2-Address", "3-Flood Zone", "4-Topography", "5-Utilities", "6-Parking", "7-Setbacks", "8-Substantial Features", "11a-Utilities", "13-Adjoiner Names", "16-Wetlands", "17-Gov't Agency", "18-Offsite Easements", "20a-Zoning Label"].map(i => ({ item: i, checked: false })));
   const su = k => e => setSite({ ...site, [k]: e.target.value });
   const zu = k => e => setZon({ ...zon, [k]: e.target.value });
   const ru = k => e => setSur({ ...sur, [k]: e.target.value });
@@ -1344,7 +1270,15 @@ function SiteEntitlements() {
 }
 
 function Infrastructure() {
-  const { svcs, setSvcs, env, setEnv } = useCtx();
+  const [svcs, setSvcs] = useLS("axiom_utilities", [
+    { name: "Water", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
+    { name: "Sewer / Sanitary", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
+    { name: "Storm Drain", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
+    { name: "Electric", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
+    { name: "Natural Gas", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
+    { name: "Telecom / Fiber", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
+  ]);
+  const [env, setEnv] = useLS("axiom_env", { floodZone: "X", firmPanel: "", firmDate: "", bfe: "", loma: "No", phase1: "No", phase1Date: "", rec: "", wetlands: "None Observed", species: "", ceqa: "Class 32 - Infill", mitigation: "", airQuality: "" });
   const upd = (i, k, v) => { const d = [...svcs]; d[i] = { ...d[i], [k]: v }; setSvcs(d); };
   const eu = k => e => setEnv({ ...env, [k]: e.target.value });
   const statOpts = ["Verify", "Available", "Capacity Constraints", "Extension Required", "Moratorium", "N/A"];
@@ -1535,10 +1469,16 @@ function ConceptDesign() {
 }
 
 function MarketIntelligence() {
-  const { setChartSel, comps, setComps } = usePrj();
+  const { setChartSel } = usePrj();
+  const [comps, setComps] = useLS("axiom_comps", [
+    { id: 1, name: "Sunset Ridge Estates", address: "456 Ridge Rd", lots: 42, lotSF: 6500, saleDate: "2024-08", pricePerLot: 185000, pricePerSF: 28.46, status: "Sold", adj: 0, notes: "" },
+    { id: 2, name: "Hawk Valley Sub.", address: "789 Valley Dr", lots: 28, lotSF: 4200, saleDate: "2024-11", pricePerLot: 142000, pricePerSF: 33.81, status: "Sold", adj: 0, notes: "" },
+    { id: 3, name: "Meadowbrook PUD", address: "321 Meadow Ln", lots: 85, lotSF: 3800, saleDate: "2025-01", pricePerLot: 128000, pricePerSF: 33.68, status: "Listed", adj: 5, notes: "Superior amenities" },
+    { id: 4, name: "Ridgecrest Heights", address: "900 Crest Blvd", lots: 55, lotSF: 7200, saleDate: "2024-06", pricePerLot: 220000, pricePerSF: 30.56, status: "Sold", adj: -3, notes: "Superior access" },
+  ]);
   const [nc, setNc] = useState({ name: "", address: "", lots: "", lotSF: "", saleDate: "", pricePerLot: "", pricePerSF: "", status: "Sold", adj: 0, notes: "" });
   const [filt, setFilt] = useState("All");
-  const filtered = (comps || []).filter(c => filt === "All" || c.status === filt);
+  const filtered = comps.filter(c => filt === "All" || c.status === filt);
   const adjPrices = filtered.map(c => c.pricePerLot * (1 + c.adj / 100));
   const avgPPL = adjPrices.length ? adjPrices.reduce((a, b) => a + b, 0) / adjPrices.length : 0;
   const avgPPSF = filtered.length ? filtered.reduce((s, c) => s + c.pricePerSF, 0) / filtered.length : 0;
@@ -1641,7 +1581,6 @@ function MarketIntelligence() {
             ))}
           </div>
         </Card>
-        <NewsAndSignalsPanel region="US" assetType="subdivision" />
       </div>
     </Tabs>
   );
@@ -1675,7 +1614,7 @@ function FinancialEngine() {
   const [sp, setSp] = useState({ comp: 185000, premium: 5, discount: 0 });
   const sugPrice = sp.comp * (1 + sp.premium / 100) * (1 - sp.discount / 100);
   return (
-    <Tabs tabs={["Pro Forma", "Calculators", "Sensitivity", "Loan & Equity", "Scenarios"]}>
+    <Tabs tabs={["Pro Forma", "Calculators", "Sensitivity", "Loan & Equity"]}>
       <div>
         <div style={S.g4}>
           <KPI label="Gross Revenue" value={fmt.M(revenue)} color={C.green} />
@@ -1939,11 +1878,6 @@ function FinancialEngine() {
             </div>
           </>);
         })()}
-      </div>
-      <div>
-        {/* ─── PHASE 4: Scenario Deck ─────────────────────────────── */}
-        <ScenarioDeck projectId="default" />
-        <DecisionPackagePanel projectId="default" scenarios={[]} />
       </div>
     </Tabs>
   );
@@ -2305,9 +2239,7 @@ function ReportsBinder() {
       <div>
         <Card title="Investment Committee Memo Generator" action={<Badge label="AI-Powered" color={C.gold} />}>
           <div style={{ fontSize: 12, color: C.dim, marginBottom: 16 }}>Generate institutional-quality IC memos, lender packages, and risk assessments directly from your project data. Powered by Claude AI.</div>
-          <TierGate feature="ai_agents">
-            <ICMemoGenerator fin={fin} project={project} risks={risks} permits={permits} />
-          </TierGate>
+          <ICMemoGenerator fin={fin} project={project} risks={risks} permits={permits} />
         </Card>
       </div>
       <div>
@@ -2323,32 +2255,30 @@ function ReportsBinder() {
         </Card>
       </div>
       <div>
-        <TierGate feature="exports">
-          <Card title="Export & Distribution">
-            {[
-              { fmt: "PDF - Investor Package", desc: "Full binder with all sections, charts, and maps", ext: ".pdf", type: "text" },
-              { fmt: "PDF - Lender Package", desc: "Financial highlights, pro forma, collateral summary", ext: ".pdf", type: "text" },
-              { fmt: "Excel - Pro Forma Workbook", desc: "Interactive financial model with sensitivity analysis", ext: ".xlsx", type: "csv" },
-              { fmt: "PowerPoint - Investor Deck", desc: "10-slide investment summary presentation", ext: ".pptx", type: "text" },
-              { fmt: "Word - DD Summary", desc: "Due diligence checklist and findings memo", ext: ".docx", type: "text" },
-              { fmt: "CSV - Data Export", desc: "Raw data export for external analysis", ext: ".csv", type: "csv" },
-            ].map((e, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #0F1117" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: C.text }}>{e.fmt}</div>
-                  <div style={{ fontSize: 10, color: C.dim, marginTop: 2 }}>{e.desc}</div>
-                </div>
-                <button style={S.btn("gold")} onClick={() => {
-                  if (e.type === "csv") {
-                    downloadCSV(["Section", "Data"], sections.map(s => [s, "Feasibility Data"]), `axiom_${e.fmt.split(" ")[0].toLowerCase()}${e.ext}`);
-                  } else {
-                    downloadText(`AXIOM OS - ${e.fmt}\nProject: ${project.name || "Unnamed"}\n\nGenerated: ${new Date().toLocaleString()}`, `axiom_${e.fmt.split(" ")[0].toLowerCase()}${e.ext}`);
-                  }
-                }}>Export</button>
+        <Card title="Export & Distribution">
+          {[
+            { fmt: "PDF - Investor Package", desc: "Full binder with all sections, charts, and maps", ext: ".pdf", type: "text" },
+            { fmt: "PDF - Lender Package", desc: "Financial highlights, pro forma, collateral summary", ext: ".pdf", type: "text" },
+            { fmt: "Excel - Pro Forma Workbook", desc: "Interactive financial model with sensitivity analysis", ext: ".xlsx", type: "csv" },
+            { fmt: "PowerPoint - Investor Deck", desc: "10-slide investment summary presentation", ext: ".pptx", type: "text" },
+            { fmt: "Word - DD Summary", desc: "Due diligence checklist and findings memo", ext: ".docx", type: "text" },
+            { fmt: "CSV - Data Export", desc: "Raw data export for external analysis", ext: ".csv", type: "csv" },
+          ].map((e, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #0F1117" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, color: C.text }}>{e.fmt}</div>
+                <div style={{ fontSize: 10, color: C.dim, marginTop: 2 }}>{e.desc}</div>
               </div>
-            ))}
-          </Card>
-        </TierGate>
+              <button style={S.btn("gold")} onClick={() => {
+                if (e.type === "csv") {
+                  downloadCSV(["Section", "Data"], sections.map(s => [s, "Feasibility Data"]), `axiom_${e.fmt.split(" ")[0].toLowerCase()}${e.ext}`);
+                } else {
+                  downloadText(`AXIOM OS - ${e.fmt}\nProject: ${project.name || "Unnamed"}\n\nGenerated: ${new Date().toLocaleString()}`, `axiom_${e.fmt.split(" ")[0].toLowerCase()}${e.ext}`);
+                }
+              }}>Export</button>
+            </div>
+          ))}
+        </Card>
       </div>
     </Tabs>
   );
@@ -2718,9 +2648,6 @@ function DealPipeline() {
     syncDeal(updated);
   };
   const totalValue = deals.reduce((s, d) => s + d.value, 0);
-  // Bug fix: only count non-archived active deals against the tier deal limit
-  const activeDeals = deals.filter(d => d.stage !== "asset_mgmt" || d.status !== "archived");
-  const atLimit = dealLimit && activeDeals.length >= dealLimit;
   const totalProfit = deals.reduce((s, d) => s + d.profit, 0);
   const pipeData = STAGES.map(st => ({ name: SL[st], count: deals.filter(d => d.stage === st).length, value: deals.filter(d => d.stage === st).reduce((s, d) => s + d.value, 0) / 1e6 }));
   return (
@@ -2728,7 +2655,7 @@ function DealPipeline() {
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={S.g4}>
-            <KPI label="Active Deals" value={activeDeals.length} />
+            <KPI label="Active Deals" value={deals.length} />
             <KPI label="Pipeline Value" value={fmt.M(totalValue)} color={C.blue} />
             <KPI label="Est. Profit" value={fmt.M(totalProfit)} color={C.green} />
             <KPI label="Avg Deal Size" value={fmt.M(totalValue / (deals.length || 1))} color={C.gold} />
@@ -2996,15 +2923,6 @@ function DealAnalyzer() {
 }
 
 function MLSListings() {
-  const { canUse } = useTier();
-  if (!canUse("mls")) return (
-    <div style={{ textAlign: "center", padding: 60 }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>🏡</div>
-      <div style={{ fontSize: 18, color: C.text, fontWeight: 700, marginBottom: 6 }}>MLS & Listings Intelligence</div>
-      <div style={{ fontSize: 13, color: C.dim, marginBottom: 16, maxWidth: 420, margin: "0 auto 16px" }}>Connect live MLS feeds, monitor competing projects, set listing alerts, and run saved searches. Requires Pro plan.</div>
-      <UpgradeButton plan="pro" label="Unlock MLS Access — $29/mo" />
-    </div>
-  );
   const [feeds, setFeeds] = useLS("axiom_mls_feeds", [
     { id: 1, name: "Zillow ZAPI", type: "Zillow", status: "Connected", endpoint: "https://api.bridgedataoutput.com/api/v2/zillow", key: "zw_— ¢— ¢— ¢— ¢", lastSync: "2025-02-20 14:30", records: 2450 },
     { id: 2, name: "Redfin Data", type: "Redfin", status: "Connected", endpoint: "https://redfin-com.p.rapidapi.com", key: "rf_— ¢— ¢— ¢— ¢", lastSync: "2025-02-20 12:15", records: 1820 },
@@ -3562,13 +3480,13 @@ function CopilotPanel() {
       const monthlyIRR = calcIRR(cf);
       if (monthlyIRR !== null) irrPct = ((Math.pow(1 + monthlyIRR, 12) - 1) * 100).toFixed(1) + "%";
       npvStr = "$" + (calcNPV(0.08 / 12, cf) / 1e6).toFixed(2) + "M";
-    } catch { }
+    } catch {}
     const openRisks = (risks || []).filter(r => r.status === "Open" || !r.status);
     const highRisks = openRisks.filter(r => r.severity === "High" || r.severity === "Critical");
     const riskLine = openRisks.length > 0 ? `Risks: ${openRisks.length} open (${highRisks.length} high/critical)${highRisks.length > 0 ? " — " + highRisks.slice(0, 2).map(r => r.risk).join(", ") : ""}` : "No open risks.";
     const pendingPermits = (permits || []).filter(p => p.status !== "Approved" && p.status !== "Complete");
     const permitLine = pendingPermits.length > 0 ? `Permits: ${pendingPermits.map(p => `${p.name} (${p.status})`).join(", ")}` : "Permits: All approved or none tracked.";
-    return `${modes[mode].system}\n\n--- ACTIVE PROJECT CONTEXT ---\nProject: ${project.name || "Unnamed"} | Location: ${loc} | Address: ${project.address || "N/A"}\nLots: ${fin.totalLots} | Land Cost: $${(fin.landCost / 1e6).toFixed(2)}M | Total Cost: $${(tc / 1e6).toFixed(2)}M | Revenue: $${(rev / 1e6).toFixed(2)}M\nHard Cost/Lot: $${fin.hardCostPerLot.toLocaleString()} | Sale Price/Lot: $${fin.salesPricePerLot.toLocaleString()} | Absorption: ${fin.absorbRate}/mo\nProfit: $${(profit / 1e6).toFixed(2)}M | Margin: ${margin}% | IRR: ${irrPct} | NPV (8%): ${npvStr}\nDebt: $${(loanAmt / 1e6).toFixed(2)}M (${loan?.ltc || 70}% LTC @ ${loan?.rate || 9.5}%) | Equity: $${(equityNeed / 1e6).toFixed(2)}M (GP ${equity?.gpPct || 10}%/LP ${equity?.lpPct || 90}%, ${equity?.prefReturn || 8}% pref)\n${riskLine}\n${permitLine}\n--- Reference these numbers in your answers. Be specific and data-driven. ---`;
+    return `${modes[mode].system}\n\n--- ACTIVE PROJECT CONTEXT ---\nProject: ${project.name || "Unnamed"} | Location: ${loc} | Address: ${project.address || "N/A"}\nLots: ${fin.totalLots} | Land Cost: $${(fin.landCost/1e6).toFixed(2)}M | Total Cost: $${(tc/1e6).toFixed(2)}M | Revenue: $${(rev/1e6).toFixed(2)}M\nHard Cost/Lot: $${fin.hardCostPerLot.toLocaleString()} | Sale Price/Lot: $${fin.salesPricePerLot.toLocaleString()} | Absorption: ${fin.absorbRate}/mo\nProfit: $${(profit/1e6).toFixed(2)}M | Margin: ${margin}% | IRR: ${irrPct} | NPV (8%): ${npvStr}\nDebt: $${(loanAmt/1e6).toFixed(2)}M (${loan?.ltc || 70}% LTC @ ${loan?.rate || 9.5}%) | Equity: $${(equityNeed/1e6).toFixed(2)}M (GP ${equity?.gpPct || 10}%/LP ${equity?.lpPct || 90}%, ${equity?.prefReturn || 8}% pref)\n${riskLine}\n${permitLine}\n--- Reference these numbers in your answers. Be specific and data-driven. ---`;
   }, [mode, project, fin, loan, equity, risks, permits]);
   const send = useCallback(async () => {
     if (!inp.trim() || busy) return;
@@ -3671,70 +3589,13 @@ function Agents() {
 }
 
 function InvoicesPayments() {
-  const auth = useAuth();
-  const ctx = useCtx();
-  const SEED = [
+  const [invoices, setInvoices] = useLS("axiom_invoices", [
     { id: 1, vendor: "Thompson Civil Engineering", amount: 12500, date: "2025-02-15", status: "Paid", category: "Soft Costs", deal: "Sunset Ridge" },
     { id: 2, vendor: "Pacific Realty Group", amount: 45000, date: "2025-02-10", status: "Pending", category: "Acquisition", deal: "Sunset Ridge" },
     { id: 3, vendor: "City of Sacramento", amount: 8500, date: "2025-02-18", status: "Approved", category: "Fees", deal: "Hawk Valley" },
     { id: 4, vendor: "A+ Grading Services", amount: 28000, date: "2025-02-22", status: "New", category: "Hard Costs", deal: "Sunset Ridge" },
-  ];
-  const [invoices, setInvoices] = useLS("axiom_invoices", SEED);
-  const [syncStatus, setSyncStatus] = useState("idle");
-  const loadedRef = useRef(false);
-  const saveTimer = useRef(null);
-
-  // Hydrate from Supabase
-  useEffect(() => {
-    if (loadedRef.current || !auth?.user || !auth?.userProfile?.org_id || !supa.configured()) return;
-    loadedRef.current = true;
-    setSyncStatus("syncing");
-    (async () => {
-      try {
-        const rows = await supa.select("invoices", `org_id=eq.${auth.userProfile.org_id}&order=created_at.desc`);
-        if (rows.length > 0) {
-          setInvoices(rows.map(r => ({ _supaId: r.id, id: r.id, vendor: r.vendor || "", amount: Number(r.amount) || 0, date: r.date || "", status: r.status || "New", category: r.category || "Soft Costs", deal: r.deal || "", notes: r.notes || "" })));
-        }
-        setSyncStatus("synced");
-      } catch (e) { console.warn("Invoices hydrate failed:", e); setSyncStatus("error"); }
-    })();
-  }, [auth?.user, auth?.userProfile?.org_id]);
-
-  const syncInvoice = useCallback((invoice, isDelete = false) => {
-    if (!auth?.user || !auth?.userProfile?.org_id || !supa.configured()) return;
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      try {
-        if (isDelete) {
-          if (invoice._supaId) await supa.del("invoices", { id: invoice._supaId });
-        } else {
-          const payload = { org_id: auth.userProfile.org_id, project_id: ctx?.activeProjectId || null, vendor: invoice.vendor, amount: invoice.amount, date: invoice.date, status: invoice.status, category: invoice.category, deal: invoice.deal || "", notes: invoice.notes || "" };
-          if (invoice._supaId) { payload.id = invoice._supaId; await supa.upsert("invoices", payload); }
-          else {
-            const inserted = await supa.insert("invoices", payload);
-            if (inserted?.id) setInvoices(prev => prev.map(i => i.id === invoice.id ? { ...i, _supaId: inserted.id, id: inserted.id } : i));
-          }
-        }
-        setSyncStatus("synced");
-      } catch (e) { console.warn("Invoice sync failed:", e); setSyncStatus("error"); }
-    }, 800);
-  }, [auth?.user, auth?.userProfile?.org_id, ctx?.activeProjectId]);
-
+  ]);
   const [active, setActive] = useState("all");
-  const [showAdd, setShowAdd] = useState(false);
-  const [ni, setNi] = useState({ vendor: "", amount: "", date: new Date().toISOString().split("T")[0], status: "New", category: "Soft Costs", deal: "" });
-  const CATS = ["Land", "Acquisition", "Hard Costs", "Soft Costs", "Fees", "Legal", "Other"];
-  const STATUSES = ["New", "Approved", "Paid", "Pending", "Rejected"];
-
-  const addInvoice = () => {
-    if (!ni.vendor || !ni.amount) return;
-    const newInv = { ...ni, id: Date.now(), amount: parseFloat(ni.amount) || 0 };
-    setInvoices(prev => [...prev, newInv]);
-    syncInvoice(newInv);
-    setNi({ vendor: "", amount: "", date: new Date().toISOString().split("T")[0], status: "New", category: "Soft Costs", deal: "" });
-    setShowAdd(false);
-  };
-
   const stats = [
     { l: "Total Invoiced", v: fmt.usd(invoices.reduce((a, b) => a + b.amount, 0)), c: C.text },
     { l: "Paid", v: fmt.usd(invoices.filter(i => i.status === "Paid").reduce((a, b) => a + b.amount, 0)), c: C.green },
@@ -3746,23 +3607,7 @@ function InvoicesPayments() {
         <div style={{ ...S.g3, marginBottom: 14 }}>
           {stats.map(s => <KPI key={s.l} label={s.l} value={s.v} color={s.c} />)}
         </div>
-        {showAdd && (
-          <Card title="Add Invoice">
-            <div style={S.g3}>
-              <Field label="Vendor"><input style={S.inp} value={ni.vendor} onChange={e => setNi({ ...ni, vendor: e.target.value })} placeholder="Vendor name" /></Field>
-              <Field label="Amount ($)"><input style={S.inp} type="number" value={ni.amount} onChange={e => setNi({ ...ni, amount: e.target.value })} placeholder="0.00" /></Field>
-              <Field label="Date"><input style={S.inp} type="date" value={ni.date} onChange={e => setNi({ ...ni, date: e.target.value })} /></Field>
-              <Field label="Category"><select style={S.sel} value={ni.category} onChange={e => setNi({ ...ni, category: e.target.value })}>{CATS.map(c => <option key={c}>{c}</option>)}</select></Field>
-              <Field label="Status"><select style={S.sel} value={ni.status} onChange={e => setNi({ ...ni, status: e.target.value })}>{STATUSES.map(s => <option key={s}>{s}</option>)}</select></Field>
-              <Field label="Deal / Project"><input style={S.inp} value={ni.deal} onChange={e => setNi({ ...ni, deal: e.target.value })} placeholder="Deal name" /></Field>
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <button style={S.btn("gold")} onClick={addInvoice}>Save Invoice</button>
-              <button style={S.btn()} onClick={() => setShowAdd(false)}>Cancel</button>
-            </div>
-          </Card>
-        )}
-        <Card title="Invoice Management" action={<button style={S.btn("gold")} onClick={() => setShowAdd(v => !v)}>+ Ingest Invoice</button>}>
+        <Card title="Invoice Management" action={<button style={S.btn("gold")}>+ Ingest Invoice</button>}>
           <table style={S.tbl}>
             <thead><tr><th style={S.th}>Vendor</th><th style={S.th}>Category</th><th style={S.th}>Amount</th><th style={S.th}>Date</th><th style={S.th}>Status</th><th style={S.th}>Deal</th></tr></thead>
             <tbody>
@@ -3816,83 +3661,37 @@ function InvoicesPayments() {
 }
 
 function SiteManagement() {
-  const { siteTasks, setSiteTasks } = useCtx();
-  const [showAdd, setShowAdd] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", status: "Planned", priority: "High", assignee: "", due_date: "", category: "General" });
-  const tasks = siteTasks || [];
-  const addTask = () => {
-    if (!newTask.title) return;
-    setSiteTasks(prev => [...prev, { ...newTask, id: Date.now().toString(), progress: 0, start: newTask.due_date, dur: 7 }]);
-    setNewTask({ title: "", status: "Planned", priority: "High", assignee: "", due_date: "", category: "General" });
-    setShowAdd(false);
-  };
-  const updateTask = (id, patch) => setSiteTasks(prev => prev.map(t => (t.id === id || t._supaId === id) ? { ...t, ...patch } : t));
-  const removeTask = (id) => setSiteTasks(prev => prev.filter(t => t.id !== id && t._supaId !== id));
-  const STATUSES = ["Planned", "In Progress", "Complete", "Blocked"];
-  const PRIORITIES = ["Low", "Medium", "High", "Critical"];
-  const CATS = ["General", "Grading", "Utilities", "Survey", "Concrete", "Landscaping", "Inspection", "Permitting"];
-  const statColor = { Planned: C.blue, "In Progress": C.gold, Complete: C.green, Blocked: C.red };
-  const priColor = { Low: C.dim, Medium: C.blue, High: C.amber, Critical: C.red };
+  const [tasks, setTasks] = useLS("axiom_site_tasks", [
+    { id: 1, name: "Mass Grading", start: "2025-03-01", dur: 14, progress: 0, status: "Planned" },
+    { id: 2, name: "Wet Utilities", start: "2025-03-15", dur: 21, progress: 0, status: "Planned" },
+    { id: 3, name: "Staking & Survey", start: "2025-02-25", dur: 3, progress: 100, status: "Complete" },
+    { id: 4, name: "Mobilization", start: "2025-02-20", dur: 5, progress: 80, status: "In Progress" },
+  ]);
   return (
     <Tabs tabs={["Development Schedule", "Daily Logs", "RFIs & Submittals"]}>
       <div>
-        <Card title="Site Task Tracker" action={<button style={S.btn("gold")} onClick={() => setShowAdd(v => !v)}>+ Add Task</button>}>
-          {showAdd && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, padding: 14, background: C.bg3, borderRadius: 4, marginBottom: 12, border: `1px solid ${C.border}` }}>
-              <Field label="Task Title"><input style={S.inp} value={newTask.title} onChange={e => setNewTask(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Mass Grading" /></Field>
-              <Field label="Category"><select style={S.sel} value={newTask.category} onChange={e => setNewTask(p => ({ ...p, category: e.target.value }))}>{CATS.map(o => <option key={o}>{o}</option>)}</select></Field>
-              <Field label="Priority"><select style={S.sel} value={newTask.priority} onChange={e => setNewTask(p => ({ ...p, priority: e.target.value }))}>{PRIORITIES.map(o => <option key={o}>{o}</option>)}</select></Field>
-              <Field label="Status"><select style={S.sel} value={newTask.status} onChange={e => setNewTask(p => ({ ...p, status: e.target.value }))}>{STATUSES.map(o => <option key={o}>{o}</option>)}</select></Field>
-              <Field label="Due Date"><input style={S.inp} type="date" value={newTask.due_date} onChange={e => setNewTask(p => ({ ...p, due_date: e.target.value }))} /></Field>
-              <Field label="Assignee"><input style={S.inp} value={newTask.assignee} onChange={e => setNewTask(p => ({ ...p, assignee: e.target.value }))} placeholder="Name or crew" /></Field>
-              <div style={{ gridColumn: "1/-1", display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button style={S.btn("dim")} onClick={() => setShowAdd(false)}>Cancel</button>
-                <button style={S.btn("green")} onClick={addTask}>Save Task</button>
-              </div>
-            </div>
-          )}
-          <div style={{ padding: "6px 0" }}>
-            {tasks.length === 0 && <div style={{ color: C.dim, fontSize: 12, textAlign: "center", padding: 24 }}>No tasks yet. Add your first site task above.</div>}
-            {tasks.map(t => {
-              const tid = t.id || t._supaId;
-              const prog = t.status === "Complete" ? 100 : t.status === "Blocked" ? t.progress || 0 : t.progress || (t.status === "In Progress" ? 50 : 0);
-              return (
-                <div key={tid} style={{ marginBottom: 14, padding: "10px 12px", background: C.bg2, borderRadius: 4, border: `1px solid ${C.border}` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                    <div>
-                      <span style={{ color: C.text, fontSize: 13, fontWeight: 600 }}>{t.title || t.name}</span>
-                      <span style={{ ...S.tag(priColor[t.priority] || C.dim), marginLeft: 8 }}>{t.priority || "Medium"}</span>
-                      <span style={{ ...S.tag(C.blue), marginLeft: 4 }}>{t.category || "General"}</span>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <select style={{ ...S.sel, padding: "2px 6px", fontSize: 10, width: "auto" }} value={t.status} onChange={e => updateTask(tid, { status: e.target.value })}>
-                        {STATUSES.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                      <button style={{ background: "none", border: "none", color: C.dim, cursor: "pointer", fontSize: 16, lineHeight: 1 }} onClick={() => removeTask(tid)}>×</button>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 16, fontSize: 10, color: C.dim, marginBottom: 6 }}>
-                    {t.due_date && <span>📅 Due: {t.due_date}</span>}
-                    {t.assignee && <span>👤 {t.assignee}</span>}
-                  </div>
-                  <div style={{ height: 6, background: C.bg3, borderRadius: 3, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${prog}%`, background: statColor[t.status] || C.gold, borderRadius: 3, transition: "width 0.3s ease" }} />
-                  </div>
-                  <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center" }}>
-                    <span style={{ fontSize: 9, color: C.dim }}>Progress: {prog}%</span>
-                    <input type="range" min={0} max={100} value={prog} style={{ flex: 1, accentColor: C.gold, height: 3 }} onChange={e => updateTask(tid, { progress: +e.target.value, status: +e.target.value === 100 ? "Complete" : +e.target.value === 0 ? "Planned" : "In Progress" })} />
-                  </div>
+        <Card title="Gantt Timeline View">
+          <div style={{ padding: "10px 0" }}>
+            {tasks.map(t => (
+              <div key={t.id} style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                  <span style={{ color: C.sub }}>{t.name}</span>
+                  <span style={{ color: C.dim }}>{t.start} ({t.dur} days)</span>
                 </div>
-              );
-            })}
+                <div style={{ height: 18, background: C.bg2, borderRadius: 9, position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${t.progress}%`, background: t.status === "Complete" ? C.green : C.gold, opacity: 0.8 }} />
+                  <div style={{ position: "absolute", left: "5%", top: 0, height: "100%", display: "flex", alignItems: "center", fontSize: 9, fontWeight: 700 }}>{t.progress}%</div>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
       </div>
       <div>
         <Card title="Construction Daily Logs">
           <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-            <KPI label="Workers on Site" value="12" />
-            <KPI label="Weather" value="Sunny / 72°F" />
+            <KPI label="Workers on Site" value="12" icon="u" />
+            <KPI label="Weather" value="Sunny / 72°F" icon="w" />
             <KPI label="Incidents" value="0" color={C.green} />
           </div>
           {[["Feb 24, 2025", "A+ Grading started mobilization. Geotech on site."], ["Feb 23, 2025", "Site fencing completed. Signage installed."], ["Feb 22, 2025", "Utility markups completed by city."]].map(([d, l], i) => (
@@ -4056,10 +3855,8 @@ function BillingPlans() {
     { id: "pro_plus", name: "Pro+", price: 99, desc: "For growing development firms with teams.", features: ["Unlimited Deals", "Unlimited AI", "Team (5 seats)", "API Access", "White-Label Reports", "Jurisdiction Intel", "Priority Support"], color: C.purple },
     { id: "enterprise", name: "Enterprise", price: 499, desc: "For institutional-grade development platforms.", features: ["Everything in Pro+", "Unlimited Seats", "Custom AI Training", "SLA 99.9% Uptime", "Dedicated Success Manager", "Custom Integrations", "On-Prem Option"], color: C.teal },
   ];
-  const stripeReady = !!(TIER_PRICE_IDS.pro && !TIER_PRICE_IDS.pro.includes("REPLACE_ME"));
   return (
     <div>
-      {!stripeReady && <div style={{ padding: "10px 16px", marginBottom: 14, borderRadius: 4, background: `color-mix(in srgb, ${C.amber} 12%, transparent)`, color: C.amber, fontSize: 12, border: `1px solid ${C.amber}40` }}>⚠️ Stripe price IDs not configured — set <b>VITE_STRIPE_PRO_PRICE_ID</b>, <b>VITE_STRIPE_PRO_PLUS_PRICE_ID</b>, and <b>VITE_STRIPE_ENTERPRISE_PRICE_ID</b> in your Vercel environment variables to enable subscriptions.</div>}
       {msg && <div style={{ padding: "10px 16px", marginBottom: 14, borderRadius: 4, background: msg.startsWith("✓") ? `color-mix(in srgb, ${C.green} 12%, transparent)` : `color-mix(in srgb, ${C.amber} 12%, transparent)`, color: msg.startsWith("✓") ? C.green : C.amber, fontSize: 12 }}>{msg}</div>}
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{ fontSize: 9, color: C.gold, letterSpacing: 3, textTransform: "uppercase" }}>Pricing</div>
@@ -4072,12 +3869,11 @@ function BillingPlans() {
           return (
             <div key={t.id} style={{ background: C.bg3, border: `1px solid ${isCurrent ? C.green : t.recommended ? C.gold : C.border}`, borderRadius: 4, padding: 20, position: "relative", display: "flex", flexDirection: "column" }}>
               {isCurrent && <div style={{ position: "absolute", top: -8, right: 12, ...S.tag(C.green), fontSize: 8 }}>CURRENT</div>}
-              {t.recommended && !isCurrent && <div style={{ position: "absolute", top: 0, right: 0, padding: "4px 8px", background: C.gold, color: "#000", fontSize: 9, fontWeight: 800, letterSpacing: 1, borderTopRightRadius: 3, borderBottomLeftRadius: 4 }}>POPULAR</div>}
+              {t.recommended && !isCurrent && <div style={{ position: "absolute", top: -8, right: 12, ...S.tag(C.gold), fontSize: 8 }}>POPULAR</div>}
               <div style={{ fontSize: 16, color: C.text, fontWeight: 700 }}>{t.name}</div>
               <div style={{ marginTop: 8 }}><span style={{ fontSize: 32, color: t.color, fontWeight: 700 }}>${t.price}</span><span style={{ fontSize: 12, color: C.dim }}>/mo</span></div>
               <div style={{ fontSize: 12, color: C.dim, marginTop: 6 }}>{t.desc}</div>
-              <button className="premium-hover" style={{ ...S.btn(isCurrent ? "" : "gold"), marginTop: 14, width: "100%", opacity: isCurrent ? 0.5 : 1, transition: "transform 0.1s, filter 0.1s", cursor: isCurrent ? "default" : "pointer" }}
-                onMouseDown={e => { if (!isCurrent) e.currentTarget.style.transform = "scale(0.98)"; }} onMouseUp={e => { if (!isCurrent) e.currentTarget.style.transform = "scale(1)"; }} onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.transform = "scale(1)"; }}
+              <button style={{ ...S.btn(isCurrent ? "" : "gold"), marginTop: 14, width: "100%", opacity: isCurrent ? 0.5 : 1 }}
                 onClick={() => { if (!isCurrent && t.id !== "free") startCheckout(t.id); else if (!isCurrent) openPortal(); }} disabled={isCurrent}>
                 {isCurrent ? "Current Plan" : t.id === "free" ? "Free Forever" : `Upgrade to ${t.name}`}
               </button>
@@ -4105,8 +3901,8 @@ function BillingPlans() {
               </div>
             </div>
           ))}
-          <div><div style={S.lbl}>Exports</div><div style={{ fontSize: 14, color: TIER_CONFIG[tier]?.features.exports ? C.green : C.dim, fontWeight: 600 }}>{TIER_CONFIG[tier]?.features.exports ? "✓ Unlocked" : "🔒 Upgrade to Pro"}</div></div>
-          <div><div style={S.lbl}>AI Agents</div><div style={{ fontSize: 14, color: TIER_CONFIG[tier]?.features.ai_agents ? C.green : C.dim, fontWeight: 600 }}>{TIER_CONFIG[tier]?.features.ai_agents ? "✓ Unlocked" : "🔒 Upgrade to Pro"}</div></div>
+          <div><div style={S.lbl}>Exports</div><div style={{ fontSize: 14, color: TIER_CONFIG[tier]?.features.exports ? C.green : C.dim, fontWeight: 600 }}>{TIER_CONFIG[tier]?.features.exports ? "✓ Enabled" : "🔒 Pro"}</div></div>
+          <div><div style={S.lbl}>AI Agents</div><div style={{ fontSize: 14, color: TIER_CONFIG[tier]?.features.ai_agents ? C.green : C.dim, fontWeight: 600 }}>{TIER_CONFIG[tier]?.features.ai_agents ? "✓ Enabled" : "🔒 Pro"}</div></div>
         </div>
       </Card>
       <Card title="Subscription">
@@ -4117,14 +3913,8 @@ function BillingPlans() {
             {auth?.userProfile?.stripe_current_period_end && <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>Renews: {new Date(auth.userProfile.stripe_current_period_end).toLocaleDateString()}</div>}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
-            {tier === "free" ? (
-              <button className="premium-hover" style={{ ...S.btn("gold"), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={() => startCheckout("pro")}>Upgrade to Pro</button>
-            ) : (
-              <>
-                <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Manage Billing</button>
-                <button className="premium-hover" style={{ ...S.btn(), transition: "transform 0.1s, filter 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.97)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} onClick={openPortal}>Update Payment</button>
-              </>
-            )}
+            <button style={S.btn()} onClick={openPortal}>Manage Billing</button>
+            <button style={S.btn()} onClick={openPortal}>Update Payment</button>
           </div>
         </div>
       </Card>
@@ -4178,10 +3968,6 @@ function SystemSettings() {
               <input style={S.inp} type="password" value={apiKeys[key]} onChange={au(key)} placeholder={ph} />
             </Field>
           ))}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, marginBottom: 4 }}>
-            <span style={{ fontSize: 10, color: C.dim, letterSpacing: 2, textTransform: "uppercase" }}>System Security</span>
-            <SecurityStatusBadge tenantId="local-tenant" />
-          </div>
           <button style={{ ...S.btn("gold"), marginTop: 10 }} onClick={() => doSave("api")}>{saved === "api" ? "✓ API Keys Saved!" : "Save API Keys"}</button>
         </Card>
       </div>
@@ -4193,7 +3979,7 @@ function SystemSettings() {
               <div style={{ flex: 1 }}><div style={{ fontSize: 13, color: C.text }}>{label}</div><div style={{ fontSize: 10, color: C.dim }}>{desc}</div></div>
             </div>
           ))}
-          <button style={{ ...S.btn("gold"), marginTop: 10 }} onClick={() => doSave("notifs")}>{saved === "notifs" ? "✓ Preferences Saved!" : "Save Preferences"}</button>
+          <button style={{ ...S.btn("gold"), marginTop: 10 }}>Save Preferences</button>
         </Card>
       </div>
       <div>
@@ -4204,21 +3990,14 @@ function SystemSettings() {
           <div style={{ fontSize: 11, color: C.dim, marginBottom: 12 }}>Connect to Supabase for cloud persistence, multi-device sync, and team collaboration.</div>
           <div style={S.g2}>
             <Field label="Supabase URL">
-              {/* Bug fix: use controlled state inputs so React re-renders + updates supa object on Save */}
-              <input style={S.inp}
-                defaultValue={supa.url || ""}
-                onChange={e => { supa.url = e.target.value; localStorage.setItem("axiom_supa_url", e.target.value); }}
-                placeholder="https://xxxxx.supabase.co" />
+              <input style={S.inp} value={localStorage.getItem("axiom_supa_url") || ""} onChange={e => localStorage.setItem("axiom_supa_url", e.target.value)} placeholder="https://xxxxx.supabase.co" />
             </Field>
             <Field label="Anon / Publishable Key">
-              <input style={S.inp} type="password"
-                defaultValue={supa.key || ""}
-                onChange={e => { supa.key = e.target.value; localStorage.setItem("axiom_supa_key", e.target.value); }}
-                placeholder="eyJhbGci..." />
+              <input style={S.inp} type="password" value={localStorage.getItem("axiom_supa_key") || ""} onChange={e => localStorage.setItem("axiom_supa_key", e.target.value)} placeholder="eyJhbGci..." />
             </Field>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button style={S.btn("gold")} onClick={() => doSave("supa")}>
+            <button style={S.btn("gold")} onClick={() => { supa.url = localStorage.getItem("axiom_supa_url") || ""; supa.key = localStorage.getItem("axiom_supa_key") || ""; doSave("supa"); }}>
               {saved === "supa" ? "✓ Saved!" : "Save Connection"}
             </button>
             {supa.configured() && supa.token && <button style={{ ...S.btn(), color: C.green, borderColor: C.green + "44" }} onClick={() => { doSave("supa-test"); }}>✓ Authenticated</button>}
@@ -4267,7 +4046,7 @@ function Notes() {
           })));
         }
         setSyncStatus("synced");
-      } catch (e) { console.warn("Notes hydrate failed:", e); setSyncStatus("error"); }
+      } catch(e) { console.warn("Notes hydrate failed:", e); setSyncStatus("error"); }
     })();
   }, [auth?.user, auth?.userProfile]);
 
@@ -4304,7 +4083,7 @@ function Notes() {
           setNotes(prev => prev.map(n => n.id === local.id ? { ...n, _supaId: inserted.id, id: inserted.id } : n));
         }
         setSyncStatus("synced");
-      } catch (e) { console.warn("Notes insert failed:", e); setSyncStatus("error"); }
+      } catch(e) { console.warn("Notes insert failed:", e); setSyncStatus("error"); }
     }
     setNn({ title: "", content: "", deal: "", category: "General", pinned: false });
     setSaving(false);
@@ -4316,7 +4095,7 @@ function Notes() {
     setNotes(notes.map(n => n.id === id ? updated : n));
     if (supa.configured() && auth?.user && (note?._supaId || typeof id === 'string')) {
       const supaId = note?._supaId || id;
-      supa.update("notes", { id: supaId }, { [field === "content" ? "content" : field === "title" ? "title" : field === "pinned" ? "pinned" : field === "category" ? "category" : field]: val, updated_at: new Date().toISOString() }).catch(() => { });
+      supa.update("notes", { id: supaId }, { [field === "content" ? "content" : field === "title" ? "title" : field === "pinned" ? "pinned" : field === "category" ? "category" : field]: val, updated_at: new Date().toISOString() }).catch(() => {});
     }
   };
 
@@ -4324,7 +4103,7 @@ function Notes() {
     const note = notes.find(n => n.id === id);
     setNotes(notes.filter(n => n.id !== id));
     if (supa.configured() && auth?.user && (note?._supaId || typeof id === 'string')) {
-      supa.del("notes", { id: note?._supaId || id }).catch(() => { });
+      supa.del("notes", { id: note?._supaId || id }).catch(() => {});
     }
   };
 
@@ -4386,60 +4165,21 @@ function Notes() {
 }
 
 function FullCalendar() {
-  const auth = useAuth();
-  const ctx = useCtx();
   const [view, setView] = useState("month");
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [selDay, setSelDay] = useState(today.getDate());
-  const [events, setEvents] = useLS("axiom_cal_events", []);
-  const [syncStatus, setSyncStatus] = useState("idle");
-  const loadedRef = useRef(false);
-  const saveTimer = useRef(null);
-
-  // Hydrate from Supabase
-  useEffect(() => {
-    if (loadedRef.current || !auth?.user || !auth?.userProfile?.org_id || !supa.configured()) return;
-    loadedRef.current = true;
-    setSyncStatus("syncing");
-    (async () => {
-      try {
-        const rows = await supa.select("calendar_events", `org_id=eq.${auth.userProfile.org_id}&order=date.asc`);
-        if (rows.length > 0) {
-          setEvents(rows.map(r => ({ _supaId: r.id, id: r.id, title: r.title || "", date: r.date || "", time: r.time || "09:00", type: r.type || "Meeting", deal: r.deal || "", color: r.color || C.blue, notes: r.notes || "", recurring: r.recurring || "" })));
-        } else {
-          // Seed with demo events for new users
-          setEvents([
-            { id: 1, title: "Sunset Ridge - LOI Due", date: `${today.getFullYear()}-${String(today.getMonth() + 2).padStart(2, "0")}-28`, time: "17:00", type: "Deadline", deal: "Sunset Ridge", color: C.red, notes: "Final LOI submission to seller" },
-            { id: 2, title: "IC Committee Meeting", date: `${today.getFullYear()}-${String(today.getMonth() + 2).padStart(2, "0")}-05`, time: "10:00", type: "Meeting", deal: "Ridgecrest Heights", color: C.purple, notes: "Investment committee review" },
-          ]);
-        }
-        setSyncStatus("synced");
-      } catch (e) { console.warn("Calendar hydrate failed:", e); setSyncStatus("error"); }
-    })();
-  }, [auth?.user, auth?.userProfile?.org_id]);
-
-  const syncEvent = useCallback((event, isDelete = false) => {
-    if (!auth?.user || !auth?.userProfile?.org_id || !supa.configured()) return;
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      try {
-        if (isDelete) {
-          if (event._supaId) await supa.del("calendar_events", { id: event._supaId });
-        } else {
-          const payload = { org_id: auth.userProfile.org_id, user_id: auth.user.id, project_id: ctx?.activeProjectId || null, title: event.title, date: event.date, time: event.time, type: event.type, deal: event.deal || "", color: event.color || "", notes: event.notes || "", recurring: event.recurring || "" };
-          if (event._supaId) { payload.id = event._supaId; await supa.upsert("calendar_events", payload); }
-          else {
-            const inserted = await supa.insert("calendar_events", payload);
-            if (inserted?.id) setEvents(prev => prev.map(e => e.id === event.id ? { ...e, _supaId: inserted.id, id: inserted.id } : e));
-          }
-        }
-        setSyncStatus("synced");
-      } catch (e) { console.warn("Calendar sync failed:", e); setSyncStatus("error"); }
-    }, 800);
-  }, [auth?.user, auth?.userProfile?.org_id, ctx?.activeProjectId]);
-
+  const [events, setEvents] = useLS("axiom_cal_events", [
+    { id: 1, title: "Sunset Ridge - LOI Due", date: "2025-02-28", time: "17:00", type: "Deadline", deal: "Sunset Ridge", color: C.red, notes: "Final LOI submission to seller" },
+    { id: 2, title: "IC Committee Meeting", date: "2025-03-05", time: "10:00", type: "Meeting", deal: "Ridgecrest Heights", color: C.purple, notes: "Investment committee review - bring updated pro forma" },
+    { id: 3, title: "Phase I ESA - Meadowbrook", date: "2025-03-10", time: "09:00", type: "Inspection", deal: "Meadowbrook PUD", color: C.amber, notes: "West Valley Labs on site. 2-week turnaround." },
+    { id: 4, title: "Entitlement Hearing - Planning Comm", date: "2025-03-18", time: "14:00", type: "Hearing", deal: "Sunset Ridge", color: C.blue, notes: "Tentative map hearing." },
+    { id: 5, title: "Canyon Oaks COE", date: "2025-03-15", time: "10:00", type: "Closing", deal: "Canyon Oaks Estates", color: C.green, notes: "Close of escrow. Wire funds by 9 AM." },
+    { id: 6, title: "Geotech Report Review", date: "2025-03-12", time: "11:00", type: "Review", deal: "Hawk Valley", color: C.teal, notes: "Review geotech findings with civil engineer" },
+    { id: 7, title: "Weekly Pipeline Standup", date: "2025-03-03", time: "09:00", type: "Meeting", deal: "General", color: C.gold, notes: "Weekly team standup - pipeline review", recurring: "weekly" },
+    { id: 8, title: "Builder Lot Release Meeting", date: "2025-03-20", time: "13:00", type: "Meeting", deal: "Sunset Ridge", color: C.purple, notes: "Meet with Lennar and D.R. Horton" },
+  ]);
   const [ne, setNe] = useState({ title: "", date: "", time: "09:00", type: "Meeting", deal: "", color: C.blue, notes: "", recurring: "" });
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -4449,24 +4189,9 @@ function FullCalendar() {
   const firstDay = new Date(year, month, 1).getDay();
   const dStr = (d) => `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   const dayEvents = (d) => events.filter(e => e.date === dStr(d));
-  const addEvent = () => {
-    if (!ne.title || !ne.date) return;
-    const newEvt = { ...ne, id: Date.now() };
-    setEvents(prev => [...prev, newEvt]);
-    syncEvent(newEvt);
-    setNe({ title: "", date: "", time: "09:00", type: "Meeting", deal: "", color: C.blue, notes: "", recurring: "" });
-    setShowQuickAdd(false);
-  };
-  const delEvent = (id) => {
-    const evt = events.find(e => e.id === id);
-    setEvents(events.filter(e => e.id !== id));
-    if (evt) syncEvent(evt, true);
-  };
-  const updEvent = (id, field, val) => {
-    setEvents(events.map(e => e.id === id ? { ...e, [field]: val } : e));
-    const updated = events.find(e => e.id === id);
-    if (updated) syncEvent({ ...updated, [field]: val });
-  };
+  const addEvent = () => { if (!ne.title || !ne.date) return; setEvents([...events, { ...ne, id: Date.now() }]); setNe({ title: "", date: "", time: "09:00", type: "Meeting", deal: "", color: C.blue, notes: "", recurring: "" }); setShowQuickAdd(false); };
+  const delEvent = (id) => setEvents(events.filter(e => e.id !== id));
+  const updEvent = (id, field, val) => setEvents(events.map(e => e.id === id ? { ...e, [field]: val } : e));
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear(year - 1); } else setMonth(month - 1); };
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear(year + 1); } else setMonth(month + 1); };
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -4855,28 +4580,11 @@ function Workflows() {
       </div>
       <div>
         <Card title="Pre-Built Templates">
-          {[
-            ["Deal Stage Notifications", "Deal moves to new stage", "Any deal", ["Send email notification to team", "Log activity in deal timeline", "Update dashboard KPIs"]],
-            ["DD Deadline Tracker", "3 days before DD deadline", "Deals in Due Diligence stage", ["Send email reminder to deal assignee", "Create calendar event", "Push notification"]],
-            ["Listing Price Drop Alert", "New MLS listing matches saved search", "Price reduction > 5%", ["Send email with listing details", "Add to Data & Intel feed", "Create note with property summary"]],
-            ["Weekly Pipeline Digest", "Time-based schedule", "Every Monday at 8:00 AM", ["Generate pipeline summary", "Email to team distribution list", "Archive to Reports & Binder"]],
-            ["Risk Score Monitor", "Risk score changes", "Any active deal", ["Notify deal lead", "Create risk review meeting", "Flag in Command Center"]],
-            ["Comp Sale Alert", "New MLS listing matches criteria", "Comparable sale recorded in target area", ["Email comp summary to team", "Add to Market Intelligence"]],
-            ["Permit Filing Alert", "DD item completed", "County records updated", ["Notify entitlements lead", "Update process control timeline"]],
-            ["Investor Report Generator", "Time-based schedule", "First day of each month", ["Generate investor KPI report", "Email to investor distribution list"]],
-          ].map(([title, trigger, condition, templateActions], i) => (
+          {[["Deal Stage Notifications", "Notify team when deals move between pipeline stages", "CRM"], ["DD Deadline Tracker", "Reminders 7, 3, and 1 day before due diligence deadlines", "Execution"], ["Listing Price Drop Alert", "Monitor saved searches for price reductions > 5%", "Market"], ["Weekly Pipeline Digest", "Automated Monday morning pipeline summary email", "Reporting"], ["Risk Score Monitor", "Alert when deal risk score drops below threshold", "Risk"], ["Comp Sale Alert", "Notify when new comparable sales are recorded in target area", "Market"], ["Permit Filing Alert", "Monitor county records for new permit applications", "Entitlements"], ["Investor Report Generator", "Monthly automated investor update email with KPIs", "Reporting"]].map(([t, d, cat], i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #0F1117" }}>
-              <div style={{ flex: 1 }}><div style={{ fontSize: 13, color: C.text }}>{title}</div><div style={{ fontSize: 10, color: C.dim }}>{condition}</div></div>
-              <button style={{ ...S.btn("gold"), padding: "4px 10px", fontSize: 9 }}
-                onClick={() => {
-                  setNw({ name: title, trigger, condition, actions: templateActions, status: "Active" });
-                  // switch to the Create tab by setting a flash state
-                  document.querySelectorAll && (() => {
-                    const tabs = document.querySelectorAll("[data-axiom-tab]");
-                    if (tabs[1]) tabs[1].click();
-                  })();
-                }}
-              >Use Template</button>
+              <div style={{ flex: 1 }}><div style={{ fontSize: 13, color: C.text }}>{t}</div><div style={{ fontSize: 10, color: C.dim }}>{d}</div></div>
+              <Badge label={cat} color={C.blue} />
+              <button style={{ ...S.btn("gold"), padding: "4px 10px", fontSize: 9 }}>Use Template</button>
             </div>
           ))}
         </Card>
@@ -5004,352 +4712,60 @@ function ResourceCenter() {
 
 function JurisdictionIntel() {
   const { project } = useContext(Ctx);
-  const [selState, setSelState] = useState(project.state || "FL");
-  const [activeTab2, setActiveTab2] = useState(0);
-
-  const JURIS_DATA = {
-    FL: {
-      name: "Florida", abbr: "FL", flag: "🌴",
-      overview: "Florida has a streamlined subdivision approval process under the Florida Subdivision Act (Ch. 177 F.S.). No state-level environmental review equivalent to CEQA. Primary regulators: FDEP (water/wetlands), SFWMD/SWFWMD/SJRWMD (water management districts), county/city planning departments.",
-      entitlement: [
-        { phase: "Pre-Application Conference", duration: "2–4 weeks", notes: "Required by most FL counties. Informal. Identify issues early." },
-        { phase: "Preliminary Plat Application", duration: "30–60 days", notes: "Staff review, DRC review. Public notice required." },
-        { phase: "Planning Commission Hearing", duration: "30–45 days", notes: "Quasi-judicial in FL. Must present competent substantial evidence." },
-        { phase: "BCC/City Commission Approval", duration: "30–45 days", notes: "Final approval. Conditions of approval issued." },
-        { phase: "Final Plat Survey & Engineering", duration: "60–120 days", notes: "Boundary survey, legal descriptions, engineer certification." },
-        { phase: "Final Plat Recording", duration: "2–4 weeks", notes: "Filed with Clerk of Courts. Recorded in plat book." },
-        { phase: "ERP Permit (if wetlands)", duration: "60–120 days", notes: "Environmental Resource Permit from SFWMD/SWFWMD. Required for >0.5 ac disturbance." },
-      ],
-      fees: [
-        { type: "Impact Fees (Roads)", range: "$3,000–$8,000/unit", notes: "Varies by county. Hillsborough ~$6,200, Orange ~$5,800, Lee ~$4,100" },
-        { type: "Impact Fees (Schools)", range: "$2,500–$6,500/unit", notes: "School board adopted. Broward ~$6,200, Collier ~$5,900" },
-        { type: "Impact Fees (Parks)", range: "$500–$2,500/unit", notes: "County/city specific. Often tied to acreage dedication option." },
-        { type: "Impact Fees (Fire/EMS)", range: "$300–$800/unit", notes: "District-specific. Fire special districts common in FL." },
-        { type: "Impact Fees (Water/Sewer)", range: "$3,000–$9,000/unit", notes: "Utility-set. JEA ~$7,400, TOHO ~$6,100." },
-        { type: "Plat Recording Fee", range: "$10–$15/lot", notes: "Clerk of Courts. Nominal." },
-        { type: "Plan Review Fee", range: "$500–$3,000 flat", notes: "Engineering plan review. Plus per-sheet fees." },
-      ],
-      env: [
-        { item: "Wetlands / ERP", detail: "FDEP & WMD jurisdiction. ERP permit required. Section 404/401 if federal nexus. Mitigation banks active in FL. Mitigation ratio typically 1.5:1–2:1." },
-        { item: "Listed Species", detail: "Florida Scrub Jay, Gopher Tortoise, Florida Panther (SW FL). FWC coordination required. Gopher Tortoise relocation permit ~$200–600/tortoise." },
-        { item: "Stormwater / NPDES", detail: "FDEP NPDES permit for >1 ac disturbance. NOI required. SWPPP mandatory. WMD permits address water quantity and quality." },
-        { item: "Coastal / CCCL", detail: "Coastal Construction Control Line (CCCL) permit from FDEP for coastal projects. Mandatory for oceanfront or near inlet." },
-        { item: "DRI Review", detail: "Development of Regional Impact: >3,000 residential units in many counties triggers DRI review under FL Ch. 380." },
-      ],
-      zones: "FL zoning is municipality/county-specific. Common residential designations: R-1 (single-family, 6,000–10,000 SF min lot), R-2/R-3 (multi-family), PUD (planned unit development — most common for subdivisions). Density bonus programs exist under Florida Community Land Trust Act. ADUs allowed by statute since 2020 (Ch. 177.0865).",
-      tips: ["DRI thresholds: >3,000 residential units in many counties triggers DRI review.", "Concurrency: FL Statute Ch. 163 requires concurrency for roads, schools, utilities.", "Impact fee credits: Donate ROW or build infrastructure for credits against impact fees.", "Wetland mitigation banking well-established — use banks vs. on-site mitigation.", "School concurrency: Certificate required before building permits."],
-    },
-    TX: {
-      name: "Texas", abbr: "TX", flag: "⭐",
-      overview: "Texas is developer-friendly with minimal state-level land use regulation. Cities have broad zoning authority but counties outside ETJ have very limited power. No state environmental review. Primary regulators: TCEQ (environmental), TWDB (water), TxDOT (state roads), local municipalities.",
-      entitlement: [
-        { phase: "Pre-Application Meeting", duration: "1–2 weeks", notes: "Optional but recommended. Staff walkthrough of requirements." },
-        { phase: "Preliminary Plat", duration: "30 days statutory", notes: "Texas LGC 212.009: 30 days to approve/deny or deemed approved." },
-        { phase: "Planning & Zoning Commission", duration: "30–45 days", notes: "Public hearing. Most TX cities have P&Z for plat recommendations." },
-        { phase: "City Council Approval", duration: "30 days", notes: "Final authority. Some cities allow administrative approval for smaller plats." },
-        { phase: "Construction Plan Approval", duration: "30–60 days", notes: "Engineering plans for utilities, streets, drainage." },
-        { phase: "Final Plat", duration: "30 days", notes: "Filed with county clerk after construction complete or bonded." },
-        { phase: "Plat Filing", duration: "1–2 weeks", notes: "Recorded with county clerk." },
-      ],
-      fees: [
-        { type: "Plat Application Fee", range: "$500–$5,000", notes: "City-specific. Austin ~$3,500+, Dallas ~$2,000, Houston minimal" },
-        { type: "Impact Fees", range: "$0–$15,000/unit", notes: "TX LGC Ch. 395. Austin ~$12,000+/unit, Frisco ~$10,000, smaller cities often $0–3,000" },
-        { type: "MUD Tap Fees", range: "$2,000–$8,000/unit", notes: "Municipal Utility District tap fees common. MUD bonds financed by developer." },
-        { type: "TxDOT Driveway Permit", range: "$150–$500", notes: "Required for any access to state highway." },
-        { type: "TCEQ Stormwater", range: "$100 NOI fee", notes: "Phase II MS4. SWPPP required for >1 ac." },
-      ],
-      env: [
-        { item: "No State CEQA", detail: "Texas has no CEQA/SEPA equivalent. Environmental review is federal (NEPA) only when federal nexus exists." },
-        { item: "TCEQ / Stormwater", detail: "TCEQ Construction General Permit (TXR150000). NOI required for >1 ac disturbance. SWPPP required." },
-        { item: "Wetlands", detail: "US Army Corps Section 404 only. Texas has no additional state wetland permitting layer. Nationwide Permits common." },
-        { item: "Listed Species", detail: "Federal ESA only (USFWS). Golden-cheeked Warbler (Austin), Houston Toad (Bastrop). TPWD coordination recommended." },
-        { item: "Edwards Aquifer", detail: "EARIP rules for Barton Springs area. Impervious cover limits (15–25%). Critical environmental feature (CEF) buffers required." },
-      ],
-      zones: "Texas cities zone independently. Common: SF-1/SF-2 (single-family, 7,500–10,000 SF min), PD (planned development), TH (townhome). ETJ platting requirements apply outside city limits. MUD districts are primary development finance tool. Houston: no city-wide zoning code — deed restrictions substitute.",
-      tips: ["Deemed approved: TX LGC 212.009 — city doesn't act within 30 days, plat is deemed approved.", "MUD strategy: Create a MUD for infrastructure finance. Bonds issued, residents pay via tax rate.", "Unincorporated areas: Counties can require plats but cannot zone.", "Austin: Most complex TX market. Consult local land use attorney.", "Impact fee caps: Ch. 395 limits impact fees to 50% of capital costs."],
-    },
-    GA: {
-      name: "Georgia", abbr: "GA", flag: "🍑",
-      overview: "Georgia's development process is county/city-driven with moderate regulation. State oversight via EPD (Environmental Protection Division) for water quality and wetlands. No state environmental review law. Most suburbs in Atlanta metro have robust planning departments with detailed UDCs.",
-      entitlement: [
-        { phase: "Pre-Application Concept Review", duration: "2–4 weeks", notes: "Informal. Most GA counties encourage this step." },
-        { phase: "Preliminary Plat / Development Plan", duration: "30–60 days", notes: "Staff review + DRC. Traffic study may be triggered." },
-        { phase: "Planning Commission Hearing", duration: "30–60 days", notes: "Advisory recommendation in most GA jurisdictions." },
-        { phase: "Board of Commissioners / City Council", duration: "30–45 days", notes: "Final decision authority." },
-        { phase: "Construction Plans / Land Disturbance Permit", duration: "30–60 days", notes: "LDP required for any disturbance >1 ac. EPD NOI." },
-        { phase: "Final Plat", duration: "30–60 days", notes: "Surveyed plat, signed by all utilities and agencies." },
-        { phase: "Plat Recording", duration: "1–2 weeks", notes: "Superior Court Clerk of each county." },
-      ],
-      fees: [
-        { type: "Development Impact Fees", range: "$1,000–$8,000/unit", notes: "Gwinnett ~$5,200, Cherokee ~$3,800, Forsyth ~$4,500" },
-        { type: "Land Disturbance Permit", range: "$0.50–$2.00/disturbed SF", notes: "County-issued. Plus plan review fee." },
-        { type: "School Impact Fees", range: "$1,000–$4,000/unit", notes: "Not all GA counties charge." },
-        { type: "EPD NOI Fee", range: "$40", notes: "GA EPD Construction General Permit. Nominal." },
-        { type: "Plat Recording", range: "$25–$75 base + $5/lot", notes: "Superior Court Clerk fees." },
-      ],
-      env: [
-        { item: "GA EPD / Erosion Control", detail: "GSWCC certified plan required for LDP. Inspection program rigorous. Fines for violations." },
-        { item: "Wetlands / Stream Buffers", detail: "State buffer law (OCGA 12-7): 25-ft undisturbed buffer + 25-ft impervious setback from state waters. Federal 404 applies." },
-        { item: "Listed Species", detail: "Federal ESA (USFWS). GA DNR Wildlife Resources Division. Gopher Tortoise protected by GA law — relocation permit required." },
-        { item: "Stormwater / MS4", detail: "GA EPD Phase II MS4 permit in urbanized areas. Post-development runoff cannot exceed pre-development. WQv and Cpv required." },
-      ],
-      zones: "GA zoning entirely local. Fulton County R-1 (min 15,000 SF), Cherokee/Forsyth more suburban density (6,000–10,000 SF). AG (Agricultural) zoning common for undeveloped land — rezoning to R required. PD/PRD popular for mixed density. Gwinnett County UDC heavily detail-oriented.",
-      tips: ["Stream buffers are a major constraint — map all state waters early with GIS and field survey.", "Traffic studies triggered at 100+ peak hour trips. Study cost $8,000–$25,000.", "BCC rezoning: Rezonings from AG to R are legislative. Written findings of consistency with comp plan required.", "Forsyth/Cherokee: Explosive growth counties. Entitlement timelines stretch due to workload.", "HOA/POA required for common area ownership under GA Nonprofit Corporation Act."],
-    },
-    NC: {
-      name: "North Carolina", abbr: "NC", flag: "🦅",
-      overview: "North Carolina has a hybrid state/local development framework. NCDEQ oversees water quality, wetlands (401 certification), and erosion control statewide. Local governments have broad zoning and subdivision authority under NCGS Ch. 160D (effective 2021).",
-      entitlement: [
-        { phase: "Pre-Application Conference", duration: "1–3 weeks", notes: "NC 160D-802 encourages pre-application. Informal coordination." },
-        { phase: "Sketch Plat / Concept Plan", duration: "15–30 days", notes: "Optional but common. Staff feedback before formal submittal." },
-        { phase: "Preliminary Subdivision Plat", duration: "30–60 days", notes: "Technical Review Committee. Public comment period." },
-        { phase: "Planning Board Recommendation", duration: "30–45 days", notes: "Advisory to governing board." },
-        { phase: "Board of Commissioners / City Council", duration: "30–45 days", notes: "Final approval. NC 160D-802 governs vested rights after approval." },
-        { phase: "Final Plat / Construction Plans", duration: "45–90 days", notes: "Sealed engineering plans. Bond required before recording." },
-        { phase: "Erosion Control Plan / NPDES", duration: "30–60 days", notes: "NCDEQ DEMLR. Required for >1 ac." },
-        { phase: "Plat Recording", duration: "1–2 weeks", notes: "Register of Deeds in each county." },
-      ],
-      fees: [
-        { type: "Subdivision Application Fee", range: "$500–$4,000", notes: "Mecklenburg ~$3,500, Wake ~$2,800, Durham ~$2,200" },
-        { type: "Erosion Control Permit", range: "$50 + $100/ac", notes: "NCDEQ DEMLR fee. 30-day review target." },
-        { type: "Water/Sewer Tap Fees", range: "$2,000–$6,000/unit", notes: "Utility authority-specific. Charlotte Water, OWASA, county authorities." },
-        { type: "Transportation Impact Fee", range: "$1,000–$8,000/unit", notes: "Wake Co, Charlotte, Cary. NCDOT TIA required for >100 trip generators." },
-        { type: "Plan Review", range: "$1,000–$5,000", notes: "Engineering review. Some counties charge per-sheet." },
-      ],
-      env: [
-        { item: "NC 401 Certification", detail: "NCDEQ DWR issues 401 Water Quality Certification for any 404 permit. NC has its own requirements beyond federal." },
-        { item: "Riparian Buffers", detail: "Jordan Lake Watershed: 50-ft Zone 1 (no disturbance) + 50-ft Zone 2 from streams. Neuse River Basin: 50-ft total buffer." },
-        { item: "Wetlands", detail: "NCDEQ DWR + USACE joint review. NC EEP mitigation bank. NC Wetland Rapid Assessment Procedure (NCWRAP) for mitigation ratios." },
-        { item: "Erosion Control", detail: "NC Sedimentation Pollution Control Act — most rigorous state program in SE US. >1 ac requires approved E&SC plan with financial assurance." },
-        { item: "Listed Species", detail: "NC Natural Heritage Program. Red-cockaded Woodpecker (federal ESA). NCWRC coordination." },
-      ],
-      zones: "NC zoning governed by NCGS Ch. 160D (2021). RS-8, RS-10, RS-20 common. CD (conditional district) rezoning primary tool — approved with binding site plan. PD/PRD used. ADUs: NC legislature preempted local ADU restrictions in 2023 (SL 2023-108) for areas >100,000 pop.",
-      tips: ["NCDOT TIA: Projects generating >100 peak hour trips require submission to NCDOT. 90-120 day review.", "Conditional Zoning: CD rezonings come with binding conditions — negotiate carefully. Cannot be amended without new rezoning.", "Jordan Lake buffer: Major constraint in Chatham, Orange, Durham, Wake counties. Map streams early.", "Vested rights: NC 160D-108.1 provides 5-year vested right upon approved preliminary subdivision plat.", "Utility extension: NCGS 162A-211 governs. Municipal annexation sometimes required for service."],
-    },
-    AZ: {
-      name: "Arizona", abbr: "AZ", flag: "🌵",
-      overview: "Arizona is one of the most developer-friendly states. Strong private property rights (ARS 12-1134 — government must pay for regulatory takings). No state environmental review law. Water resource restrictions are a critical evolving constraint. Primary regulators: ADEQ (environment), ADWR (water), ASLD (state trust land), local municipalities.",
-      entitlement: [
-        { phase: "Pre-Application Conference", duration: "1–3 weeks", notes: "Required in Phoenix, Scottsdale. Formal PAC process." },
-        { phase: "Rezoning Application", duration: "60–90 days", notes: "Public hearing before P&Z Commission. 300–1,000 ft neighbor notification." },
-        { phase: "City Council Approval", duration: "30–45 days", notes: "Legislative act. Cannot be appealed to Board of Adjustment." },
-        { phase: "Preliminary Subdivision Plat", duration: "30–60 days", notes: "Concurrent with rezoning or separate. DRC review." },
-        { phase: "Construction Plans", duration: "30–60 days", notes: "Civil engineering plans. City/county engineer review." },
-        { phase: "Final Subdivision Plat", duration: "30 days", notes: "Recorded with County Recorder. CC&Rs filed simultaneously." },
-        { phase: "ADEQ Aquifer Protection Permit", duration: "30–90 days", notes: "Required if groundwater impacted." },
-      ],
-      fees: [
-        { type: "Development Impact Fees", range: "$3,000–$20,000/unit", notes: "ARS 9-463.05. Phoenix ~$8,000, Scottsdale ~$12,000, Queen Creek ~$18,000, Mesa ~$7,500" },
-        { type: "ADWR Water Report", range: "$100–$500", notes: "100-year Assured Water Supply (AWS) designation required." },
-        { type: "Plat Application Fee", range: "$1,000–$5,000", notes: "City-specific. Plus per-lot fee ($10–50/lot)." },
-        { type: "Plan Review Fee", range: "$1,500–$8,000", notes: "Engineering plan review." },
-        { type: "AZPDES / Stormwater", range: "$0 fee (ADEQ)", notes: "NOI required, no fee. SWPPP preparation cost $2,000–8,000." },
-      ],
-      env: [
-        { item: "Assured Water Supply", detail: "ADWR requires 100-year AWS demonstration for new residential subdivisions in AMAs. Critical constraint since 2023 Colorado River shortage." },
-        { item: "No State CEQA", detail: "Arizona has no CEQA/SEPA equivalent. Federal NEPA only when federal nexus exists." },
-        { item: "AZ Native Plant Law", detail: "ARS 3-904: Protected native plants (saguaro, ironwood, blue palo verde) cannot be removed without ADA permit. Cost to transplant saguaro: $200–1,000/plant." },
-        { item: "Washes & Floodplains", detail: "AZ washes ephemeral but FEMA FIRM maps apply. CLOMR/LOMR often needed. Maricopa County Flood Control District has additional requirements." },
-        { item: "Listed Species", detail: "USFWS federal ESA only. State: AZ Game & Fish for AZ state-listed species." },
-      ],
-      zones: "AZ zoning municipal/county. Common: R1-6, R1-8, R1-10 (min lot size in thousands SF), PAD (planned area development, most common for subdivisions). State Trust Land (ASLD) must be auctioned — separate process. AZ legislature preempted local ADU restrictions 2023.",
-      tips: ["Water supply is existential — verify AWS designation before LOI. Engage water utility or ADWR first.", "State Trust Land: ~9.2M acres in AZ. Must be purchased at auction from ASLD.", "Development fee cap: ARS 9-463.05 — cities can only charge for 10 years of infrastructure at buildout.", "Queen Creek/Pinal County: Explosive growth. Impact fees highest in state.", "Takings: ARS 12-1134 (Prop 207) — regulations reducing property value >50% require compensation."],
-    },
-    TN: {
-      name: "Tennessee", abbr: "TN", flag: "🎸",
-      overview: "Tennessee is one of the most business-friendly states for land development. No state income tax, low regulatory burden, rapid growth in Nashville, Chattanooga, Knoxville, and Memphis metros. No state environmental review law. TDEC handles water, air, and waste. County governments control most rural development.",
-      entitlement: [
-        { phase: "Pre-Application Meeting", duration: "1–3 weeks", notes: "Most TN counties encourage informal coordination with planning staff." },
-        { phase: "Sketch Plan Review", duration: "2–4 weeks", notes: "Optional informal review. Identify constraints before formal submittal." },
-        { phase: "Preliminary Plat Submission", duration: "30–60 days", notes: "Regional Planning Commission or local PC review. TCA 13-4-301 governs." },
-        { phase: "Planning Commission Approval", duration: "30–60 days", notes: "Planning Commission has full approval authority for preliminary plats in TN." },
-        { phase: "Construction Plan Approval", duration: "30–60 days", notes: "County/city engineer or road department review. Utility service agreement." },
-        { phase: "Final Plat", duration: "30–45 days", notes: "Sealed surveyor plat. As-built certification typically required." },
-        { phase: "Register of Deeds Recording", duration: "1–2 weeks", notes: "Filed with county Register of Deeds." },
-      ],
-      fees: [
-        { type: "Impact Fees (where adopted)", range: "$500–$5,000/unit", notes: "TCA 13-20-601: Impact fees optional. Williamson Co. ~$4,500, Nashville ~$4,200, Rutherford Co. ~$2,800" },
-        { type: "Plat Application", range: "$200–$2,000", notes: "County/city fee. Generally lower than other Sunbelt states." },
-        { type: "TDEC NPDES Construction", range: "$0 (no state fee)", notes: "CGP coverage required >1 ac. SWPPP required." },
-        { type: "Water/Sewer Connection", range: "$1,500–$5,000/unit", notes: "Nashville Water Services, MLGW, county water authorities." },
-        { type: "Recording Fees", range: "$15–$25/page + tax stamps", notes: "Recordation tax: $0.37/$100 purchase price." },
-      ],
-      env: [
-        { item: "No State Environmental Review", detail: "Tennessee has no CEQA/SEPA equivalent. Environmental review is federal NEPA only when federal nexus exists." },
-        { item: "TDEC Construction / NPDES", detail: "Construction General Permit (CGP) required for >1 ac disturbance. SWPPP required. Inspect every 14 days or after 0.5\" rain." },
-        { item: "Wetlands", detail: "Federal Section 404 (USACE Nashville District) and 401 (TDEC Division of Water Resources). TN Statewide Permit 40 for minor impacts. TN EEP mitigation bank active." },
-        { item: "Karst / Sinkholes", detail: "Tennessee has significant karst terrain (Nashville Basin, Cumberland Plateau). TCA 13-21-201: Cave Protection Act. Geotechnical study required in karst areas. Can void entitlements." },
-        { item: "Listed Species", detail: "Many state-listed aquatic species (mussels, fish in streams). TWRA coordination. Fluted Kidneyshell, Pale Lilliput protected. Stream impacts require USFWS coordination." },
-        { item: "Antidegradation", detail: "Outstanding National Resource Waters (ONRWs) have strict no-degradation standard. Exceptional Tennessee Waters (ETWs) require special protection." },
-      ],
-      zones: "TN zoning entirely local under TCA 6-54-101 (municipalities) and 13-7-101 (counties). Nashville suburbs: R-1 (15,000–20,000 SF min), R-2 (10,000 SF), PD/PUD most common for large subdivisions. Many rural TN counties (>40) have no county zoning — only subdivision regulations apply. ADU: No state preemption — varies locally.",
-      tips: ["Nashville MSA: Explosive growth. Williamson County (Brentwood, Franklin) highest-income county in TN.", "Karst study: Required in Middle TN limestone areas. Budget $15,000–40,000 for geophysical survey + borings.", "Rural TN: Many counties have no zoning. Fast approvals possible — only subdivision regulations apply.", "TDOT review: Projects on state roads require TDOT driveway/access permit. TIA may be required for >100 trips.", "No state income tax: TN favorable for in-state investors and 1031 exchanges."],
-    },
-    CO: {
-      name: "Colorado", abbr: "CO", flag: "⛰️",
-      overview: "Colorado has a complex and increasingly regulated development environment. High-altitude development adds geotechnical complexity. CDPHE governs environmental regulation. Water rights are a critical separate legal domain (prior appropriation doctrine). SB23-213 (2023) significantly reformed land use. Strong environmental protections.",
-      entitlement: [
-        { phase: "Pre-Application Conference", duration: "2–6 weeks", notes: "Required in most Front Range municipalities. Formal PAC process common." },
-        { phase: "Referral & Utility Coordination", duration: "3–6 weeks", notes: "Multi-agency referral to water/ditch companies, school districts, fire districts." },
-        { phase: "Sketch / Concept Plan", duration: "30–60 days", notes: "Planning Commission concept review. Public hearing typically not required." },
-        { phase: "Preliminary Plan / PUD", duration: "45–90 days", notes: "Planning Commission public hearing. For rezonings, separate legislative hearing." },
-        { phase: "Board of County Commissioners / City Council", duration: "30–60 days", notes: "Final land use authority. For PUD or rezoning — legislative act." },
-        { phase: "Construction Plans / CDPS Permit", duration: "45–90 days", notes: "CDPHE Stormwater Discharge Permit for >1 ac. Referral to water quality." },
-        { phase: "Final Plat", duration: "30–60 days", notes: "Sealed plat, improvements agreement, financial guarantee." },
-        { phase: "Plat Recording", duration: "1–2 weeks", notes: "Filed with County Clerk and Recorder." },
-      ],
-      fees: [
-        { type: "Development Impact Fees", range: "$5,000–$30,000+/unit", notes: "Denver ~$8,000, Boulder ~$25,000+, Broomfield ~$12,000, Aurora ~$7,500, Douglas Co. ~$9,000" },
-        { type: "Water Tap Fees", range: "$10,000–$40,000/unit", notes: "Most expensive in nation. Denver Water ~$28,000/SF tap, Colorado Springs ~$15,000." },
-        { type: "School Impact Fees", range: "$2,000–$7,000/unit", notes: "School district-set. Jefferson Co., Douglas Co., Adams Co. adopt independently." },
-        { type: "CDPS Construction Permit", range: "$345 + annual fee", notes: "CDPHE charges construction stormwater permit — one of few states that does." },
-        { type: "Water Court Filing", range: "$1,500–$50,000+", notes: "Colorado water rights adjudication. Highly variable. Water attorney essential." },
-        { type: "Plan Review", range: "$3,000–$15,000", notes: "Plus referral fees to utility companies ($500–2,000 each)." },
-      ],
-      env: [
-        { item: "Water Rights (Prior Appropriation)", detail: "Separate Water Court proceedings. Must purchase water rights ($5,000–$100,000+/acre-foot) or obtain augmentation plan approval. Water Court takes 1–3 years." },
-        { item: "CDPS / Stormwater", detail: "CDPHE Construction Stormwater Discharge Permit required for >1 ac. $345 fee. Annual inspection program. More rigorous than most states." },
-        { item: "Wildfire Mitigation", detail: "HB22-1049: Wildfire Mitigation Impact Fee allowed. WUI areas require defensible space, Class A roofing, ember-resistant vents. Add $20,000–60,000/lot." },
-        { item: "Colorado Air Quality", detail: "Front Range is EPA non-attainment area for ozone. Large projects may trigger air quality permits. Dust suppression required." },
-        { item: "Wetlands", detail: "Federal Section 404 (USACE Omaha/Sacramento Districts). CDPHE 401 certification adds water quality conditions. No additional state wetland law." },
-        { item: "Listed Species", detail: "Black-footed Ferret, Preble's Meadow Jumping Mouse, Greenback Cutthroat Trout (federal ESA). CDOW coordination for sensitive habitat surveys." },
-      ],
-      zones: "CO zoning local under C.R.S. 30-28-101 (counties) and 31-23-201 (municipalities). Common: R-1/R-2/R-3 (single-family), PUD (primary tool), RDMU (Residential Mixed-Use). SB23-213 (2023): Cities >5,000 must allow ADUs by-right, multi-unit near transit, lot splitting. Metro Districts (CO version of MUDs) common in Douglas, Jefferson, El Paso counties.",
-      tips: ["Water rights are separate from land rights — purchase water or prove augmentation BEFORE major investment.", "Wildfire: WUI development adds $20,000–60,000/lot for fire mitigation.", "Boulder County: Most restrictive in CO. Urban Service Area limits. Very difficult to entitle outside boundaries.", "SB23-213: ADUs now allowed by-right, lot splitting streamlined, transit corridors allow 3–7 stories.", "Metro Districts: Special district formation for infrastructure finance common on Front Range."],
-    },
-  };
-
-  const STATES_LIST = Object.keys(JURIS_DATA);
-  const data = JURIS_DATA[selState] || JURIS_DATA.FL;
-  const aiSys = `You are a senior real estate development regulatory expert specializing in ${data.name}. You have deep expertise in:
-- Entitlement process: ${data.entitlement.map(e => e.phase).join(", ")}
-- Fee structure: ${data.fees.map(f => f.type).join(", ")}
-- Environmental: ${data.env.map(e => e.item).join(", ")}
-- Key tips: ${data.tips.join(" | ")}
-Provide accurate, specific, actionable guidance. Reference specific statutes, agencies, timelines, and dollar amounts. Always flag critical risks and deal-killers first.`;
-
-  const TAB_LABELS = ["Overview", "Entitlement Timeline", "Fees & Costs", "Environmental", "Zoning", "AI Assistant"];
-  const tabBtnStyle = (active) => ({
-    padding: "5px 12px", fontSize: 10, fontWeight: active ? 700 : 400,
-    background: active ? C.gold : C.bg2, color: active ? "#000" : C.sub,
-    border: `1px solid ${active ? C.gold : C.border}`, borderRadius: 3, cursor: "pointer",
-  });
-
+  const stLabel = project.state || "(select state above)";
+  const muniLabel = project.municipality || "(enter city/county above)";
+  const loc = project.state ? (project.municipality ? `${project.municipality}, ${project.state}` : project.state) : "United States";
+  const regSys = `You are a real estate development regulatory expert for ${loc}. Provide accurate, detailed information about development regulations, zoning codes, building requirements, and approval processes specific to ${loc}. Include specific code sections, fee amounts, timelines, and agency contacts when possible. If the user hasn't selected a state yet, ask them to select one from the top bar.`;
+  const feeSys = `You are a development fee estimation expert for ${loc}. Provide detailed estimates of all development-related fees including impact fees, permit fees, school fees, park fees (Quimby), utility connection fees, plan check fees, and any special district assessments. Give specific dollar amounts or ranges for ${loc}. Break down by fee type and agency. Note which fees are per-unit, per-lot, per-SF, or lump sum.`;
+  const compSys = `You are a compliance and environmental regulatory expert for ${loc}. Cover state-specific environmental review processes (CEQA for CA, SEPA for WA, NEPA overlay, etc.), wetlands regulations, endangered species requirements, air quality rules, stormwater management, and any state-specific compliance mandates. Provide specific statutes, agencies, and timelines for ${loc}.`;
+  const zoneSys = `You are a zoning and land use expert for ${loc}. Help with zoning code interpretation, density calculations, setback requirements, height limits, parking ratios, design standards, overlay zones, specific plans, and variance/CUP procedures. Reference specific municipal code sections for ${loc} when possible.`;
   return (
-    <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ fontSize: 10, color: C.dim, fontWeight: 700, letterSpacing: 1 }}>SELECT STATE:</div>
-        {STATES_LIST.map(st => (
-          <button key={st} style={tabBtnStyle(st === selState)} onClick={() => setSelState(st)}>
-            {JURIS_DATA[st].flag} {JURIS_DATA[st].abbr}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ background: C.bg2, border: `1px solid ${C.gold}40`, borderRadius: 6, padding: "14px 18px", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>{data.flag} {data.name} Development Intelligence</div>
-          <div style={{ fontSize: 12, color: C.sub, marginTop: 4, maxWidth: 640 }}>{data.overview}</div>
-        </div>
-        <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 16 }}>
-          <div style={{ fontSize: 11, color: C.dim }}>Entitlement Phases</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: C.text }}>{data.entitlement.length}</div>
-          <div style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>Typical Timeline</div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: C.amber }}>6–18 months</div>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
-        {TAB_LABELS.map((t, i) => <button key={i} style={tabBtnStyle(i === activeTab2)} onClick={() => setActiveTab2(i)}>{t}</button>)}
-      </div>
-
-      {activeTab2 === 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Card title={`${data.name} Developer Tips`}>
-            {data.tips.map((tip, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
-                <span style={{ color: C.gold, fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
-                <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>{tip}</div>
-              </div>
-            ))}
-          </Card>
-          <Card title="Zoning Framework">
-            <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.7 }}>{data.zones}</div>
-          </Card>
-        </div>
-      )}
-
-      {activeTab2 === 1 && (
-        <Card title={`${data.name} Entitlement Timeline`}>
-          <div style={{ position: "relative", paddingLeft: 24 }}>
-            <div style={{ position: "absolute", left: 10, top: 0, bottom: 0, width: 2, background: `${C.gold}40` }} />
-            {data.entitlement.map((e, i) => (
-              <div key={i} style={{ position: "relative", marginBottom: 18, paddingLeft: 20 }}>
-                <div style={{ position: "absolute", left: -18, top: 4, width: 10, height: 10, borderRadius: "50%", background: C.gold, border: `2px solid ${C.bg}` }} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ fontSize: 13, color: C.text, fontWeight: 600 }}>Phase {i + 1}: {e.phase}</div>
-                  <Badge label={e.duration} color={C.blue} />
-                </div>
-                <div style={{ fontSize: 11, color: C.dim, marginTop: 3 }}>{e.notes}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {activeTab2 === 2 && (
-        <Card title={`${data.name} Fee Schedule`}>
-          <table style={S.tbl}>
-            <thead><tr><th style={S.th}>Fee Type</th><th style={S.th}>Typical Range</th><th style={S.th}>Notes</th></tr></thead>
-            <tbody>{data.fees.map((f, i) => (
-              <tr key={i}>
-                <td style={{ ...S.td, color: C.gold, fontWeight: 600 }}>{f.type}</td>
-                <td style={{ ...S.td, color: C.green, fontWeight: 700 }}>{f.range}</td>
-                <td style={{ ...S.td, color: C.dim, fontSize: 10 }}>{f.notes}</td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </Card>
-      )}
-
-      {activeTab2 === 3 && (
-        <Card title={`${data.name} Environmental Requirements`}>
-          {data.env.map((e, i) => (
-            <div key={i} style={{ padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 13, color: C.text, fontWeight: 600, marginBottom: 4 }}>🌿 {e.item}</div>
-              <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.6 }}>{e.detail}</div>
-            </div>
-          ))}
-        </Card>
-      )}
-
-      {activeTab2 === 4 && (
-        <Card title={`${data.name} Zoning & Land Use`}>
-          <div style={{ fontSize: 13, color: C.sub, lineHeight: 1.8 }}>{data.zones}</div>
-        </Card>
-      )}
-
-      {activeTab2 === 5 && (
-        <Card title={`${data.name} AI Regulatory Advisor`} action={<Badge label={`${data.flag} ${data.name} Expert`} color={C.gold} />}>
-          <div style={{ fontSize: 12, color: C.dim, marginBottom: 10 }}>AI advisor pre-loaded with {data.name} regulations, timelines, fees, and environmental requirements.</div>
+    <Tabs tabs={["Regulatory Intel", "Fee Estimator", "Compliance & Environmental", "Zoning Assistant"]}>
+      <div>
+        <Card title={`Regulatory Intelligence — ${loc}`} action={project.state ? <Badge label={ST_ABBR[project.state] || ""} color={C.gold} /> : <Badge label="Set State — —" color={C.amber} />}>
+          <div style={{ fontSize: 12, color: C.sub, marginBottom: 10 }}>Ask about entitlement processes, approval timelines, required studies, hearing procedures, and regulatory requirements for <b style={{ color: C.gold }}>{loc}</b>.</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-            {[
-              `What is the entitlement timeline in ${data.name}?`,
-              `Estimate impact fees for 50-lot SFR subdivision in ${data.name}`,
-              `Key environmental constraints in ${data.name}?`,
-              `What zoning designation for a 40-lot subdivision?`,
-              `Biggest deal-killers for developers in ${data.name}?`,
-            ].map((q, i) => (
-              <button key={i} style={{ ...S.btn(), padding: "4px 10px", fontSize: 9 }}
-                onClick={() => { const el = document.getElementById("JurisAI-input"); if (el) { el.value = q; el.dispatchEvent(new Event("input", { bubbles: true })); } }}>
-                {q.length > 55 ? q.substring(0, 52) + "..." : q}
-              </button>
+            {["What is the entitlement process?", "Typical approval timeline?", "Required environmental studies?", "Planning commission procedures?", "Appeal process and timeline?", "Subdivision map requirements?"].map((q, i) => (
+              <button key={i} style={{ ...S.btn(), padding: "4px 10px", fontSize: 9 }} onClick={() => { const el = document.getElementById("reg-agent-input"); if (el) { el.value = q; el.dispatchEvent(new Event("input", { bubbles: true })); } }}>{q}</button>
             ))}
           </div>
-          <Agent id="JurisAI" system={aiSys} placeholder={`Ask about ${data.name} development regulations, fees, and entitlements...`} />
+          <Agent id="RegulatoryIntel" system={regSys} placeholder={`Ask about regulations in ${loc}...`} />
         </Card>
-      )}
-    </div>
+      </div>
+      <div>
+        <Card title={`Fee Estimator — ${loc}`} action={project.state ? <Badge label={ST_ABBR[project.state] || ""} color={C.gold} /> : <Badge label="Set State — —" color={C.amber} />}>
+          <div style={{ fontSize: 12, color: C.sub, marginBottom: 10 }}>Get detailed fee estimates for development in <b style={{ color: C.gold }}>{loc}</b>. Includes impact fees, permit fees, school fees, park fees, and utility connections.</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            {["Estimate all impact fees for 50-lot SFR subdivision", "School fee rates and calculation method?", "Park/Quimby fee requirements?", "Utility connection fee estimates?", "Permit and plan check fees?", "Any special assessment districts?"].map((q, i) => (
+              <button key={i} style={{ ...S.btn(), padding: "4px 10px", fontSize: 9 }}>{q}</button>
+            ))}
+          </div>
+          <Agent id="FeeEstimator" system={feeSys} placeholder={`Ask about fees in ${loc}...`} />
+        </Card>
+      </div>
+      <div>
+        <Card title={`Compliance & Environmental — ${loc}`} action={project.state ? <Badge label={ST_ABBR[project.state] || ""} color={C.gold} /> : <Badge label="Set State — —" color={C.amber} />}>
+          <div style={{ fontSize: 12, color: C.sub, marginBottom: 10 }}>State-specific environmental review and compliance requirements for <b style={{ color: C.gold }}>{loc}</b>.</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            {["Environmental review process?", "Wetlands and waterway regulations?", "Endangered species requirements?", "Stormwater and NPDES permits?", "Air quality and GHG requirements?", "Cultural resource survey requirements?"].map((q, i) => (
+              <button key={i} style={{ ...S.btn(), padding: "4px 10px", fontSize: 9 }}>{q}</button>
+            ))}
+          </div>
+          <Agent id="ComplianceIntel" system={compSys} placeholder={`Ask about environmental compliance in ${loc}...`} />
+        </Card>
+      </div>
+      <div>
+        <Card title={`Zoning Assistant — ${loc}`} action={project.state ? <Badge label={ST_ABBR[project.state] || ""} color={C.gold} /> : <Badge label="Set State — —" color={C.amber} />}>
+          <div style={{ fontSize: 12, color: C.sub, marginBottom: 10 }}>Zoning code interpretation and land use guidance for <b style={{ color: C.gold }}>{loc}</b>.</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            {["What zones allow residential subdivision?", "Density and lot size minimums?", "Setback and height requirements?", "Parking requirements for SFR?", "How to apply for a variance?", "ADU regulations and allowances?"].map((q, i) => (
+              <button key={i} style={{ ...S.btn(), padding: "4px 10px", fontSize: 9 }}>{q}</button>
+            ))}
+          </div>
+          <Agent id="ZoningAssistant" system={zoneSys} placeholder={`Ask about zoning in ${loc}...`} />
+        </Card>
+      </div>
+    </Tabs>
   );
 }
 
@@ -6172,14 +5588,11 @@ export default function App() {
   const [loan, setLoan] = useLS("axiom_loan", { ltc: 70, rate: 9.5, termMonths: 24, extensionMonths: 12, origFee: 1.5, lender: "" });
   const [equity, setEquity] = useLS("axiom_equity", { gpPct: 10, lpPct: 90, prefReturn: 8, promotePct: 20, equityMultipleTarget: 2.0, irrTarget: 18 });
 
-  // ─── SYNC: Hydrate from Supabase on login + project switch ──────
+  // ─── SYNC: Hydrate from Supabase on login ──────
   const hydrated = useRef(false);
-  const lastHydratedProject = useRef(null);
   useEffect(() => {
-    if (!user || !userProfile || !supa.configured()) return;
-    if (hydrated.current && lastHydratedProject.current === activeProjectId) return;
+    if (!user || !userProfile || hydrated.current || !supa.configured()) return;
     hydrated.current = true;
-    lastHydratedProject.current = activeProjectId;
     (async () => {
       try {
         // Get or create a project
@@ -6230,20 +5643,6 @@ export default function App() {
           setVendors(vendorRows.map(v => ({ id: v.id, name: v.name, type: v.type || "", status: v.status || "Active", contact: v.contact || "", email: v.email || "", phone: v.phone || "", rating: v.rating || 5, notes: v.notes || "" })));
         }
 
-        // Hydrate loan terms
-        const loanRows = await supa.select("loan_terms", `project_id=eq.${pid}&limit=1`);
-        if (loanRows.length > 0) {
-          const l = loanRows[0];
-          setLoan(prev => ({ ...prev, ltc: Number(l.ltc) || prev.ltc, rate: Number(l.rate) || prev.rate, termMonths: l.term_months || prev.termMonths, extensionMonths: l.extension_months || prev.extensionMonths, origFee: Number(l.orig_fee) || prev.origFee, lender: l.lender || prev.lender }));
-        }
-
-        // Hydrate equity terms
-        const equityRows = await supa.select("equity_terms", `project_id=eq.${pid}&limit=1`);
-        if (equityRows.length > 0) {
-          const e = equityRows[0];
-          setEquity(prev => ({ ...prev, gpPct: Number(e.gp_pct) || prev.gpPct, lpPct: Number(e.lp_pct) || prev.lpPct, prefReturn: Number(e.pref_return) || prev.prefReturn, promotePct: Number(e.promote_pct) || prev.promotePct, equityMultipleTarget: Number(e.equity_multiple_target) || prev.equityMultipleTarget, irrTarget: Number(e.irr_target) || prev.irrTarget }));
-        }
-
         // Hydrate DD checklists
         const ddRows = await supa.select("dd_checklists", `project_id=eq.${pid}`);
         if (ddRows.length > 0) {
@@ -6253,7 +5652,7 @@ export default function App() {
         }
       } catch (e) { console.warn("Hydrate from Supabase failed:", e); }
     })();
-  }, [user, userProfile, activeProjectId]);
+  }, [user, userProfile]);
 
   // ─── SYNC: Project → Supabase ──────────────────
   const isAuth = !!(user && userProfile && supa.configured());
@@ -6276,58 +5675,6 @@ export default function App() {
     };
   }, [fin, activeProjectId], isAuth);
 
-
-  // ─── SYNC: Loan terms → Supabase ───────────────
-  useSyncToSupabase("loan_terms", loan, (l) => {
-    if (!activeProjectId) return null;
-    return { project_id: activeProjectId, ltc: l.ltc, rate: l.rate, term_months: l.termMonths, extension_months: l.extensionMonths, orig_fee: l.origFee, lender: l.lender || "" };
-  }, [loan, activeProjectId], isAuth);
-
-  // ─── SYNC: Equity terms → Supabase ─────────────
-  useSyncToSupabase("equity_terms", equity, (e) => {
-    if (!activeProjectId) return null;
-    return { project_id: activeProjectId, gp_pct: e.gpPct, lp_pct: e.lpPct, pref_return: e.prefReturn, promote_pct: e.promotePct, equity_multiple_target: e.equityMultipleTarget, irr_target: e.irrTarget };
-  }, [equity, activeProjectId], isAuth);
-
-  // ─── SYNC: Risks → Supabase (bulk upsert on change) ───
-  const prevRisksRef = useRef(null);
-  useEffect(() => {
-    if (!isAuth || !activeProjectId || !risks) return;
-    const json = JSON.stringify(risks);
-    if (json === prevRisksRef.current) return;
-    prevRisksRef.current = json;
-    const timer = setTimeout(async () => {
-      try {
-        for (const r of risks) {
-          const row = { project_id: activeProjectId, category: r.category, risk: r.risk, likelihood: r.likelihood || "Medium", impact: r.impact || "Medium", severity: r.severity || "Medium", mitigation: r.mitigation || "", status: r.status || "Open" };
-          if (r.id && r.id.length > 10) row.id = r.id;
-          await supa.upsert("risks", row);
-        }
-      } catch (e) { console.warn("Risk sync failed:", e); }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [risks, activeProjectId, isAuth]);
-
-  // ─── SYNC: Permits → Supabase (bulk upsert on change) ─
-  const prevPermitsRef = useRef(null);
-  useEffect(() => {
-    if (!isAuth || !activeProjectId || !permits) return;
-    const json = JSON.stringify(permits);
-    if (json === prevPermitsRef.current) return;
-    prevPermitsRef.current = json;
-    const timer = setTimeout(async () => {
-      try {
-        for (const p of permits) {
-          const row = { project_id: activeProjectId, name: p.name, agency: p.agency || "", duration: p.duration || "", cost: p.cost || "", status: p.status || "Not Started", required: p.required ?? true };
-          if (p.id && p.id.length > 10) row.id = p.id;
-          await supa.upsert("permits", row);
-        }
-      } catch (e) { console.warn("Permit sync failed:", e); }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [permits, activeProjectId, isAuth]);
-
-
   // ─── SYNC: DD Checklists → Supabase ────────────
   const syncDdCheck = useCallback((key, val) => {
     if (!activeProjectId || !supa.configured() || !user) return;
@@ -6341,7 +5688,7 @@ export default function App() {
       completed: val,
       completed_at: val ? new Date().toISOString() : null,
       completed_by: val ? user.id : null,
-    }).catch(() => { });
+    }).catch(() => {});
   }, [activeProjectId, user]);
 
   const setDdChecksSync = useCallback((newChecksOrFn) => {
@@ -6361,7 +5708,7 @@ export default function App() {
     if (!userProfile?.org_id || !supa.configured()) return;
     supa.select("projects", `org_id=eq.${userProfile.org_id}&order=updated_at.desc`)
       .then(rows => setAllProjects(rows || []))
-      .catch(() => { });
+      .catch(() => {});
   }, [userProfile, activeProjectId]);
 
   const createProject = useCallback(async (name, state, address) => {
@@ -6385,9 +5732,9 @@ export default function App() {
     if (!proj) return;
     setActiveProjectId(pid);
     setProject({ name: proj.name || "", address: proj.address || "", jurisdiction: "", state: proj.state || "", municipality: proj.municipality || "" });
-    // Reset hydration flags so the effect re-runs for the new project
     hydrated.current = false;
-    lastHydratedProject.current = null;
+    // Re-trigger hydration
+    setTimeout(() => { hydrated.current = false; }, 100);
   }, [allProjects]);
 
   const authCtx = {
@@ -6428,173 +5775,10 @@ export default function App() {
   };
 
   // ─── INVITE ACCEPTANCE ──────────────────────────
-  const { inviteData, accepting, acceptMsg, acceptInvite, dismissInvite } = useInviteAcceptance(user, userProfile, () => { });
+  const { inviteData, accepting, acceptMsg, acceptInvite, dismissInvite } = useInviteAcceptance(user, userProfile, () => {});
 
 
-  // ─── SITE / ZONING / SURVEY / ENV / UTILITIES ──
-  const DEFAULT_SITE_D = { address: "", apn: "", grossAcres: "", netAcres: "", jurisdiction: "", county: "", state: "", generalPlan: "", existingUse: "", proposedUse: "SFR Subdivision", shape: "Rectangular", frontage: "", access: "", legalDesc: "" };
-  const DEFAULT_ZON_D = { zone: "", overlay: "", du_ac: "", maxHeight: "", minLotSize: "", minLotWidth: "", minLotDepth: "", frontSetback: "", rearSetback: "", sideSetback: "", maxLot: "", parkingRatio: "", entitlementType: "Tentative Map", entitlementStatus: "Not Started", notes: "" };
-  const DEFAULT_SUR_D = { altaOrdered: "No", altaDate: "", surveyorName: "", easements: "", encroachments: "", soilType: "", percRate: "", slopeMax: "", cutFill: "", expansiveSoil: "No", liquefaction: "No" };
-  const DEFAULT_ALTA_D = ["1-Monuments", "2-Address", "3-Flood Zone", "4-Topography", "5-Utilities", "6-Parking", "7-Setbacks", "8-Substantial Features", "11a-Utilities", "13-Adjoiner Names", "16-Wetlands", "17-Gov't Agency", "18-Offsite Easements", "20a-Zoning Label"].map(i => ({ item: i, checked: false }));
-  const DEFAULT_SVCS_D = [
-    { name: "Water", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
-    { name: "Sewer / Sanitary", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
-    { name: "Storm Drain", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
-    { name: "Electric", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
-    { name: "Natural Gas", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
-    { name: "Telecom / Fiber", provider: "", capacity: "", distance: "", connFee: "", status: "Verify" },
-  ];
-  const DEFAULT_ENV_D = { floodZone: "X", firmPanel: "", firmDate: "", bfe: "", loma: "No", phase1: "No", phase1Date: "", rec: "", wetlands: "None Observed", species: "", ceqa: "Class 32 - Infill", mitigation: "", airQuality: "" };
-  const [site, setSite] = useLS("axiom_site", DEFAULT_SITE_D);
-  const [zon, setZon] = useLS("axiom_zoning", DEFAULT_ZON_D);
-  const [sur, setSur] = useLS("axiom_survey", DEFAULT_SUR_D);
-  const [altaA, setAltaA] = useLS("axiom_alta", DEFAULT_ALTA_D);
-  const [svcs, setSvcs] = useLS("axiom_utilities", DEFAULT_SVCS_D);
-  const [env, setEnv] = useLS("axiom_env", DEFAULT_ENV_D);
-
-  // ─── COMPS STATE ────────────────────────────────
-  const [comps, setComps] = useLS("axiom_comps", [
-    { id: "1", address: "123 Oak St", price: 4200000, lots: 28, pricePerLot: 150000, saleDate: "2025-01-15", source: "CoStar", notes: "Arm's length sale" },
-    { id: "2", address: "456 Pine Ave", price: 6800000, lots: 42, pricePerLot: 161905, saleDate: "2024-11-30", source: "MLS", notes: "Similar entitlement status" },
-    { id: "3", address: "789 Elm Dr", price: 3100000, lots: 22, pricePerLot: 140909, saleDate: "2024-09-12", source: "Broker", notes: "Distressed sale" },
-  ]);
-
-  // ─── SITE TASKS STATE ────────────────────────────
-  const [siteTasks, setSiteTasks] = useLS("axiom_site_tasks", [
-    { id: "t1", title: "Mass Grading", start: "2025-03-01", dur: 14, progress: 0, status: "Planned", priority: "High", assignee: "", category: "Grading", due_date: "2025-03-15" },
-    { id: "t2", title: "Wet Utilities", start: "2025-03-15", dur: 21, progress: 0, status: "Planned", priority: "High", assignee: "", category: "Utilities", due_date: "2025-04-05" },
-    { id: "t3", title: "Staking & Survey", start: "2025-02-25", dur: 3, progress: 100, status: "Complete", priority: "Medium", assignee: "", category: "Survey", due_date: "2025-02-28" },
-    { id: "t4", title: "Mobilization", start: "2025-02-20", dur: 5, progress: 80, status: "In Progress", priority: "High", assignee: "", category: "General", due_date: "2025-02-25" },
-  ]);
-
-  // ─── SYNC: site_data → Supabase ─────────────────
-  const prevSiteRef = useRef(null);
-  useEffect(() => {
-    if (!isAuth || !activeProjectId) return;
-    const combined = JSON.stringify({ site, zon, sur, altaA, svcs, env });
-    if (combined === prevSiteRef.current) return;
-    prevSiteRef.current = combined;
-    const timer = setTimeout(async () => {
-      try {
-        await supa.upsert("site_data", {
-          project_id: activeProjectId,
-          address: site.address, apn: site.apn,
-          gross_acres: site.grossAcres ? parseFloat(site.grossAcres) : null,
-          net_acres: site.netAcres ? parseFloat(site.netAcres) : null,
-          jurisdiction: site.jurisdiction, county: site.county, state: site.state,
-          general_plan: site.generalPlan, existing_use: site.existingUse,
-          proposed_use: site.proposedUse, shape: site.shape, frontage: site.frontage,
-          access: site.access, legal_desc: site.legalDesc,
-          zone: zon.zone, overlay: zon.overlay, du_ac: zon.du_ac,
-          max_height: zon.maxHeight, min_lot_size: zon.minLotSize,
-          min_lot_width: zon.minLotWidth, min_lot_depth: zon.minLotDepth,
-          front_setback: zon.frontSetback, rear_setback: zon.rearSetback,
-          side_setback: zon.sideSetback, max_lot: zon.maxLot,
-          parking_ratio: zon.parkingRatio, entitlement_type: zon.entitlementType,
-          entitlement_status: zon.entitlementStatus, zoning_notes: zon.notes,
-          alta_ordered: sur.altaOrdered, alta_date: sur.altaDate,
-          surveyor_name: sur.surveyorName, easements: sur.easements,
-          encroachments: sur.encroachments, soil_type: sur.soilType,
-          perc_rate: sur.percRate, slope_max: sur.slopeMax,
-          cut_fill: sur.cutFill, expansive_soil: sur.expansiveSoil,
-          liquefaction: sur.liquefaction,
-          flood_zone: env.floodZone, firm_panel: env.firmPanel,
-          firm_date: env.firmDate, bfe: env.bfe, loma: env.loma,
-          phase1: env.phase1, phase1_date: env.phase1Date, rec: env.rec,
-          wetlands: env.wetlands, species: env.species,
-          ceqa: env.ceqa, mitigation: env.mitigation, air_quality: env.airQuality,
-          alta_items: altaA, utilities: svcs,
-          updated_at: new Date().toISOString(),
-        });
-      } catch (e) { console.warn("Site data sync failed:", e); }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [site, zon, sur, altaA, svcs, env, activeProjectId, isAuth]);
-
-  // ─── SYNC: comps → Supabase ─────────────────────
-  const prevCompsRef = useRef(null);
-  useEffect(() => {
-    if (!isAuth || !activeProjectId || !comps?.length) return;
-    const json = JSON.stringify(comps);
-    if (json === prevCompsRef.current) return;
-    prevCompsRef.current = json;
-    const timer = setTimeout(async () => {
-      try {
-        for (const c of comps) {
-          const row = {
-            org_id: userProfile.org_id, project_id: activeProjectId,
-            address: c.address || "", price: parseFloat(c.price) || 0,
-            lots: parseInt(c.lots) || 0,
-            price_per_lot: parseFloat(c.pricePerLot || c.price_per_lot) || 0,
-            sale_date: c.saleDate || c.sale_date || "",
-            source: c.source || "", notes: c.notes || "",
-            updated_at: new Date().toISOString(),
-          };
-          if (c._supaId) row.id = c._supaId;
-          await supa.upsert("comps", row);
-        }
-      } catch (e) { console.warn("Comps sync failed:", e); }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [comps, activeProjectId, isAuth]);
-
-  // ─── SYNC: siteTasks → Supabase ─────────────────
-  const prevTasksRef = useRef(null);
-  useEffect(() => {
-    if (!isAuth || !activeProjectId || !siteTasks?.length) return;
-    const json = JSON.stringify(siteTasks);
-    if (json === prevTasksRef.current) return;
-    prevTasksRef.current = json;
-    const timer = setTimeout(async () => {
-      try {
-        for (const t of siteTasks) {
-          const row = {
-            org_id: userProfile.org_id, project_id: activeProjectId,
-            title: t.title || t.name || "Task",
-            status: t.status || "Planned",
-            priority: t.priority || "Medium",
-            assignee: t.assignee || "",
-            due_date: t.due_date || t.start || "",
-            category: t.category || "General",
-            updated_at: new Date().toISOString(),
-          };
-          if (t._supaId) row.id = t._supaId;
-          await supa.upsert("site_tasks", row);
-        }
-      } catch (e) { console.warn("Site tasks sync failed:", e); }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [siteTasks, activeProjectId, isAuth]);
-
-  // ─── HYDRATE: site_data + comps + siteTasks ──────
-  const siteHydrated = useRef(false);
-  useEffect(() => { siteHydrated.current = false; }, [activeProjectId]);
-  useEffect(() => {
-    if (!isAuth || !activeProjectId || siteHydrated.current) return;
-    siteHydrated.current = true;
-    (async () => {
-      try {
-        const [siteRows, compRows, taskRows] = await Promise.all([
-          supa.select("site_data", `project_id=eq.${activeProjectId}&limit=1`),
-          supa.select("comps", `project_id=eq.${activeProjectId}&order=created_at.desc`),
-          supa.select("site_tasks", `project_id=eq.${activeProjectId}&order=created_at.asc`),
-        ]);
-        if (siteRows.length > 0) {
-          const s = siteRows[0];
-          if (s.address || s.apn) setSite(p => ({ ...p, address: s.address || p.address, apn: s.apn || p.apn, grossAcres: s.gross_acres || p.grossAcres, netAcres: s.net_acres || p.netAcres, jurisdiction: s.jurisdiction || p.jurisdiction, county: s.county || p.county, state: s.state || p.state, generalPlan: s.general_plan || p.generalPlan, existingUse: s.existing_use || p.existingUse, proposedUse: s.proposed_use || p.proposedUse, shape: s.shape || p.shape, frontage: s.frontage || p.frontage, access: s.access || p.access, legalDesc: s.legal_desc || p.legalDesc }));
-          if (s.zone) setZon(p => ({ ...p, zone: s.zone || p.zone, overlay: s.overlay || p.overlay, du_ac: s.du_ac || p.du_ac, maxHeight: s.max_height || p.maxHeight, minLotSize: s.min_lot_size || p.minLotSize, minLotWidth: s.min_lot_width || p.minLotWidth, minLotDepth: s.min_lot_depth || p.minLotDepth, frontSetback: s.front_setback || p.frontSetback, rearSetback: s.rear_setback || p.rearSetback, sideSetback: s.side_setback || p.sideSetback, maxLot: s.max_lot || p.maxLot, parkingRatio: s.parking_ratio || p.parkingRatio, entitlementType: s.entitlement_type || p.entitlementType, entitlementStatus: s.entitlement_status || p.entitlementStatus, notes: s.zoning_notes || p.notes }));
-          if (s.alta_ordered) setSur(p => ({ ...p, altaOrdered: s.alta_ordered || p.altaOrdered, altaDate: s.alta_date || p.altaDate, surveyorName: s.surveyor_name || p.surveyorName, easements: s.easements || p.easements, encroachments: s.encroachments || p.encroachments, soilType: s.soil_type || p.soilType, percRate: s.perc_rate || p.percRate, slopeMax: s.slope_max || p.slopeMax, cutFill: s.cut_fill || p.cutFill, expansiveSoil: s.expansive_soil || p.expansiveSoil, liquefaction: s.liquefaction || p.liquefaction }));
-          if (s.flood_zone) setEnv(p => ({ ...p, floodZone: s.flood_zone || p.floodZone, firmPanel: s.firm_panel || p.firmPanel, firmDate: s.firm_date || p.firmDate, bfe: s.bfe || p.bfe, loma: s.loma || p.loma, phase1: s.phase1 || p.phase1, phase1Date: s.phase1_date || p.phase1Date, rec: s.rec || p.rec, wetlands: s.wetlands || p.wetlands, species: s.species || p.species, ceqa: s.ceqa || p.ceqa, mitigation: s.mitigation || p.mitigation, airQuality: s.air_quality || p.airQuality }));
-          if (s.alta_items?.length) setAltaA(s.alta_items);
-          if (s.utilities?.length) setSvcs(s.utilities);
-        }
-        if (compRows.length > 0) setComps(compRows.map(c => ({ id: c.id, _supaId: c.id, address: c.address || "", price: Number(c.price) || 0, lots: c.lots || 0, pricePerLot: Number(c.price_per_lot) || 0, saleDate: c.sale_date || "", source: c.source || "", notes: c.notes || "" })));
-        if (taskRows.length > 0) setSiteTasks(taskRows.map(t => ({ id: t.id, _supaId: t.id, title: t.title, status: t.status || "Planned", priority: t.priority || "Medium", assignee: t.assignee || "", due_date: t.due_date || "", category: t.category || "General", progress: t.status === "Complete" ? 100 : t.status === "In Progress" ? 50 : 0, start: t.due_date || "", dur: 7 })));
-      } catch (e) { console.warn("Site/comps/tasks hydration failed:", e); }
-    })();
-  }, [activeProjectId, isAuth]);
-
-  const ctx = { project, setProject, fin, setFin, risks, setRisks, permits, setPermits, ddChecks, setDdChecks: setDdChecksSync, vendors, setVendors, loan, setLoan, equity, setEquity, activeProjectId, setChartSel, site, setSite, zon, setZon, sur, setSur, altaA, setAltaA, svcs, setSvcs, env, setEnv, comps, setComps, siteTasks, setSiteTasks, ...authCtx };
+  const ctx = { project, setProject, fin, setFin, risks, setRisks, permits, setPermits, ddChecks, setDdChecks: setDdChecksSync, vendors, setVendors, loan, setLoan, equity, setEquity, activeProjectId, setChartSel, ...authCtx };
   const TITLE = {
     dashboard: "Command Center", connectors: "Connectors & APIs",
     network: "Professional Network",
@@ -6621,104 +5805,103 @@ export default function App() {
   };
   return (
     <ErrorBoundary>
-      <AuthCtx.Provider value={authCtx}>
-        <TierProvider userProfile={userProfile}>
-          <Ctx.Provider value={ctx}>
-            <PremiereStyles />
-            {/* Show login gate if Supabase configured but not logged in */}
-            {supa.configured() && !user && !authLoading ? (
-              <AuthGate />
-            ) : user && userProfile && !userProfile.onboarded && !allProjects.length ? (
-              <OnboardingWizard onComplete={async (orgName, state) => {
-                // Create first project for the user
-                await createProject(`${orgName} - First Project`, state, "");
-                // Mark as onboarded in DB
-                if (supa.configured()) {
-                  supa.update("organizations", { id: userProfile.org_id }, { name: orgName }).catch(() => { });
-                  supa.update("user_profiles", { id: user.id }, { onboarded: true }).catch(() => { });
-                }
-              }} />
-            ) : (
-              <div style={S.app}>
-                <Sidebar active={active} setActive={setActive} collapsed={collapsed} setCollapsed={setCollapsed} />
-                <div style={{ ...S.main, width: collapsed ? "calc(100% - 64px)" : "calc(100% - 218px)", transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}>
-                  <div style={S.bar}>
-                    <div style={{ fontSize: 14, color: C.gold, letterSpacing: 2, flex: 1, fontWeight: 600 }}>{TITLE[active]}</div>
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <button style={{ ...S.btn(), padding: "4px 8px", fontSize: 10 }} onClick={() => setLightMode(!lightMode)} title="Toggle Theme">
-                        {lightMode ? "🌙 Dark" : "☀️ Light"}
-                      </button>
-                      {user && <span style={{ fontSize: 9, color: C.green, background: "color-mix(in srgb, var(--c-green) 12%, transparent)", padding: "3px 8px", borderRadius: 4 }}>● Synced</span>}
-                      {userProfile?.subscription_tier && userProfile.subscription_tier !== "free" && userProfile.subscription_tier !== "FREE" && (
-                        <span style={{ fontSize: 9, color: C.gold, background: "color-mix(in srgb, var(--c-gold) 12%, transparent)", padding: "3px 8px", borderRadius: 4, letterSpacing: 1, textTransform: "uppercase" }}>{TIER_NAMES[userProfile.subscription_tier] || userProfile.subscription_tier}</span>
-                      )}
-                      {/* Multi-project switcher */}
-                      {user && allProjects.length > 0 ? (
-                        <select
-                          style={{ ...S.sel, maxWidth: 160, padding: "4px 6px", fontSize: 10, color: C.gold }}
-                          value={activeProjectId || ""}
-                          onChange={e => { if (e.target.value === "__new__") { const n = prompt("New project name:"); if (n) createProject(n, project.state || "FL", ""); } else if (e.target.value) switchProject(e.target.value); }}
-                          title="Switch Project"
-                        >
-                          {allProjects.map(p => <option key={p.id} value={p.id}>{p.name || "Untitled"}</option>)}
-                          <option value="__new__">+ New Project</option>
-                        </select>
-                      ) : (
-                        <input style={{ ...S.inp, width: 160, padding: "4px 8px", fontSize: 10 }} value={project.name} onChange={e => setProject({ ...project, name: e.target.value })} placeholder="Project Name" />
-                      )}
-                      <input style={{ ...S.inp, width: 160, padding: "4px 8px", fontSize: 10 }} value={project.address} onChange={e => setProject({ ...project, address: e.target.value })} placeholder="Address / APN" />
-                      <select style={{ ...S.sel, width: 100, padding: "4px 6px", fontSize: 10, color: project.state ? C.gold : C.dim }} value={project.state} onChange={e => setProject({ ...project, state: e.target.value })}>{US_STATES.map(s => <option key={s} value={s}>{s || "State"}</option>)}</select>
-                      <input style={{ ...S.inp, width: 130, padding: "4px 8px", fontSize: 10 }} value={project.municipality} onChange={e => setProject({ ...project, municipality: e.target.value })} placeholder="City / County" />
-                      {user && <button style={{ ...S.btn(), padding: "4px 8px", fontSize: 9, color: C.dim }} onClick={authCtx.logout} title="Logout">⏻</button>}
-                      <NotifBell setActive={setActive} />
-                    </div>
-                  </div>
-                  {(() => {
-                    const keys = JSON.parse(localStorage.getItem("axiom_api_keys") || "{}");
-                    const hasProxy = !!keys.proxyUrl;
-                    const hasAnyKey = !!(keys.anthropic || keys.openai || keys.groq || keys.together);
-                    if (!hasProxy && hasAnyKey) return (
-                      <div style={{ background: "color-mix(in srgb, var(--c-red) 12%, transparent)", border: `1px solid color-mix(in srgb, var(--c-red) 30%, transparent)`, padding: "6px 16px", fontSize: 10, color: C.red, display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontWeight: 700 }}>⚠ DEV MODE</span>
-                        <span style={{ color: C.muted }}>API keys are exposed in the browser. Configure a proxy URL in Settings for production use.</span>
-                        <button style={{ ...S.btn(), padding: "2px 8px", fontSize: 9, marginLeft: "auto", borderColor: C.red, color: C.red }} onClick={() => setActive("settings")}>Fix Now</button>
-                      </div>
-                    );
-                    return null;
-                  })()}
-                  <div style={S.cnt}>
-                    {SECTIONS[active] || <div style={{ color: C.dim, padding: 40, textAlign: "center" }}>Section not found.</div>}
-                  </div>
-                </div>
+    <AuthCtx.Provider value={authCtx}>
+    <TierProvider userProfile={userProfile}>
+    <Ctx.Provider value={ctx}>
+      <PremiereStyles />
+      {/* Show login gate if Supabase configured but not logged in */}
+      {supa.configured() && !user && !authLoading ? (
+        <AuthGate />
+      ) : user && userProfile && !userProfile.onboarded && !allProjects.length ? (
+        <OnboardingWizard onComplete={async (orgName, state) => {
+          // Create first project for the user
+          await createProject(`${orgName} - First Project`, state, "");
+          // Mark as onboarded (optimistic)
+          if (supa.configured()) {
+            supa.update("organizations", { id: userProfile.org_id }, { name: orgName }).catch(() => {});
+          }
+        }} />
+      ) : (
+      <div style={S.app}>
+        <Sidebar active={active} setActive={setActive} collapsed={collapsed} setCollapsed={setCollapsed} />
+        <div style={{ ...S.main, width: collapsed ? "calc(100% - 64px)" : "calc(100% - 218px)", transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+          <div style={S.bar}>
+            <div style={{ fontSize: 14, color: C.gold, letterSpacing: 2, flex: 1, fontWeight: 600 }}>{TITLE[active]}</div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <button style={{ ...S.btn(), padding: "4px 8px", fontSize: 10 }} onClick={() => setLightMode(!lightMode)} title="Toggle Theme">
+                {lightMode ? "🌙 Dark" : "☀️ Light"}
+              </button>
+              {user && <span style={{ fontSize: 9, color: C.green, background: "color-mix(in srgb, var(--c-green) 12%, transparent)", padding: "3px 8px", borderRadius: 4 }}>● Synced</span>}
+              {userProfile?.subscription_tier && userProfile.subscription_tier !== "free" && userProfile.subscription_tier !== "FREE" && (
+                <span style={{ fontSize: 9, color: C.gold, background: "color-mix(in srgb, var(--c-gold) 12%, transparent)", padding: "3px 8px", borderRadius: 4, letterSpacing: 1, textTransform: "uppercase" }}>{TIER_NAMES[userProfile.subscription_tier] || userProfile.subscription_tier}</span>
+              )}
+              {/* Multi-project switcher */}
+              {user && allProjects.length > 0 ? (
+                <select
+                  style={{ ...S.sel, maxWidth: 160, padding: "4px 6px", fontSize: 10, color: C.gold }}
+                  value={activeProjectId || ""}
+                  onChange={e => { if (e.target.value === "__new__") { const n = prompt("New project name:"); if (n) createProject(n, project.state || "FL", ""); } else if (e.target.value) switchProject(e.target.value); }}
+                  title="Switch Project"
+                >
+                  {allProjects.map(p => <option key={p.id} value={p.id}>{p.name || "Untitled"}</option>)}
+                  <option value="__new__">+ New Project</option>
+                </select>
+              ) : (
+                <input style={{ ...S.inp, width: 160, padding: "4px 8px", fontSize: 10 }} value={project.name} onChange={e => setProject({ ...project, name: e.target.value })} placeholder="Project Name" />
+              )}
+              <input style={{ ...S.inp, width: 160, padding: "4px 8px", fontSize: 10 }} value={project.address} onChange={e => setProject({ ...project, address: e.target.value })} placeholder="Address / APN" />
+              <select style={{ ...S.sel, width: 100, padding: "4px 6px", fontSize: 10, color: project.state ? C.gold : C.dim }} value={project.state} onChange={e => setProject({ ...project, state: e.target.value })}>{US_STATES.map(s => <option key={s} value={s}>{s || "State"}</option>)}</select>
+              <input style={{ ...S.inp, width: 130, padding: "4px 8px", fontSize: 10 }} value={project.municipality} onChange={e => setProject({ ...project, municipality: e.target.value })} placeholder="City / County" />
+              {user && <button style={{ ...S.btn(), padding: "4px 8px", fontSize: 9, color: C.dim }} onClick={authCtx.logout} title="Logout">⏻</button>}
+              <NotifBell setActive={setActive} />
+            </div>
+          </div>
+          {(() => {
+            const keys = JSON.parse(localStorage.getItem("axiom_api_keys") || "{}");
+            const hasProxy = !!keys.proxyUrl;
+            const hasAnyKey = !!(keys.anthropic || keys.openai || keys.groq || keys.together);
+            if (!hasProxy && hasAnyKey) return (
+              <div style={{ background: "color-mix(in srgb, var(--c-red) 12%, transparent)", border: `1px solid color-mix(in srgb, var(--c-red) 30%, transparent)`, padding: "6px 16px", fontSize: 10, color: C.red, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 700 }}>⚠ DEV MODE</span>
+                <span style={{ color: C.muted }}>API keys are exposed in the browser. Configure a proxy URL in Settings for production use.</span>
+                <button style={{ ...S.btn(), padding: "2px 8px", fontSize: 9, marginLeft: "auto", borderColor: C.red, color: C.red }} onClick={() => setActive("settings")}>Fix Now</button>
               </div>
+            );
+            return null;
+          })()}
+          <div style={S.cnt}>
+            {SECTIONS[active] || <div style={{ color: C.dim, padding: 40, textAlign: "center" }}>Section not found.</div>}
+          </div>
+        </div>
+      </div>
+      )}
+      <DataExplorerModal data={chartSel} onClose={() => setChartSel(null)} />
+      <CommandKModal isOpen={cmdKOpen} onClose={() => setCmdKOpen(false)} onSelect={(id) => setActive(id)} />
+      {/* Invite acceptance modal */}
+      {inviteData && user && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 420, background: "var(--c-bg2)", borderRadius: 12, border: "1px solid var(--c-gold)44", padding: 36, textAlign: "center" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🤝</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--c-text)", marginBottom: 8 }}>You've been invited!</div>
+            <div style={{ fontSize: 13, color: "var(--c-dim)", marginBottom: 24 }}>
+              Join the organization as <strong style={{ color: "var(--c-gold)" }}>{inviteData.role}</strong>
+            </div>
+            {acceptMsg && (
+              <div style={{ fontSize: 12, color: acceptMsg.startsWith("✓") ? "var(--c-green)" : "var(--c-red)", padding: "8px 12px", background: "var(--c-bg3)", borderRadius: 4, marginBottom: 16 }}>{acceptMsg}</div>
             )}
-            <DataExplorerModal data={chartSel} onClose={() => setChartSel(null)} />
-            <CommandKModal isOpen={cmdKOpen} onClose={() => setCmdKOpen(false)} onSelect={(id) => setActive(id)} />
-            {/* Invite acceptance modal */}
-            {inviteData && user && (
-              <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ width: 420, background: "var(--c-bg2)", borderRadius: 12, border: "1px solid var(--c-gold)44", padding: 36, textAlign: "center" }}>
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>🤝</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: "var(--c-text)", marginBottom: 8 }}>You've been invited!</div>
-                  <div style={{ fontSize: 13, color: "var(--c-dim)", marginBottom: 24 }}>
-                    Join the organization as <strong style={{ color: "var(--c-gold)" }}>{inviteData.role}</strong>
-                  </div>
-                  {acceptMsg && (
-                    <div style={{ fontSize: 12, color: acceptMsg.startsWith("✓") ? "var(--c-green)" : "var(--c-red)", padding: "8px 12px", background: "var(--c-bg3)", borderRadius: 4, marginBottom: 16 }}>{acceptMsg}</div>
-                  )}
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button style={{ ...S.btn(), flex: 1, padding: "10px 0" }} onClick={dismissInvite} disabled={accepting}>Decline</button>
-                    <button style={{ ...S.btn("gold"), flex: 2, padding: "10px 0", opacity: accepting ? 0.6 : 1 }} onClick={acceptInvite} disabled={accepting}>
-                      {accepting ? "Joining..." : "Accept & Join →"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button style={{ ...S.btn(), flex: 1, padding: "10px 0" }} onClick={dismissInvite} disabled={accepting}>Decline</button>
+              <button style={{ ...S.btn("gold"), flex: 2, padding: "10px 0", opacity: accepting ? 0.6 : 1 }} onClick={acceptInvite} disabled={accepting}>
+                {accepting ? "Joining..." : "Accept & Join →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-          </Ctx.Provider>
-        </TierProvider>
-      </AuthCtx.Provider>
+    </Ctx.Provider>
+    </TierProvider>
+    </AuthCtx.Provider>
     </ErrorBoundary>
   );
 }
@@ -6746,7 +5929,7 @@ function ShareDealButton() {
 
   const copyLink = () => {
     if (!shareUrl) return;
-    navigator.clipboard.writeText(shareUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }).catch(() => { });
+    navigator.clipboard.writeText(shareUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }).catch(() => {});
   };
 
   return (
@@ -6917,7 +6100,7 @@ function useInviteAcceptance(user, userProfile, onOrgJoined) {
     if (!inviteToken || !supa.configured()) return;
     supa.select("team_invites", `token=eq.${inviteToken}&status=eq.pending&select=*`)
       .then(rows => { if (rows.length > 0) setInviteData(rows[0]); })
-      .catch(() => { });
+      .catch(() => {});
   }, [inviteToken]);
 
   const acceptInvite = useCallback(async () => {
@@ -7055,7 +6238,6 @@ function AuthGate() {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
-  const [tosAccepted, setTosAccepted] = useState(false);
   const [supaUrl, setSupaUrl] = useLS("axiom_supa_url", SUPA_URL);
   const [supaKey, setSupaKey] = useLS("axiom_supa_key", SUPA_KEY);
   const [showConfig, setShowConfig] = useState(!SUPA_URL && !IS_PROD_CONFIGURED);
@@ -7064,11 +6246,7 @@ function AuthGate() {
   const handle = async () => {
     setErr(""); setLoading(true);
     try {
-      if (mode === "reset") {
-        const res = await fetch(`${supa.url}/auth/v1/recover`, { method: "POST", headers: { "Content-Type": "application/json", "apikey": supa.key }, body: JSON.stringify({ email }) });
-        if (res.ok) setErr("✓ Check your email for a reset link.");
-        else setErr("Failed to send reset email.");
-      } else if (mode === "login") await auth.login(email, pw);
+      if (mode === "login") await auth.login(email, pw);
       else {
         const data = await auth.signup(email, pw);
         if (!data.user) setErr("Check your email for a confirmation link.");
@@ -7112,8 +6290,7 @@ function AuthGate() {
             <div style={{ display: "flex", gap: 0, marginBottom: 20 }}>
               {["login", "signup"].map(m => (
                 <button key={m} onClick={() => { setMode(m); setErr(""); }}
-                  style={{
-                    flex: 1, padding: "8px 0", fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", cursor: "pointer",
+                  style={{ flex: 1, padding: "8px 0", fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", cursor: "pointer",
                     background: mode === m ? "var(--c-bg3)" : "transparent", color: mode === m ? "var(--c-gold)" : "var(--c-dim)",
                     border: `1px solid ${mode === m ? "var(--c-gold)" : "var(--c-border)"}`, borderRadius: m === "login" ? "6px 0 0 6px" : "0 6px 6px 0",
                   }}>{m}</button>
@@ -7123,36 +6300,15 @@ function AuthGate() {
               <div style={{ fontSize: 10, color: "var(--c-dim)", marginBottom: 4 }}>Email</div>
               <input style={{ ...S.inp, width: "100%" }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" onKeyDown={e => e.key === "Enter" && handle()} />
             </div>
-            {mode !== "reset" && <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 10, color: "var(--c-dim)", marginBottom: 4 }}>Password</div>
               <input style={{ ...S.inp, width: "100%" }} type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === "Enter" && handle()} />
-            </div>}
-            {err && <div style={{ fontSize: 10, color: err.startsWith("✓") ? "var(--c-green)" : "var(--c-red)", marginBottom: 12, padding: "6px 10px", background: err.startsWith("✓") ? "color-mix(in srgb, var(--c-green) 10%, transparent)" : "color-mix(in srgb, var(--c-red) 10%, transparent)", borderRadius: 4 }}>{err}</div>}
-            {mode === "signup" && (
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 14, padding: "10px 12px", background: "var(--c-bg3)", borderRadius: 6, border: `1px solid ${tosAccepted ? "var(--c-green)" : "var(--c-border)"}`, transition: "border-color 0.2s" }}>
-                <input
-                  id="tos-checkbox"
-                  type="checkbox"
-                  checked={tosAccepted}
-                  onChange={e => setTosAccepted(e.target.checked)}
-                  style={{ marginTop: 2, accentColor: "var(--c-gold)", flexShrink: 0, cursor: "pointer", width: 14, height: 14 }}
-                />
-                <label htmlFor="tos-checkbox" style={{ fontSize: 10, color: "var(--c-sub)", lineHeight: 1.5, cursor: "pointer" }}>
-                  I agree to the{" "}
-                  <a href="https://buildaxiom.dev/terms" target="_blank" rel="noopener noreferrer" style={{ color: "var(--c-gold)", textDecoration: "underline" }}>Terms of Service</a>
-                  {" "}and{" "}
-                  <a href="https://buildaxiom.dev/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "var(--c-gold)", textDecoration: "underline" }}>Privacy Policy</a>
-                </label>
-              </div>
-            )}
-            <button style={{ ...S.btn("gold"), width: "100%", opacity: (loading || (mode === "signup" && !tosAccepted)) ? 0.5 : 1 }} onClick={handle} disabled={loading || (mode === "signup" && !tosAccepted)}>
-              {loading ? "..." : mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link"}
-            </button>
-            <div style={{ textAlign: "center", marginTop: 12, display: "flex", justifyContent: "center", gap: 16 }}>
-              {mode === "login" && <button style={{ fontSize: 10, color: "var(--c-dim)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }} onClick={() => { setMode("reset"); setErr(""); }}>Forgot password?</button>}
-              {mode === "reset" && <button style={{ fontSize: 10, color: "var(--c-dim)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }} onClick={() => { setMode("login"); setErr(""); }}>Back to login</button>}
             </div>
-            <div style={{ textAlign: "center", marginTop: 8 }}>
+            {err && <div style={{ fontSize: 10, color: "var(--c-red)", marginBottom: 12, padding: "6px 10px", background: "color-mix(in srgb, var(--c-red) 10%, transparent)", borderRadius: 4 }}>{err}</div>}
+            <button style={{ ...S.btn("gold"), width: "100%", opacity: loading ? 0.6 : 1 }} onClick={handle} disabled={loading}>
+              {loading ? "..." : mode === "login" ? "Sign In" : "Create Account"}
+            </button>
+            <div style={{ textAlign: "center", marginTop: 16 }}>
               <button style={{ fontSize: 10, color: "var(--c-dim)", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }} onClick={() => setShowConfig(true)}>
                 Configure Supabase
               </button>

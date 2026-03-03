@@ -95,6 +95,28 @@ export const PricingPage: React.FC = () => {
                 </p>
             </div>
 
+            {/* AXIOM ENTERPRISE: API Passthrough Metered Usage Visualization */}
+            {profile?.subscription_tier === 'PRO_PLUS' && (
+                <div className="max-w-3xl mx-auto mt-10 bg-white shadow sm:rounded-lg overflow-hidden border border-slate-200">
+                    <div className="px-4 py-5 sm:p-6">
+                        <h3 className="text-lg leading-6 font-medium text-slate-900">API Compute Usage (Current Cycle)</h3>
+                        <div className="mt-2 max-w-xl text-sm text-slate-500">
+                            <p>You are on the Pro+ Enterprise tier. Your base compute is included, but high-volume inferences and data fetches are passed through at a 15% markup. Your monthly hard-cap is $500.00.</p>
+                        </div>
+                        <div className="mt-5">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-slate-700">Estimated Current Spend</span>
+                                <span className="text-sm font-semibold text-emerald-600">$142.50 / $500.00</span>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-2.5 dark:bg-slate-700">
+                                <div className="bg-emerald-600 h-2.5 rounded-full" style={{ width: '28.5%' }}></div>
+                            </div>
+                            <p className="mt-2 text-xs text-slate-400">Data delayed by up to 15 minutes. Final billing handled via Stripe.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6 lg:max-w-7xl lg:mx-auto lg:grid-cols-3 xl:gap-8">
                 {TIERS.map((tier) => (
                     <div key={tier.name} className={`border rounded-lg shadow-sm divide-y divide-gray-200 bg-white flex flex-col ${tier.recommended ? 'ring-2 ring-emerald-500 relative' : 'border-slate-200'}`}>

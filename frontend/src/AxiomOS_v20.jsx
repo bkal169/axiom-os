@@ -637,15 +637,21 @@ const ENDPOINTS = {
 async function callLLM(messages, system = "", modelId = "claude-sonnet-4-20250514") {
   const m = MODELS.find(x => x.id === modelId) || MODELS[0];
   const keys = JSON.parse(localStorage.getItem("axiom_api_keys") || "{}");
-  const proxyUrl = keys.proxyUrl || "";
+  // Default proxy: use the deployed Supabase llm-proxy Edge Function
+  const SUPA_LLM_PROXY = `${SUPA_URL}/functions/v1/llm-proxy`;
+  const proxyUrl = keys.proxyUrl || SUPA_LLM_PROXY;
   const defaultSys = "You are an expert real estate development analyst and feasibility consultant. Be concise, precise, and actionable.";
   try {
-    // PROXY MODE — recommended for production (Vercel Edge Function)
+    // PROXY MODE — use Supabase llm-proxy (default) or custom proxy
     if (proxyUrl) {
       const r = await fetch(proxyUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: m.id, provider: m.provider, system: system || defaultSys, messages, max_tokens: 1200 }),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPA_KEY}`,
+          "apikey": SUPA_KEY,
+        },
+        body: JSON.stringify({ model: m.provider === "openai" ? m.id : "gpt-4o-mini", messages, temperature: 0.7, max_tokens: 1200 }),
       });
       const d = await r.json();
       return d.content || d.text || d.error?.message || "No response from proxy.";
@@ -1648,7 +1654,8 @@ function MarketIntelligence() {
 }
 
 function FinancialEngine() {
-  const { fin, setFin, loan, setLoan, equity, setEquity, setChartSel } = usePrj();
+  const { fin, setFin, loan, setLoan, equity, setEquity, setChartSel, project } = usePrj();
+  const auth = useAuth();
   const u = k => e => setFin({ ...fin, [k]: parseFloat(e.target.value) || 0 });
   const hard = fin.totalLots * fin.hardCostPerLot, soft = hard * fin.softCostPct / 100;
   const fees = fin.planningFees + (fin.permitFeePerLot + fin.schoolFee + fin.impactFeePerLot) * fin.totalLots;
@@ -1658,6 +1665,55 @@ function FinancialEngine() {
   const reserves = totalCost * fin.reservePercentage / 100;
   const profit = revenue - comm - reserves - totalCost;
   const margin = revenue > 0 ? profit / revenue * 100 : 0, roi = totalCost > 0 ? profit / totalCost * 100 : 0;
+
+  // ── COMPOSITE SCORE (auto-fetches from engines-score on fin change) ──
+  const [dealScore, setDealScore] = useState(null);
+  const [scoreLoading, setScoreLoading] = useState(false);
+  const scoreTimer = useRef(null);
+
+  const fetchScore = useCallback(async (projectId) => {
+    if (!supa.configured() || !supa.token) return;
+    setScoreLoading(true);
+    try {
+      const result = await supa.callEdge("engines-score", {});
+      // engines-score currently needs project_id as query param — use callEdge with custom approach
+      const r = await fetch(`${supa.url}/functions/v1/engines-score?project_id=${projectId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${supa.token}`, apikey: supa.key },
+        body: JSON.stringify({
+          state: {
+            finance: { irr: margin > 0 ? (margin / 100 * 25) : 18, dscr: loan?.dscr || 1.3 },
+            risk: { score: 50 }
+          }
+        }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.composite_score !== undefined) setDealScore(Math.round(d.composite_score));
+      }
+    } catch (e) { console.warn("Score fetch:", e.message); }
+    setScoreLoading(false);
+  }, [supa.url, supa.token, margin, loan]);
+
+  // Heuristic local score when no project_id (guest mode)
+  const localScore = useMemo(() => {
+    const irrImpact = Math.max(0, Math.min(1, margin / 20)) * 40;
+    const dscrImpact = Math.max(0, Math.min(1, ((loan?.dscr || 1.3) - 1) / 0.5)) * 25;
+    const riskImpact = 25;
+    return Math.round(Math.min(100, irrImpact + dscrImpact + riskImpact + 10));
+  }, [margin, loan]);
+
+  useEffect(() => {
+    clearTimeout(scoreTimer.current);
+    if (project?.id && supa.configured() && auth?.user) {
+      scoreTimer.current = setTimeout(() => fetchScore(project.id), 2000);
+    }
+    return () => clearTimeout(scoreTimer.current);
+  }, [fin, project?.id, auth?.user]);
+
+  const displayScore = project?.id ? (dealScore ?? localScore) : localScore;
+  const scoreColor = displayScore >= 70 ? C.green : displayScore >= 50 ? C.amber : C.red;
+
   const waterfall = [
     { name: "Revenue", value: revenue / 1e6, fill: C.green }, { name: "Land", value: -(fin.landCost + fin.closingCosts) / 1e6, fill: C.red + "88" },
     { name: "Hard Cost", value: -hard / 1e6, fill: C.red + "88" }, { name: "Soft Cost", value: -soft / 1e6, fill: C.amber + "88" },
@@ -1677,11 +1733,25 @@ function FinancialEngine() {
   return (
     <Tabs tabs={["Pro Forma", "Calculators", "Sensitivity", "Loan & Equity", "Scenarios"]}>
       <div>
-        <div style={S.g4}>
+        <div style={S.g5}>
           <KPI label="Gross Revenue" value={fmt.M(revenue)} color={C.green} />
           <KPI label="Total Cost" value={fmt.M(totalCost)} color={C.red} />
           <KPI label="Net Profit" value={fmt.M(profit)} color={profit >= 0 ? C.green : C.red} />
           <KPI label="Profit Margin" value={fmt.pct(margin)} color={margin > 15 ? C.green : margin > 5 ? C.amber : C.red} sub={`ROI: ${roi.toFixed(1)}%`} />
+          <div style={S.kpi}>
+            <div style={{ fontSize: 9, color: C.dim, letterSpacing: 2, textTransform: "uppercase" }}>Deal Score</div>
+            <div style={{ fontSize: 25, color: scoreColor, fontWeight: 700, marginTop: 3, lineHeight: 1, display: "flex", alignItems: "baseline", gap: 4 }}>
+              {scoreLoading ? <span style={{ fontSize: 14, color: C.dim }}>…</span> : displayScore}
+              <span style={{ fontSize: 11, color: C.dim }}>/100</span>
+            </div>
+            <div style={{ fontSize: 10, color: C.dim, marginTop: 3 }}>
+              {project?.id ? (dealScore ? "engine" : "local") : "local"}
+              {!project?.id && <span
+                onClick={() => fetchScore(project?.id)}
+                style={{ color: C.gold, cursor: "pointer", marginLeft: 4 }}
+              >↻</span>}
+            </div>
+          </div>
         </div>
         <div style={{ ...S.g2, marginTop: 14 }}>
           <Card title="Cost Inputs">

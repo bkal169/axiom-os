@@ -1,132 +1,103 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import Stripe from "https://esm.sh/stripe@14.16.0?target=deno";
+import { corsHeaders } from "../_shared/cors.ts";
+import Stripe from "npm:stripe@^14.14.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
     apiVersion: "2023-10-16",
     httpClient: Stripe.createFetchHttpClient(),
 });
 
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-serve(async (req) => {
-    // Handle CORS preflight
+Deno.serve(async (req) => {
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
 
     try {
-        const authHeader = req.headers.get("Authorization");
-        if (!authHeader) {
-            throw new Error("Missing Authorization header");
-        }
+        const body = await req.json();
+        const action = body.action || "create_checkout";
+        const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        const origin = req.headers.get("origin") || "http://localhost:5173";
 
-        const { action, price_id, success_url, cancel_url, return_url } = await req.json();
+        // --- METERED BILLING: Record API Usage Event ---
+        if (action === "record_usage") {
+            const { tenant_id, service_type, quantity, provider, cost_basis } = body;
 
-        // Init Supabase client with the user's JWT to ensure they are authenticated
-        const supabaseClient = createClient(
-            Deno.env.get("SUPABASE_URL") ?? "",
-            Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-            { global: { headers: { Authorization: authHeader } } }
-        );
+            // Lookup tenant profile
+            const { data: profile } = await supa.from("profiles").select("stripe_customer_id").eq("id", tenant_id).single();
+            if (!profile?.stripe_customer_id) throw new Error("Tenant has no active Stripe subscription");
 
-        // Supabase JS v2 explicitly requires passing the JWT into getUser() within Edge Functions
-        const jwt = authHeader.replace("Bearer ", "");
-        const { data: { user }, error: userError } = await supabaseClient.auth.getUser(jwt);
+            // Look up the active subscription item for the metered product
+            const subscriptions = await stripe.subscriptions.list({ customer: profile.stripe_customer_id, status: "active" });
+            if (!subscriptions.data.length) throw new Error("No active subscription to bill against.");
 
-        if (userError || !user) {
-            throw new Error(`Unauthorized: ${userError?.message || "User not found"}`);
-        }
+            const subItem = subscriptions.data[0].items.data.find(i => i.price.billing_scheme === "metered");
+            if (!subItem) throw new Error("No metered billing item attached to this subscription.");
 
-        // Now initialize Supabase Service Role client to fetch user profile details
-        // (In case the profile is RLS restricted for reading the stripe customer ID)
-        const supabaseAdmin = createClient(
-            Deno.env.get("SUPABASE_URL") ?? "",
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-        );
+            // Bill Stripe for the usage
+            const record = await stripe.subscriptionItems.createUsageRecord(
+                subItem.id,
+                { quantity: Math.ceil(quantity), timestamp: Math.floor(Date.now() / 1000), action: "increment" },
+                { idempotencyKey: `${tenant_id}-${Date.now()}` }
+            );
 
-        const { data: profile } = await supabaseAdmin
-            .from("user_profiles")
-            .select("stripe_customer_id, email")
-            .eq("id", user.id)
-            .single();
-
-        let customerId = profile?.stripe_customer_id;
-
-        // --- CREATE CHECKOUT SESSION ---
-        if (action === "create_checkout") {
-            if (!price_id || !success_url || !cancel_url) {
-                throw new Error("Missing required parameters for checkout");
-            }
-
-            // If user doesn't have a Stripe customer ID, let Stripe create one based on their email.
-            // We will save it in the webhook.
-            const sessionConfig: Stripe.Checkout.SessionCreateParams = {
-                payment_method_types: ["card"],
-                billing_address_collection: "required",
-                line_items: [
-                    {
-                        price: price_id,
-                        quantity: 1,
-                    },
-                ],
-                mode: "subscription",
-                success_url,
-                cancel_url,
-                subscription_data: {
-                    metadata: {
-                        user_id: user.id,
-                    },
-                },
-                metadata: {
-                    user_id: user.id, // Ensure we tie this checkout session back to the Supabase user
-                },
-            };
-
-            if (customerId) {
-                sessionConfig.customer = customerId;
-            } else {
-                sessionConfig.customer_email = profile?.email || user.email;
-            }
-
-            const session = await stripe.checkout.sessions.create(sessionConfig);
-
-            return new Response(JSON.stringify({ url: session.url }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-                status: 200,
+            // Save audit log to Supabase
+            await supa.from("billing_usage").insert({
+                tenant_id, service_type, provider, quantity, cost_basis, stripe_meter_event_id: record.id
             });
+
+            return new Response(JSON.stringify({ status: "metered_event_recorded", record }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
         // --- CREATE BILLING PORTAL SESSION ---
         if (action === "create_portal") {
-            if (!return_url) {
-                throw new Error("Missing return_url for portal");
-            }
+            const { customerId, return_url } = body;
+            if (!return_url) throw new Error("Missing return_url for portal");
+            if (!customerId) throw new Error("You don't have an active subscription yet.");
 
-            if (!customerId) {
-                throw new Error("You don't have an active subscription yet.");
-            }
-
-            const session = await stripe.billingPortal.sessions.create({
+            const portalSession = await stripe.billingPortal.sessions.create({
                 customer: customerId,
                 return_url,
             });
 
-            return new Response(JSON.stringify({ url: session.url }), {
+            return new Response(JSON.stringify({ url: portalSession.url }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
-                status: 200,
             });
         }
 
-        throw new Error(`Unknown action: ${action}`);
-    } catch (error: any) {
-        console.error("Function error:", error);
-        return new Response(JSON.stringify({ error: error.message }), {
+        // --- STANDARD CHECKOUT ---
+        let price_id = body.price_id || "price_H5ggYwtDq4fbrJ";
+        const { customerId } = body;
+
+        const sessionConfig: Stripe.Checkout.SessionCreateParams = {
+            payment_method_types: ["card"],
+            line_items: [
+                { price: price_id, quantity: 1 },
+                // Inject the variable passthrough meter alongside the base seat price for Enterprise
+                { price: "price_1Pk_Axiom_Tier2_Compute_Metered" }
+            ],
+            mode: "subscription",
+            success_url: `${origin}/sys?success=true`,
+            cancel_url: `${origin}/sys?canceled=true`,
+        };
+
+        if (customerId) {
+            sessionConfig.customer = customerId;
+        }
+
+        const checkoutSession = await stripe.checkout.sessions.create(sessionConfig);
+
+        return new Response(JSON.stringify({ url: checkoutSession.url }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 400,
         });
+
+    } catch (err: any) {
+        console.error("Stripe Checkout Error:", err);
+        return new Response(
+            JSON.stringify({ error: err.message }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
     }
 });
