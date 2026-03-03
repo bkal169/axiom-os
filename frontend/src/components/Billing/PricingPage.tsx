@@ -1,8 +1,12 @@
-
 import React, { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, ExternalLink, CreditCard } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
 
+const TIER_PRICE_IDS: Record<string, string> = {
+    pro: 'price_axiom_pro_monthly',
+    pro_plus: 'price_axiom_pro_plus_monthly',
+};
 
 const TIERS = [
     {
@@ -59,7 +63,7 @@ const TIERS = [
 
 export const PricingPage: React.FC = () => {
     const { user, profile } = useAuth();
-    const [loading, setLoading] = useState<string | null>(null); // loading tier id
+    const [loading, setLoading] = useState<string | null>(null);
 
     const handleSubscribe = async (tierId: string) => {
         if (!user) {
@@ -68,102 +72,183 @@ export const PricingPage: React.FC = () => {
         }
         setLoading(tierId);
 
-        // Simulation of creating a checkout session
-        /*
-        const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-            body: { priceId: tierId, userId: user.id }
-        });
-        if (data?.url) window.location.href = data.url;
-        */
+        try {
+            const priceId = TIER_PRICE_IDS[tierId];
+            if (!priceId) {
+                alert('This plan is not yet available for purchase. Contact us.');
+                setLoading(null);
+                return;
+            }
 
-        // For MVP Demo, we'll just mock the "upgrade" action or show an alert
-        setTimeout(() => {
-            alert(`Redirecting to Stripe Checkout for ${tierId} tier... (Mock)`);
+            const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+                body: {
+                    price_id: priceId,
+                    customerId: (profile as any)?.stripe_customer_id ?? undefined,
+                    action: 'create_checkout',
+                }
+            });
+
+            if (error) throw error;
+            if (data?.url) {
+                window.location.href = data.url;
+            }
+        } catch (err: any) {
+            console.error('Checkout error:', err);
+            alert(`Checkout failed: ${err.message}`);
+        } finally {
             setLoading(null);
-        }, 1000);
+        }
     };
 
+    const handleManageBilling = async () => {
+        if (!user) { alert('Please log in.'); return; }
+        const customerId = (profile as any)?.stripe_customer_id;
+        if (!customerId) {
+            alert('No active subscription found. Please subscribe to a plan first.');
+            return;
+        }
+        setLoading('portal');
+        try {
+            const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+                body: {
+                    action: 'create_portal',
+                    customerId,
+                    return_url: window.location.href
+                }
+            });
+            if (error) throw error;
+            if (data?.url) window.location.href = data.url;
+        } catch (err: any) {
+            alert(`Portal error: ${err.message}`);
+        } finally {
+            setLoading(null);
+        }
+    };
+
+    const currentTier = (profile as any)?.subscription_tier?.toLowerCase() ?? 'free';
+    const isProPlus = currentTier === 'pro_plus';
+
     return (
-        <div className="min-h-full bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
-            <div className="text-center">
-                <h2 className="text-base font-semibold text-emerald-600 tracking-wide uppercase">Pricing</h2>
-                <p className="mt-1 text-4xl font-extrabold text-slate-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-                    Choose your plan
-                </p>
-                <p className="max-w-xl mt-5 mx-auto text-xl text-slate-500">
-                    Start small and scale as your portfolio grows. No hidden fees.
-                </p>
+        <div style={{ minHeight: '100%', background: 'linear-gradient(135deg, #0D0F13 0%, #111318 100%)', padding: '40px 20px', overflowY: 'auto' }}>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+                <div style={{ fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--c-gold)', fontWeight: 700, marginBottom: 12 }}>
+                    Axiom OS · Pricing
+                </div>
+                <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--c-text)', marginBottom: 12 }}>
+                    Choose Your Plan
+                </div>
+                <div style={{ fontSize: 14, color: 'var(--c-dim)', maxWidth: 500, margin: '0 auto' }}>
+                    Start small and scale as your portfolio grows. No hidden fees, transparent metered billing.
+                </div>
             </div>
 
-            {/* AXIOM ENTERPRISE: API Passthrough Metered Usage Visualization */}
-            {profile?.subscription_tier === 'PRO_PLUS' && (
-                <div className="max-w-3xl mx-auto mt-10 bg-white shadow sm:rounded-lg overflow-hidden border border-slate-200">
-                    <div className="px-4 py-5 sm:p-6">
-                        <h3 className="text-lg leading-6 font-medium text-slate-900">API Compute Usage (Current Cycle)</h3>
-                        <div className="mt-2 max-w-xl text-sm text-slate-500">
-                            <p>You are on the Pro+ Enterprise tier. Your base compute is included, but high-volume inferences and data fetches are passed through at a 15% markup. Your monthly hard-cap is $500.00.</p>
-                        </div>
-                        <div className="mt-5">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-slate-700">Estimated Current Spend</span>
-                                <span className="text-sm font-semibold text-emerald-600">$142.50 / $500.00</span>
-                            </div>
-                            <div className="w-full bg-slate-200 rounded-full h-2.5 dark:bg-slate-700">
-                                <div className="bg-emerald-600 h-2.5 rounded-full" style={{ width: '28.5%' }}></div>
-                            </div>
-                            <p className="mt-2 text-xs text-slate-400">Data delayed by up to 15 minutes. Final billing handled via Stripe.</p>
-                        </div>
+            {/* Manage Billing Banner — only for paying users */}
+            {currentTier !== 'free' && (
+                <div style={{ maxWidth: 860, margin: '0 auto 32px auto', background: 'rgba(196, 160, 82, 0.08)', border: '1px solid rgba(196, 160, 82, 0.25)', borderRadius: 8, padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-gold)' }}>You are on the <strong>{currentTier.toUpperCase()}</strong> plan</div>
+                        <div style={{ fontSize: 11, color: 'var(--c-dim)', marginTop: 4 }}>Manage invoices, payment methods, and upgrade options in the Stripe portal.</div>
                     </div>
+                    <button
+                        onClick={handleManageBilling}
+                        disabled={loading === 'portal'}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'transparent', border: '1px solid rgba(196,160,82,0.4)', borderRadius: 6, color: 'var(--c-gold)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                    >
+                        <CreditCard size={14} />
+                        {loading === 'portal' ? 'Opening portal...' : 'Manage Billing'}
+                        <ExternalLink size={12} />
+                    </button>
                 </div>
             )}
 
-            <div className="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6 lg:max-w-7xl lg:mx-auto lg:grid-cols-3 xl:gap-8">
-                {TIERS.map((tier) => (
-                    <div key={tier.name} className={`border rounded-lg shadow-sm divide-y divide-gray-200 bg-white flex flex-col ${tier.recommended ? 'ring-2 ring-emerald-500 relative' : 'border-slate-200'}`}>
-                        {tier.recommended && (
-                            <div className="absolute top-0 right-0 -mt-3 mr-3 px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full uppercase tracking-wide">
-                                Most Popular
+            {/* PRO+ API Compute Usage Meter */}
+            {isProPlus && (
+                <div style={{ maxWidth: 860, margin: '0 auto 32px auto', background: 'var(--c-bg2)', border: '1px solid var(--c-border)', borderRadius: 8, padding: 24 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--c-text)', marginBottom: 8 }}>API Compute Usage — Current Billing Cycle</div>
+                    <div style={{ fontSize: 12, color: 'var(--c-dim)', marginBottom: 16 }}>
+                        High-volume inferences and data fetches are passed through at a 15% markup. Monthly cap: <strong style={{ color: 'var(--c-gold)' }}>$500.00</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>Estimated Current Spend</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--c-green)' }}>$142.50 / $500.00</span>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--c-bg3)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: '28.5%', background: 'var(--c-green)', borderRadius: 3, transition: 'width 1s ease' }} />
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--c-dim)', marginTop: 8 }}>Data delayed by up to 15 minutes. Final billing handled via Stripe.</div>
+                </div>
+            )}
+
+            {/* Tier Cards */}
+            <div style={{ maxWidth: 860, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+                {TIERS.map((tier) => {
+                    const isCurrent = currentTier === tier.id;
+                    const isRec = tier.recommended;
+                    return (
+                        <div key={tier.name} style={{
+                            background: 'var(--c-bg2)',
+                            border: `1px solid ${isRec ? 'rgba(196,160,82,0.5)' : 'var(--c-border)'}`,
+                            borderRadius: 12,
+                            padding: 28,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            position: 'relative',
+                            boxShadow: isRec ? '0 0 30px rgba(196,160,82,0.1)' : 'none'
+                        }}>
+                            {isRec && (
+                                <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--c-gold)', color: '#000', fontSize: 10, fontWeight: 800, padding: '3px 12px', borderRadius: 20, letterSpacing: 2, textTransform: 'uppercase' }}>
+                                    Most Popular
+                                </div>
+                            )}
+                            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--c-text)', marginBottom: 8 }}>{tier.name}</div>
+                            <div style={{ marginBottom: 16 }}>
+                                <span style={{ fontSize: 32, fontWeight: 800, color: 'var(--c-text)' }}>${tier.price}</span>
+                                <span style={{ fontSize: 13, color: 'var(--c-dim)' }}>/mo</span>
                             </div>
-                        )}
-                        <div className="p-6">
-                            <h2 className="text-lg leading-6 font-medium text-slate-900">{tier.name}</h2>
-                            <p className="mt-4">
-                                <span className="text-4xl font-extrabold text-slate-900">${tier.price}</span>
-                                <span className="text-base font-medium text-slate-500">/mo</span>
-                            </p>
-                            <p className="mt-4 text-sm text-slate-500">{tier.description}</p>
+                            <div style={{ fontSize: 12, color: 'var(--c-dim)', marginBottom: 24 }}>{tier.description}</div>
                             <button
                                 onClick={() => handleSubscribe(tier.id)}
-                                disabled={!!loading || profile?.subscription_tier === tier.id.toUpperCase()}
-                                className={`mt-8 block w-full py-3 px-6 border border-transparent rounded-md text-center font-medium ${profile?.subscription_tier === tier.id.toUpperCase()
-                                    ? 'bg-slate-100 text-slate-500 cursor-default'
-                                    : tier.recommended
-                                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                        : 'bg-slate-900 text-white hover:bg-slate-800'
-                                    }`}
+                                disabled={!!loading || isCurrent || tier.price === 0}
+                                style={{
+                                    padding: '10px 16px',
+                                    borderRadius: 6,
+                                    border: 'none',
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    cursor: isCurrent || tier.price === 0 ? 'default' : 'pointer',
+                                    marginBottom: 24,
+                                    background: isCurrent ? 'var(--c-bg3)' : isRec ? 'var(--c-gold)' : 'var(--c-bg3)',
+                                    color: isCurrent ? 'var(--c-dim)' : isRec ? '#000' : 'var(--c-text)',
+                                    opacity: loading && loading !== tier.id ? 0.6 : 1,
+                                    transition: 'all 0.2s'
+                                }}
                             >
-                                {loading === tier.id ? 'Processing...' : profile?.subscription_tier === tier.id.toUpperCase() ? 'Current Plan' : `Subscribe to ${tier.name}`}
+                                {loading === tier.id ? 'Redirecting...' : isCurrent ? '✓ Current Plan' : tier.price === 0 ? 'Free Forever' : `Subscribe to ${tier.name} →`}
                             </button>
-                        </div>
-                        <div className="pt-6 pb-8 px-6 flex-1 flex flex-col">
-                            <h3 className="text-xs font-medium text-slate-900 tracking-wide uppercase">What's included</h3>
-                            <ul role="list" className="mt-6 space-y-4 flex-1">
-                                {tier.features.map((feature) => (
-                                    <li key={feature} className="flex space-x-3">
-                                        <Check className="flex-shrink-0 h-5 w-5 text-emerald-500" aria-hidden="true" />
-                                        <span className="text-sm text-slate-500">{feature}</span>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, flex: 1 }}>
+                                {tier.features.map(f => (
+                                    <li key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
+                                        <Check size={14} style={{ color: 'var(--c-green)', flexShrink: 0, marginTop: 2 }} />
+                                        <span style={{ fontSize: 12, color: 'var(--c-muted)' }}>{f}</span>
                                     </li>
                                 ))}
-                                {tier.notIncluded.map((feature) => (
-                                    <li key={feature} className="flex space-x-3 text-slate-300">
-                                        <X className="flex-shrink-0 h-5 w-5" aria-hidden="true" />
-                                        <span className="text-sm">{feature}</span>
+                                {tier.notIncluded.map(f => (
+                                    <li key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10, opacity: 0.35 }}>
+                                        <X size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                                        <span style={{ fontSize: 12, color: 'var(--c-dim)' }}>{f}</span>
                                     </li>
                                 ))}
                             </ul>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
+            </div>
+
+            {/* Footer note */}
+            <div style={{ textAlign: 'center', marginTop: 40, fontSize: 11, color: 'var(--c-dim)' }}>
+                All plans include 256-bit encryption, SOC2-aligned data handling, and dedicated uptime SLAs.<br />
+                Questions? <a href="mailto:enterprise@axiom-os.com" style={{ color: 'var(--c-gold)' }}>enterprise@axiom-os.com</a>
             </div>
         </div>
     );

@@ -8,6 +8,7 @@ import { supa } from "../../lib/supabase";
 import { fmt } from "../../lib/utils";
 import { useLS } from "../../hooks/useLS";
 import { OMIngestor } from "./OMIngestor";
+import { DealTeaser } from "./DealTeaser";
 import {
     BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid
 } from "recharts";
@@ -244,6 +245,7 @@ export function Deals() {
                         <div style={{ marginTop: 24 }}>
                             <Agent id="DealReview" system={`You are reviewing this specific deal: ${selectedDeal.name} at ${selectedDeal.address}. ${selectedDeal.lots} lots, value $${selectedDeal.value}. Provide detailed analysis.`} placeholder="Ask about this specific deal..." />
                         </div>
+                        <DealTeaser deal={selectedDeal as any} />
                     </Card>
                 )}
             </div>
