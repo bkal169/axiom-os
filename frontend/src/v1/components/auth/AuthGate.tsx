@@ -85,8 +85,8 @@ export function AuthGate() {
     };
 
     const saveConfig = () => {
-        localStorage.setItem("axiom_supa_url", supaUrl);
-        localStorage.setItem("axiom_supa_key", supaKey);
+        localStorage.setItem("axiom_supa_url", JSON.stringify(supaUrl));
+        localStorage.setItem("axiom_supa_key", JSON.stringify(supaKey));
         supa.url = supaUrl; supa.key = supaKey;
         setShowConfig(false);
         window.location.reload();

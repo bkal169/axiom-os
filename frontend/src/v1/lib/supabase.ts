@@ -3,16 +3,24 @@
  */
 
 // Production: reads VITE_ env vars baked by Vercel at build time
+const getLocalString = (key: string) => {
+    try {
+        const val = localStorage.getItem(key);
+        if (!val) return "";
+        try { return JSON.parse(val); } catch { return val; }
+    } catch { return ""; }
+};
+
 export const SUPA_URL =
-    (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL) || "";
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL) || getLocalString("axiom_supa_url");
 
 export const SUPA_KEY =
-    (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY) || "";
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY) || getLocalString("axiom_supa_key");
 
 if (!SUPA_URL || !SUPA_KEY) {
     console.warn(
         "[Axiom] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is not set. " +
-        "Set these in .env.local for development or Vercel Project Settings for production."
+        "Set these in .env.local for development or configure them in Vercel."
     );
 }
 
