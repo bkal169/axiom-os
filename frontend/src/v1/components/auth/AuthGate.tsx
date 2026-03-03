@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useAuth, useTier } from "../../context/AuthContext";
+import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { supa, SUPA_URL, SUPA_KEY, IS_PROD_CONFIGURED } from "../../lib/supabase";
 import { useLS } from "../../hooks/useLS";
 import "../ui/theme.css";
