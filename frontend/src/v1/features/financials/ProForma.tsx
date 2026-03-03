@@ -4,6 +4,7 @@ import { Card, KPI, Field, Progress } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 import { buildMonthlyCashFlows, calcIRR } from "../../lib/math";
 import { fmt } from "../../lib/utils";
+import { CHART_TT, CHART_TT_BAR, AXIS_TICK, GRID_STROKE, LEGEND_STYLE } from "../../lib/chartTheme";
 import {
     BarChart, Bar, AreaChart, Area, Cell,
     ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid
@@ -121,10 +122,10 @@ export function ProForma() {
                         <div style={{ height: 260 }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={waterfallData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border)" vertical={false} />
-                                    <XAxis dataKey="name" stroke="var(--c-dim)" fontSize={10} />
-                                    <YAxis stroke="var(--c-dim)" fontSize={10} />
-                                    <Tooltip contentStyle={{ background: "var(--c-bg2)", border: "1px solid var(--c-border)" }} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+                                    <XAxis dataKey="name" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+                                    <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} tickFormatter={v => `$${v}M`} />
+                                    <Tooltip {...CHART_TT_BAR} formatter={(v: any) => [`$${Number(v).toFixed(2)}M`, ""]} />
                                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                                         {waterfallData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -140,13 +141,23 @@ export function ProForma() {
                     <div style={{ height: 300 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={cfChartData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border)" vertical={false} />
-                                <XAxis dataKey="month" stroke="var(--c-dim)" fontSize={10} />
-                                <YAxis stroke="var(--c-dim)" fontSize={10} />
-                                <Tooltip contentStyle={{ background: "var(--c-bg2)", border: "1px solid var(--c-border)" }} />
-                                <Area type="monotone" dataKey="cf" name="Monthly" stroke="var(--c-blue)" fill="var(--c-blue)" fillOpacity={0.1} />
-                                <Area type="monotone" dataKey="cumulative" name="Cumulative" stroke="var(--c-gold)" fill="var(--c-gold)" fillOpacity={0.05} />
-                                <Legend />
+                                <defs>
+                                    <linearGradient id="pfCfGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
+                                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.02} />
+                                    </linearGradient>
+                                    <linearGradient id="pfCumGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#D4A843" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#D4A843" stopOpacity={0.02} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+                                <XAxis dataKey="month" tick={AXIS_TICK} axisLine={false} tickLine={false} label={{ value: "Month", position: "insideBottom", offset: -2, fill: "#6B7280", fontSize: 9 }} />
+                                <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}K`} />
+                                <Tooltip {...CHART_TT} formatter={(v: any) => [`$${Number(v).toLocaleString()}`, ""]} />
+                                <Area type="monotone" dataKey="cf" name="Monthly CF" stroke="#3B82F6" fill="url(#pfCfGrad)" strokeWidth={2} dot={false} />
+                                <Area type="monotone" dataKey="cumulative" name="Cumulative" stroke="#D4A843" fill="url(#pfCumGrad)" strokeWidth={2} dot={false} />
+                                <Legend wrapperStyle={LEGEND_STYLE} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -190,7 +201,7 @@ export function ProForma() {
                         </div>
                         <div className="axiom-flex-between" style={{ padding: "8px 0" }}>
                             <span className="axiom-kpi-sub">ROI (Unlevered)</span>
-                            <span style={{ fontSize: 14, fontWeight: "bold" }}>{calculations.roi.toFixed(1)}%</span>
+                            <span style={{ fontSize: 14, fontWeight: "bold", color: calculations.roi >= 0 ? "var(--c-green)" : "var(--c-red)" }}>{calculations.roi.toFixed(1)}%</span>
                         </div>
                     </div>
                 </Card>

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, KPI, Field } from "../../components/ui/components";
 import { fmt } from "../../lib/utils";
+import { supa } from "../../lib/supabase";
 
 export function CalcHub() {
     const [active, setActive] = useState("mortgage");
@@ -39,10 +40,21 @@ function MortgageCalc() {
     const [loan, setLoan] = useState(500000);
     const [rate, setRate] = useState(6.5);
     const [years, setYears] = useState(30);
+    const [result, setResult] = useState<any>(null);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            supa.callEdge("engines-calc", { type: "mortgage", loan, rate, years }).then(res => {
+                if (res && res.payment !== undefined) setResult(res);
+            });
+        }, 400);
+        return () => clearTimeout(t);
+    }, [loan, rate, years]);
 
     const n = years * 12;
     const r = rate / 100 / 12;
-    const pmt = r > 0 ? loan * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : loan / n;
+    const fallbackPmt = r > 0 ? loan * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : loan / n;
+    const pmt = result?.payment ?? fallbackPmt;
 
     return (
         <Card title="Mortgage Calculator">
@@ -76,11 +88,23 @@ function MortgageCalc() {
 
 function ROICalc() {
     const [v, setV] = useState({ purchase: 350000, rehab: 85000, arv: 520000, holdMonths: 6 });
+    const [result, setResult] = useState<any>(null);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            supa.callEdge("engines-calc", { type: "roi", purchase: v.purchase, rehab: v.rehab, arv: v.arv }).then(res => {
+                if (res && res.profit !== undefined) setResult(res);
+            });
+        }, 400);
+        return () => clearTimeout(t);
+    }, [v.purchase, v.rehab, v.arv]);
+
     const u = (k: string) => (e: any) => setV({ ...v, [k]: +e.target.value });
 
     const totalIn = v.purchase + v.rehab;
-    const profit = v.arv - totalIn - (v.arv * 0.08); // Simplified 8% closing/comm
-    const roi = totalIn > 0 ? (profit / totalIn) * 100 : 0;
+    const fallbackProfit = v.arv - totalIn;
+    const profit = result?.profit ?? fallbackProfit;
+    const roi = result?.roi ?? (totalIn > 0 ? (profit / totalIn) * 100 : 0);
 
     return (
         <Card title="Flip ROI Analysis">
@@ -101,10 +125,22 @@ function ROICalc() {
 
 function CapRateCalc() {
     const [v, setV] = useState({ price: 2000000, gri: 180000, opex: 72000 });
+    const [result, setResult] = useState<any>(null);
+
+    useEffect(() => {
+        const noi = v.gri - v.opex;
+        const t = setTimeout(() => {
+            supa.callEdge("engines-calc", { type: "caprate", noi, value: v.price }).then(res => {
+                if (res && res.capRate !== undefined) setResult(res);
+            });
+        }, 400);
+        return () => clearTimeout(t);
+    }, [v.price, v.gri, v.opex]);
+
     const u = (k: string) => (e: any) => setV({ ...v, [k]: +e.target.value });
 
     const noi = v.gri - v.opex;
-    const capRate = v.price > 0 ? (noi / v.price) * 100 : 0;
+    const capRate = result?.capRate ?? (v.price > 0 ? (noi / v.price) * 100 : 0);
 
     return (
         <Card title="Cap Rate / NOI Calculator">

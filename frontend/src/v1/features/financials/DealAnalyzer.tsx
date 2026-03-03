@@ -1,8 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useProject } from "../../context/ProjectContext";
 import { Card, KPI, Progress } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 import { fmt } from "../../lib/utils";
+import { CHART_TT } from "../../lib/chartTheme";
+import { supa } from "../../lib/supabase";
 import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
     ResponsiveContainer, Tooltip
@@ -10,6 +12,14 @@ import {
 
 export function DealAnalyzer() {
     const { project, fin } = useProject() as any;
+    const [engineData, setEngineData] = useState<Record<string, any> | null>(null);
+
+    useEffect(() => {
+        if (!project?.id) return;
+        supa.callEdge(`engines-score?project_id=${project.id}`, {}).then(res => {
+            if (res && !res.error) setEngineData(res);
+        }).catch(e => console.error("Score engine failed", e));
+    }, [project?.id]);
 
     const analysis = useMemo(() => {
         const hard = fin.totalLots * fin.hardCostPerLot;
@@ -22,27 +32,33 @@ export function DealAnalyzer() {
         const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
         const roi = totalCost > 0 ? (profit / totalCost) * 100 : 0;
 
-        // Score components (0-100)
+        // Base financial score to fallback on
         const scoreF = Math.min(100, Math.max(0, margin > 20 ? 95 : margin > 15 ? 80 : margin > 10 ? 65 : margin > 5 ? 50 : 30));
 
-        // Mocking some project data that would normally come from other context fields
-        const entitlementScore = project.status === "Approved" ? 100 : project.status === "In Progress" ? 65 : 30;
-        const environmentalScore = 85; // Placeholder
-        const marketScore = 72; // Placeholder
-
-        const overall = Math.round(scoreF * 0.4 + entitlementScore * 0.3 + environmentalScore * 0.3);
+        // Sync with Edge Function Data if available
+        const overall = engineData ? Math.round(engineData.composite_score) : Math.round(scoreF * 0.4 + 40);
         const verdict = overall >= 75 ? "GO" : overall >= 50 ? "CONDITIONAL" : "NO-GO";
 
-        const radarData = [
+        const radarData = engineData ? [
+            { subject: "Financial", A: engineData.subscores?.financeability || scoreF, fullMark: 100 },
+            { subject: "Feasibility", A: engineData.subscores?.feasibility || 50, fullMark: 100 },
+            { subject: "Timeline Risk", A: engineData.subscores?.timeline_risk || 50, fullMark: 100 },
+            { subject: "Budget Risk", A: engineData.subscores?.budget_risk || 50, fullMark: 100 },
+            { subject: "Infrastructure", A: 78, fullMark: 100 },
+        ] : [
             { subject: "Financial", A: scoreF, fullMark: 100 },
-            { subject: "Entitlement", A: entitlementScore, fullMark: 100 },
-            { subject: "Environmental", A: environmentalScore, fullMark: 100 },
-            { subject: "Market", A: marketScore, fullMark: 100 },
+            { subject: "Entitlement", A: 65, fullMark: 100 },
+            { subject: "Environmental", A: 85, fullMark: 100 },
+            { subject: "Market", A: 72, fullMark: 100 },
             { subject: "Infrastructure", A: 78, fullMark: 100 },
         ];
 
-        return { totalCost, revenue, profit, margin, roi, overall, verdict, radarData, scoreF, entitlementScore, environmentalScore };
-    }, [fin, project]);
+        return {
+            totalCost, revenue, profit, margin, roi, overall, verdict, radarData, scoreF,
+            entitlementScore: engineData?.subscores?.feasibility || 65,
+            environmentalScore: 85
+        };
+    }, [fin, project, engineData]);
 
     const verdictColor = {
         "GO": "var(--c-green)",
@@ -74,7 +90,7 @@ export function DealAnalyzer() {
                                     fill="var(--c-gold)"
                                     fillOpacity={0.3}
                                 />
-                                <Tooltip contentStyle={{ background: "var(--c-bg2)", border: "1px solid var(--c-border)" }} />
+                                <Tooltip {...CHART_TT} formatter={(v: any) => [v, "Score"]} />
                             </RadarChart>
                         </ResponsiveContainer>
                     </div>

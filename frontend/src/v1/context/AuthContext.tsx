@@ -76,14 +76,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await supa.auth(email, pw);
         const u = await supa.getUser();
         setUser(u);
+        if (u && u.id) {
+            supa.callEdge("security-log-event", {
+                user_id: u.id,
+                event_type: "LOGIN",
+                metadata: { email, source: "AppV1" }
+            }).catch(e => console.warn("Failed to log security event", e));
+        }
         return data;
     };
 
     const signup = async (email: string, pw: string) => {
-        return await supa.auth(email, pw, true);
+        const res = await supa.auth(email, pw, true);
+        const u = await supa.getUser();
+        if (u && u.id) {
+            supa.callEdge("security-log-event", {
+                user_id: u.id,
+                event_type: "SIGNUP",
+                metadata: { email, source: "AppV1" }
+            }).catch(e => console.warn("Failed to log security event", e));
+        }
+        return res;
     };
 
     const logout = async () => {
+        if (user && user.id) {
+            await supa.callEdge("security-log-event", {
+                user_id: user.id,
+                event_type: "LOGOUT",
+                metadata: { source: "AppV1" }
+            }).catch(e => console.warn("Failed to log security event", e));
+        }
         await supa.logout();
         setUser(null);
         setUserProfile(null);

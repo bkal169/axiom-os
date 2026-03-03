@@ -67,11 +67,12 @@ export function Badge({ label, color = "var(--c-gold)" }: { label: string, color
     );
 }
 
-export function Button({ children, label, onClick, variant = "ghost", className = "", disabled = false }: { children?: React.ReactNode, label?: string, onClick?: (e?: any) => void, variant?: "gold" | "ghost", className?: string, style?: React.CSSProperties, disabled?: boolean }) {
+export function Button({ children, label, onClick, variant = "ghost", className = "", style, disabled = false }: { children?: React.ReactNode, label?: string, onClick?: (e?: any) => void, variant?: "gold" | "ghost", className?: string, style?: React.CSSProperties, disabled?: boolean }) {
     return (
         <button
             className={`axiom-btn ${variant === "gold" ? "axiom-btn-gold" : ""} ${disabled ? "axiom-btn-disabled" : ""} ${className}`}
             onClick={onClick}
+            style={style}
             disabled={disabled}
         >
             {label || children}

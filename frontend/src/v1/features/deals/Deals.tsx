@@ -292,7 +292,7 @@ export function Deals() {
                             <ResponsiveContainer width="100%" height={240}>
                                 <BarChart data={pipeData} onClick={onChartClick(setChartSel) as any} style={CHART_STYLE}>
                                     <CartesianGrid strokeDasharray="3 6" stroke="var(--c-border)" strokeOpacity={0.5} />
-                                    <XAxis dataKey="name" stroke="var(--c-dim)" tick={{ fontSize: 9 }} />
+                                    <XAxis dataKey="name" stroke="var(--c-dim)" tick={{ fontSize: 9, fill: 'var(--c-muted)' }} />
                                     <YAxis stroke="var(--c-dim)" tick={{ fontSize: 12, fontFamily: 'Inter,sans-serif', fill: 'var(--c-muted)' }} tickFormatter={v => `$${v.toFixed(1)}M`} />
                                     <Tooltip {...TT()} formatter={(v: any, name: any) => [`$${Number(v).toFixed(2)}M`, name]} labelFormatter={l => `Stage: ${l}`} />
                                     <Legend wrapperStyle={{ fontSize: 11, color: 'var(--c-muted)', paddingTop: 12 }} />
