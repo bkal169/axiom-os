@@ -38,7 +38,7 @@ export function KPI({ label, value, sub, color, trend, onUpdate, style }: { labe
                     onKeyDown={e => e.key === 'Enter' && handleBlur()}
                 />
             ) : (
-                <div className="axiom-kpi-value" style={{ color: color || "inherit", cursor: onUpdate ? "pointer" : "default" }}>
+                <div className="axiom-kpi-value" style={{ color: color || undefined, cursor: onUpdate ? "pointer" : "default" }}>
                     {value}
                     {onUpdate && <span style={{ fontSize: 8, marginLeft: 4, opacity: 0.5 }}>✎</span>}
                 </div>
