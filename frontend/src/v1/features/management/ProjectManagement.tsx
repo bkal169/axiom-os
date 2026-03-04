@@ -117,8 +117,18 @@ export function ProjectManagement({ projectId }: Props) {
                                 <tbody>
                                     {permits.map((p: any, i: number) => (
                                         <tr key={i}>
-                                            <td className="axiom-td-13-p8-bb">{p.name}</td>
-                                            <td className="axiom-td-12-dim-p8-bb">{p.agency}</td>
+                                            <td className="axiom-td-13-p8-bb" style={{ cursor: "pointer" }} onClick={() => {
+                                                const n = prompt("Edit Permit Name:", p.name);
+                                                if (n) updPerm(i, "name", n);
+                                            }}>
+                                                {p.name} <span style={{ fontSize: 8, opacity: 0.5 }}>✎</span>
+                                            </td>
+                                            <td className="axiom-td-12-dim-p8-bb" style={{ cursor: "pointer" }} onClick={() => {
+                                                const a = prompt("Edit Agency:", p.agency);
+                                                if (a) updPerm(i, "agency", a);
+                                            }}>
+                                                {p.agency} <span style={{ fontSize: 8, opacity: 0.5 }}>✎</span>
+                                            </td>
                                             <td className="axiom-td-p8-bb">
                                                 <select
                                                     className="axiom-select-transparent"

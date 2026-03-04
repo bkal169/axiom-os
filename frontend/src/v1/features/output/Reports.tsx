@@ -30,13 +30,17 @@ export function Reports() {
                     <div className="axiom-text-12-dim" style={{ marginBottom: 16 }}>
                         Complete investor and lender ready development package.
                     </div>
-                    {sections.map((s, i) => (
-                        <div key={i} className="axiom-checkbox-item">
-                            <input type="checkbox" defaultChecked className="axiom-checkbox" title={`Include ${s}`} />
-                            <span className="axiom-text-12-dim">{s}</span>
-                            <Badge label="Ready" color="var(--c-green)" />
-                        </div>
-                    ))}
+                    <div className="axiom-stack-8">
+                        {sections.map((s, i) => (
+                            <div key={i} className="axiom-flex-sb-center" style={{ padding: "8px 12px", background: "var(--c-bg2)", borderRadius: 6, border: "1px solid var(--c-border)" }}>
+                                <div className="axiom-flex-gap-8-center">
+                                    <input type="checkbox" defaultChecked className="axiom-checkbox" title={`Include ${s}`} />
+                                    <span className="axiom-text-13">{s}</span>
+                                </div>
+                                <Badge label="Ready" color="var(--c-green)" />
+                            </div>
+                        ))}
+                    </div>
                 </Card>
             </div>
             <div>
@@ -139,19 +143,20 @@ ${permits?.length ? permits.filter((p: any) => p.status !== 'Approved' && p.req)
     };
 
     const MEMO_TYPES = [
-        { id: "ic_memo", label: "IC Memo", desc: "Full Investment Committee Memo" },
-        { id: "lender_pkg", label: "Lender Package", desc: "Construction loan presentation" },
-        { id: "exec_summary", label: "Exec Summary", desc: "1-page deal overview" },
-        { id: "risk_memo", label: "Risk Memo", desc: "Risk assessment matrix" },
+        { id: "ic_memo", label: "IC Memo", desc: "Full Investment Committee Memo", icon: "📄" },
+        { id: "lender_pkg", label: "Lender Package", desc: "Construction loan presentation", icon: "🏛️" },
+        { id: "exec_summary", label: "Exec Summary", desc: "1-page deal overview", icon: "⚡" },
+        { id: "risk_memo", label: "Risk Memo", desc: "Risk assessment matrix", icon: "⚠️" },
     ];
 
     return (
         <div>
-            <div className="axiom-flex-gap-8" style={{ marginBottom: 16, flexWrap: "wrap" }}>
+            <div className="axiom-grid-4" style={{ marginBottom: 20, gap: 12 }}>
                 {MEMO_TYPES.map(mt => (
-                    <div key={mt.id} onClick={() => setMemoType(mt.id)} className={`axiom-memo-card ${memoType === mt.id ? "active" : ""}`}>
+                    <div key={mt.id} onClick={() => setMemoType(mt.id)} className={`axiom-memo-card ${memoType === mt.id ? "active" : ""}`} style={{ cursor: "pointer", padding: 12, border: "1px solid var(--c-border)", borderRadius: 8, transition: "0.2s" }}>
+                        <div style={{ fontSize: 20, marginBottom: 8 }}>{mt.icon}</div>
                         <div className="axiom-text-12-bold">{mt.label}</div>
-                        <div className="axiom-text-9-dim" style={{ marginTop: 2 }}>{mt.desc}</div>
+                        <div className="axiom-text-10-dim" style={{ marginTop: 2 }}>{mt.desc}</div>
                     </div>
                 ))}
             </div>

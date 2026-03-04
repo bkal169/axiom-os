@@ -15,26 +15,69 @@ export function Card({ title, children, action, className = "" }: { title: strin
     );
 }
 
-export function KPI({ label, value, sub, color, trend }: { label: string, value: string | number, sub?: string, color?: string, trend?: number }) {
+export function KPI({ label, value, sub, color, trend, onUpdate }: { label: string, value: string | number, sub?: string, color?: string, trend?: string | number, onUpdate?: (val: any) => void }) {
+    const [isEditing, setIsEditing] = React.useState(false);
+    const [editValue, setEditValue] = React.useState(value);
+
+    const handleBlur = () => {
+        setIsEditing(false);
+        if (onUpdate && editValue !== value) onUpdate(editValue);
+    };
+
     return (
-        <div className="axiom-kpi">
+        <div className="axiom-kpi" onClick={() => onUpdate && !isEditing && setIsEditing(true)}>
             <div className="axiom-label">{label}</div>
-            <div className={`axiom-kpi-value ${color ? '' : 'axiom-text-color'}`} style={color ? { color } : {}}>{value}</div>
+            {isEditing ? (
+                <input
+                    autoFocus
+                    className="axiom-input"
+                    style={{ fontSize: 18, padding: "2px 4px", height: "auto", border: "1px solid var(--c-gold)" }}
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    onBlur={handleBlur}
+                    onKeyDown={e => e.key === 'Enter' && handleBlur()}
+                />
+            ) : (
+                <div className="axiom-kpi-value" style={{ color: color || "inherit", cursor: onUpdate ? "pointer" : "default" }}>
+                    {value}
+                    {onUpdate && <span style={{ fontSize: 8, marginLeft: 4, opacity: 0.5 }}>✎</span>}
+                </div>
+            )}
             {sub && <div className="axiom-kpi-sub">{sub}</div>}
             {trend !== undefined && (
-                <div className={`axiom-kpi-trend ${trend >= 0 ? "axiom-trend-up" : "axiom-trend-down"}`}>
-                    {trend >= 0 ? "▲" : "▼"} {Math.abs(trend).toFixed(1)}%
+                <div className={`axiom-kpi-trend ${Number(trend) >= 0 ? "axiom-trend-up" : "axiom-trend-down"}`}>
+                    {Number(trend) >= 0 ? "▲" : "▼"} {Math.abs(Number(trend)).toFixed(1)}%
                 </div>
             )}
         </div>
     );
 }
 
-export function Field({ label, children, mb = 11, className = "" }: { label: string, children: React.ReactNode, mb?: number, className?: string, style?: React.CSSProperties }) {
+export function Field({ label, children, mb = 11, className = "", onUpdate, value }: { label: string, children: React.ReactNode, mb?: number, className?: string, onUpdate?: (val: any) => void, value?: any }) {
+    const [isEditing, setIsEditing] = React.useState(false);
+    const [editValue, setEditValue] = React.useState(value);
+
+    const handleBlur = () => {
+        setIsEditing(false);
+        if (onUpdate && editValue !== value) onUpdate(editValue);
+    };
+
     return (
         <div className={`axiom-field ${className}`} style={{ marginBottom: mb }}>
-            <label className="axiom-label">{label}</label>
-            {children}
+            <label className="axiom-label" style={{ display: "flex", justifyContent: "space-between" }}>
+                {label}
+                {onUpdate && !isEditing && <span onClick={() => setIsEditing(true)} style={{ cursor: "pointer", fontSize: 8, opacity: 0.5 }}>✎ EDIT</span>}
+            </label>
+            {isEditing ? (
+                <input
+                    autoFocus
+                    className="axiom-input"
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    onBlur={handleBlur}
+                    onKeyDown={e => e.key === 'Enter' && handleBlur()}
+                />
+            ) : children}
         </div>
     );
 }

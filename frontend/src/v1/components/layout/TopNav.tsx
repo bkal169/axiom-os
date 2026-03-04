@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth, useTier } from "../../context/AuthContext";
 import { useProject } from "../../context/ProjectContext";
 import { useLS } from "../../hooks/useLS";
+import { ProjectMetaEditor } from "../../features/management/ProjectMetaEditor";
 
 function NotifBell({ setView }: { setView: (v: string) => void }) {
     const [open, setOpen] = useState(false);
@@ -22,11 +23,11 @@ function NotifBell({ setView }: { setView: (v: string) => void }) {
             <div
                 style={{
                     cursor: "pointer", padding: "4px 8px", border: "1px solid var(--c-border)", borderRadius: 3,
-                    background: "var(--c-bg3)", display: "flex", alignItems: "center", gap: 4
+                    background: "var(--c-bg3)", display: "flex", alignItems: "center", gap: 4, height: 28
                 }}
                 onClick={() => setOpen(!open)}
             >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={unread > 0 ? "var(--c-gold)" : "var(--c-dim)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={unread > 0 ? "var(--c-gold)" : "var(--c-dim)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
                 {unread > 0 && <span style={{ background: "var(--c-red)", color: "#fff", fontSize: 8, padding: "1px 4px", borderRadius: 6, fontWeight: 700 }}>{unread}</span>}
@@ -71,9 +72,10 @@ export function TopNav({ title, setView }: { title: string, setView: (v: string)
     const { user, logout } = useAuth() as any;
     const tierCtx = useTier() as any;
     const tier = tierCtx?.tier || "FREE";
-    const { project, setProject, allProjects, activeProjectId, switchProject, createProject } = useProject() as any;
+    const { project, allProjects, activeProjectId, switchProject, createProject } = useProject() as any;
 
     const [lightMode, setLightMode] = useState(false);
+    const [isEditingMeta, setIsEditingMeta] = useState(false);
 
     useEffect(() => {
         if (lightMode) {
@@ -85,78 +87,70 @@ export function TopNav({ title, setView }: { title: string, setView: (v: string)
 
     return (
         <div style={{
-            display: "flex", alignItems: "center", padding: "16px 32px",
+            display: "flex", alignItems: "center", padding: "12px 32px",
             borderBottom: "1px solid var(--c-border)", background: "var(--c-bg2)", zIndex: 10,
-            justifyContent: "space-between"
+            justifyContent: "space-between", minHeight: 64
         }}>
-            <div style={{ fontSize: 14, color: "var(--c-gold)", letterSpacing: 2, flex: 1, fontWeight: 600 }}>{title}</div>
-
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button
-                    style={{ background: "var(--c-bg3)", border: "1px solid var(--c-border)", color: "var(--c-text)", padding: "4px 8px", fontSize: 10, borderRadius: 3, cursor: "pointer" }}
-                    onClick={() => setLightMode(!lightMode)}
-                    title="Toggle Theme"
+            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                <div style={{ fontSize: 12, color: "var(--c-gold)", letterSpacing: 2, fontWeight: 700, textTransform: "uppercase" }}>{title}</div>
+                <div
+                    onClick={() => setIsEditingMeta(true)}
+                    style={{
+                        fontSize: 10, color: "var(--c-dim)", marginTop: 2, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 6
+                    }}
                 >
-                    {lightMode ? "🌙 Dark" : "☀️ Light"}
-                </button>
+                    <span style={{ color: "var(--c-sub)" }}>{project.address || "Add Address"}</span>
+                    <span>•</span>
+                    <span>{project.municipality || "Add City"}, {project.state || "--"}</span>
+                    <span style={{ fontSize: 8 }}>✎</span>
+                </div>
+            </div>
 
-                {user && <span style={{ fontSize: 9, color: "var(--c-green)", background: "color-mix(in srgb, var(--c-green) 12%, transparent)", padding: "3px 8px", borderRadius: 4 }}>● Synced</span>}
-
-                {tier && tier.toUpperCase() !== "FREE" && (
-                    <span style={{ fontSize: 9, color: "var(--c-gold)", background: "color-mix(in srgb, var(--c-gold) 12%, transparent)", padding: "3px 8px", borderRadius: 4, letterSpacing: 1, textTransform: "uppercase" }}>
-                        {tier}
-                    </span>
-                )}
-
-                {/* Multi-project switcher */}
-                {user && allProjects.length > 0 ? (
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                {/* Multi-project switcher - Premium Style */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--c-bg3)", border: "1px solid var(--c-border)", padding: "2px 8px", borderRadius: 4 }}>
+                    <div style={{ fontSize: 8, color: "var(--c-dim)", letterSpacing: 1, fontWeight: 700 }}>ACTIVE PROJECT</div>
                     <select
-                        style={{ background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-gold)", padding: "4px 6px", fontSize: 10, borderRadius: 3, maxWidth: 160 }}
+                        style={{
+                            background: "transparent", border: "none", color: "var(--c-gold)",
+                            fontSize: 11, fontWeight: 600, padding: "4px 0", outline: "none", cursor: "pointer",
+                            minWidth: 140
+                        }}
                         value={activeProjectId || ""}
                         onChange={e => {
                             if (e.target.value === "__new__") {
-                                const n = prompt("New project name:");
-                                if (n) createProject(n, project.state || "FL", "");
+                                const n = prompt("Enter project name:");
+                                if (n) createProject(n, "FL", "");
                             } else if (e.target.value) {
                                 switchProject(e.target.value);
                             }
                         }}
-                        title="Switch Project"
                     >
                         {allProjects.map((p: any) => <option key={p.id} value={p.id}>{p.name || "Untitled"}</option>)}
-                        <option value="__new__">+ New Project</option>
+                        <option value="__new__">+ NEW PROJECT</option>
                     </select>
-                ) : (
-                    <input
-                        style={{ background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-text)", padding: "4px 8px", fontSize: 10, borderRadius: 3, width: 160 }}
-                        value={project.name}
-                        onChange={e => setProject({ ...project, name: e.target.value })}
-                        placeholder="Project Name"
-                    />
-                )}
-                <input
-                    style={{ background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-text)", padding: "4px 8px", fontSize: 10, borderRadius: 3, width: 160 }}
-                    value={project.address}
-                    onChange={e => setProject({ ...project, address: e.target.value })}
-                    placeholder="Address / APN"
-                />
-                <select
-                    style={{ background: "var(--c-bg)", border: "1px solid var(--c-border)", color: project.state ? "var(--c-gold)" : "var(--c-dim)", padding: "4px 6px", fontSize: 10, borderRadius: 3, width: 90 }}
-                    value={project.state}
-                    onChange={e => setProject({ ...project, state: e.target.value })}
+                </div>
+
+                <div style={{ width: 1, height: 24, background: "var(--c-border)", margin: "0 4px" }}></div>
+
+                <button
+                    style={{ background: "var(--c-bg3)", border: "1px solid var(--c-border)", color: "var(--c-dim)", width: 28, height: 28, borderRadius: 3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    onClick={() => setLightMode(!lightMode)}
+                    title="Toggle Theme"
                 >
-                    {"AL,AK,AZ,AR,CA,CO,CT,DE,FL,GA,HI,ID,IL,IN,IA,KS,KY,LA,ME,MD,MA,MI,MN,MS,MO,MT,NE,NV,NH,NJ,NM,NY,NC,ND,OH,OK,OR,PA,RI,SC,SD,TN,TX,UT,VT,VA,WA,WV,WI,WY".split(",").map(s => <option key={s} value={s}>{s || "State"}</option>)}
-                </select>
-                <input
-                    style={{ background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-text)", padding: "4px 8px", fontSize: 10, borderRadius: 3, width: 130 }}
-                    value={project.municipality}
-                    onChange={e => setProject({ ...project, municipality: e.target.value })}
-                    placeholder="City / County"
-                />
+                    {lightMode ? "🌙" : "☀️"}
+                </button>
+
+                {tier && tier.toUpperCase() !== "FREE" && (
+                    <span style={{ fontSize: 9, color: "var(--c-gold)", background: "color-mix(in srgb, var(--c-gold) 12%, transparent)", padding: "4px 10px", borderRadius: 4, letterSpacing: 1, textTransform: "uppercase", fontWeight: 700 }}>
+                        {tier}
+                    </span>
+                )}
 
                 {user && (
                     <button
-                        style={{ background: "transparent", border: "none", color: "var(--c-dim)", cursor: "pointer", fontSize: 14, padding: "2px 6px" }}
+                        style={{ background: "transparent", border: "none", color: "var(--c-dim)", cursor: "pointer", fontSize: 16, padding: "2px 6px" }}
                         onClick={logout}
                         title="Logout"
                     >
@@ -166,6 +160,8 @@ export function TopNav({ title, setView }: { title: string, setView: (v: string)
 
                 <NotifBell setView={setView} />
             </div>
+
+            {isEditingMeta && <ProjectMetaEditor onClose={() => setIsEditingMeta(false)} />}
         </div>
     );
 }

@@ -10,6 +10,8 @@ export function CalcHub() {
         { id: "mortgage", label: "Mortgage", desc: "Monthly payment & amortization" },
         { id: "roi", label: "Flip ROI", desc: "Purchase, rehab, and profit" },
         { id: "caprate", label: "Cap Rate", desc: "NOI and value analysis" },
+        { id: "construction", label: "Construction", desc: "Hard cost estimation" },
+        { id: "insurance", label: "Insurance", desc: "Annual premium estimate" },
     ];
 
     return (
@@ -32,6 +34,8 @@ export function CalcHub() {
                 {active === "mortgage" && <MortgageCalc />}
                 {active === "roi" && <ROICalc />}
                 {active === "caprate" && <CapRateCalc />}
+                {active === "construction" && <ConstructionCalc />}
+                {active === "insurance" && <InsuranceCalc />}
             </div>
         </div>
     );
@@ -152,6 +156,94 @@ function CapRateCalc() {
                 <KPI label="Cap Rate" value={capRate.toFixed(2) + "%"} color={capRate > 6 ? "var(--c-green)" : "var(--c-gold)"} />
             </div>
             <KPI label="Net Operating Income" value={fmt.usd(noi)} color="var(--c-green)" />
+        </Card>
+    );
+}
+
+function ConstructionCalc() {
+    const [sqft, setSqft] = useState(100000);
+    const [costPerSf, setCostPerSf] = useState(150);
+    const [contingencyPct, setContingencyPct] = useState(10);
+    const [result, setResult] = useState<any>(null);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            supa.callEdge("engines-calc", { type: "construction", sqft, cost_per_sf: costPerSf, contingency_pct: contingencyPct / 100 }).then(res => {
+                if (res && res.estimated_total_cost !== undefined) setResult(res);
+            });
+        }, 400);
+        return () => clearTimeout(t);
+    }, [sqft, costPerSf, contingencyPct]);
+
+    const totalCost = result?.estimated_total_cost ?? (sqft * costPerSf * (1 + contingencyPct / 100));
+
+    return (
+        <Card title="Construction Cost Estimator">
+            <div className="axiom-grid-2" style={{ marginBottom: 20 }}>
+                <div className="axiom-stack-16">
+                    <Field label="Total SqFt"><input className="axiom-input" type="number" value={sqft} onChange={e => setSqft(+e.target.value)} title="Total SqFt" /></Field>
+                    <Field label="Cost / SqFt ($)"><input className="axiom-input" type="number" value={costPerSf} onChange={e => setCostPerSf(+e.target.value)} title="Cost / SqFt" /></Field>
+                    <Field label={`Contingency (${contingencyPct}%)`}>
+                        <input type="range" min="0" max="30" step="1" value={contingencyPct} onChange={e => setContingencyPct(+e.target.value)} title="Contingency" style={{ width: "100%", accentColor: "var(--c-gold)" }} />
+                    </Field>
+                </div>
+                <div className="axiom-kpi-highlight" style={{ background: "var(--c-bg4)", border: "1px solid var(--c-border2)" }}>
+                    <div style={{ fontSize: 10, color: "var(--c-sub)", letterSpacing: "1px", marginBottom: 5 }}>ESTIMATED HARD COSTS</div>
+                    <div className="axiom-text-32-bold-gold">{fmt.usd(Math.round(totalCost))}</div>
+                    <div style={{ fontSize: 10, color: "var(--c-dim)", marginTop: 8 }}>Including {contingencyPct}% Contingency</div>
+                </div>
+            </div>
+        </Card>
+    );
+}
+
+function InsuranceCalc() {
+    const [replacementCost, setReplacementCost] = useState(1000000);
+    const [assetClass, setAssetClass] = useState("multifamily");
+    const [locationRisk, setLocationRisk] = useState(1.0);
+    const [result, setResult] = useState<any>(null);
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            supa.callEdge("engines-calc", { type: "insurance", replacement_cost: replacementCost, asset_class: assetClass, location_risk: locationRisk }).then(res => {
+                if (res && res.estimated_annual_premium !== undefined) setResult(res);
+            });
+        }, 400);
+        return () => clearTimeout(t);
+    }, [replacementCost, assetClass, locationRisk]);
+
+    const premium = result?.estimated_annual_premium ?? (replacementCost * 0.007 * locationRisk);
+
+    return (
+        <Card title="Insurance Premium Estimator">
+            <div className="axiom-grid-2" style={{ marginBottom: 20 }}>
+                <div className="axiom-stack-16">
+                    <Field label="Replacement Cost"><input className="axiom-input" type="number" value={replacementCost} onChange={e => setReplacementCost(+e.target.value)} title="Replacement Cost" /></Field>
+                    <Field label="Asset Class">
+                        <select className="axiom-select" value={assetClass} onChange={e => setAssetClass(e.target.value)} title="Asset Class">
+                            <option value="multifamily">Multifamily</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="retail">Retail</option>
+                            <option value="office">Office</option>
+                            <option value="single_family">Single Family</option>
+                        </select>
+                    </Field>
+                    <Field label="Risk Profile">
+                        <select className="axiom-select" value={locationRisk} onChange={e => setLocationRisk(+e.target.value)} title="Risk Profile">
+                            <option value="0.8">Low Risk</option>
+                            <option value="1.0">Standard Risk</option>
+                            <option value="1.5">High Wind</option>
+                            <option value="2.5">Coastal</option>
+                            <option value="3.0">Wildfire</option>
+                        </select>
+                    </Field>
+                </div>
+                <div className="axiom-kpi-highlight" style={{ background: "var(--c-bg4)", border: "1px solid var(--c-border2)" }}>
+                    <div style={{ fontSize: 10, color: "var(--c-sub)", letterSpacing: "1px", marginBottom: 5 }}>ANNUAL PREMIUM</div>
+                    <div className="axiom-text-32-bold-gold">{fmt.usd(Math.round(premium))}</div>
+                    <div style={{ fontSize: 10, color: "var(--c-dim)", marginTop: 8 }}>Dynamic ESG Factor: {(locationRisk * 10).toFixed(1)}</div>
+                </div>
+            </div>
         </Card>
     );
 }

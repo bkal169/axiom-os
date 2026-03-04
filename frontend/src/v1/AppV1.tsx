@@ -146,7 +146,7 @@ function NavSection({
     onSelect: (id: string) => void;
     collapsed: boolean;
 }) {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
 
     if (sidebarCollapsed) {
         // Icon-only mode: show dots

@@ -628,6 +628,10 @@ body.light-mode {
     color: #E2E8F0 !important;
 }
 
+.recharts-tooltip-item-list {
+    padding: 0 !important;
+}
+
 .recharts-legend-item-text {
     color: var(--c-dim) !important;
     font-size: 11px;
@@ -740,6 +744,62 @@ textarea::placeholder {
     font-weight: 600;
 }
 
+/* Extended Typography Utilities */
+.axiom-text-10-dim-caps-ls1 {
+    font-size: 10px;
+    color: var(--c-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.axiom-text-9-dim-caps {
+    font-size: 9px;
+    color: var(--c-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.axiom-text-11-dim-lh14 {
+    font-size: 11px;
+    color: var(--c-dim);
+    line-height: 1.4;
+}
+
+.axiom-text-16-bold {
+    font-size: 16px;
+    color: var(--c-text);
+    font-weight: 700;
+}
+
+.axiom-text-40-bold {
+    font-size: 40px;
+    color: var(--c-text);
+    font-weight: 800;
+    line-height: 1;
+}
+
+.axiom-list-item-sb-11 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--c-border);
+}
+
+.axiom-list-item-dim-11 {
+    font-size: 11px;
+    color: var(--c-dim);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--c-border);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.axiom-list-item-dim-11:hover {
+    color: var(--c-text);
+}
+
 .axiom-full-width {
     width: 100%;
 }
@@ -815,4 +875,94 @@ textarea::placeholder {
     border: 1px dashed var(--c-border2);
     border-radius: 4px;
     color: var(--c-dim);
+}
+
+/* ─── PRO FORMA SPECIFIC UTILITIES ───────────────────────────────── */
+.axiom-deal-score-container {
+    padding: 12px 14px;
+    background: var(--c-bg2);
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.axiom-deal-score-circle {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+.axiom-deal-score-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.axiom-sensitivity-container {
+    overflow-x: auto;
+    margin-top: 12px;
+}
+
+.axiom-sensitivity-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+
+.axiom-sensitivity-th {
+    padding: 4px;
+    text-align: center;
+    background: var(--c-bg2);
+    border: 1px solid var(--c-border);
+    color: var(--c-dim);
+}
+
+.axiom-sensitivity-th-corner {
+    padding: 4px;
+    text-align: left;
+    background: var(--c-bg4);
+    border: 1px solid var(--c-border);
+    color: var(--c-dim);
+}
+
+.axiom-sensitivity-td {
+    padding: 6px;
+    text-align: center;
+    border: 1px solid var(--c-border);
+    cursor: default;
+}
+
+.axiom-sensitivity-td-base {
+    background: rgba(212, 168, 67, 0.15);
+    font-weight: bold;
+}
+
+.axiom-scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.axiom-scenario-card {
+    padding: 10px;
+    background: var(--c-bg2);
+    border: 1px solid var(--c-border);
+    border-radius: 4px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.axiom-scenario-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--c-gold);
+}
+
+.axiom-scenario-card-base {
+    border: 1px solid var(--c-gold);
 }
