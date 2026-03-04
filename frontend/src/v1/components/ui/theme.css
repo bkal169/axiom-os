@@ -42,7 +42,15 @@ body.light-mode {
     --c-teal: #0D9488;
 }
 
-.axiom-app {
+body {
+    margin: 0;
+    padding: 0;
+    color: var(--c-text);
+    background: var(--c-bg);
+}
+
+.axiom-app,
+.axiom-layout {
     display: flex;
     height: 100vh;
     background: var(--c-bg);
@@ -350,8 +358,29 @@ body.light-mode {
 
 .axiom-td {
     padding: 8px 9px;
-    border-bottom: 1px solid #0F1117;
+    border-bottom: 1px solid var(--c-border2);
     color: var(--c-sub);
+}
+
+.axiom-td-11-gold-p10-bb {
+    font-size: 11px;
+    color: var(--c-gold);
+    padding: 10px;
+    border-bottom: 1px solid var(--c-border2);
+}
+
+.axiom-td-13-p10-bb {
+    font-size: 13px;
+    color: var(--c-text);
+    padding: 10px;
+    border-bottom: 1px solid var(--c-border2);
+}
+
+.axiom-td-13-p8-bb {
+    font-size: 13px;
+    color: var(--c-text);
+    padding: 8px;
+    border-bottom: 1px solid var(--c-border2);
 }
 
 .axiom-tabs-nav {
@@ -453,12 +482,6 @@ body.light-mode {
     white-space: pre-wrap;
     max-height: 400px;
     overflow-y: auto;
-}
-
-.axiom-layout {
-    display: flex;
-    height: 100vh;
-    background: var(--c-bg);
 }
 
 .axiom-sidebar {
@@ -801,6 +824,7 @@ textarea::placeholder {
     font-size: 18px;
     color: var(--c-gold);
     letter-spacing: 1px;
+    font-weight: 700;
 }
 
 .axiom-text-20-bold {
@@ -1087,12 +1111,41 @@ textarea::placeholder {
     gap: 8px;
 }
 
-.axiom-flex-sb-center-p5-bb {
+.axiom-flex-sb {
+    display: flex;
+    justify-content: space-between;
+}
+
+.axiom-flex-sb-center {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 5px;
-    border-bottom: 1px solid var(--c-border);
+}
+
+.axiom-flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.axiom-select-transparent {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+}
+
+.axiom-select-transparent option {
+    background: var(--c-bg2);
+    color: var(--c-text);
+}
+
+.axiom-text-40 {
+    font-size: 40px;
 }
 
 .axiom-modal-overlay {
@@ -1278,4 +1331,25 @@ textarea::placeholder {
     border-bottom: 1px solid var(--c-border);
     letter-spacing: 1px;
     text-transform: uppercase;
+}
+
+/* Animations & Utility */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.border-bottom {
+    border-bottom: 1px solid var(--c-border);
 }

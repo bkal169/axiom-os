@@ -13,10 +13,10 @@ export function LegalCompliance() {
     return (
         <div style={{ display: "flex", gap: 24, height: "100%" }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="axiom-flex-sb-center">
                     <div>
-                        <div style={{ fontSize: 24, fontWeight: 300, color: "var(--c-text)", marginBottom: 4 }}>Legal & Compliance</div>
-                        <div style={{ color: "var(--c-dim)", fontSize: 13 }}>Track regulatory requirements, filings, and legal obligations.</div>
+                        <div className="axiom-page-title">Legal & Compliance</div>
+                        <div className="axiom-text-13-dim">Track regulatory requirements, filings, and legal obligations.</div>
                     </div>
                     <Button variant="gold" onClick={() => {
                         const title = prompt("Enter new filing title:");
@@ -34,7 +34,7 @@ export function LegalCompliance() {
                 <div style={{ flex: 1, overflowY: "auto" }}>
                     <Card title="Compliance Tracker">
                         <div style={{ margin: "-16px" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                            <table className="axiom-table">
                                 <thead>
                                     <tr>
                                         <th className="axiom-th" style={{ paddingLeft: 16 }}>Requirement</th>
@@ -52,7 +52,7 @@ export function LegalCompliance() {
                                         if (c.status === "Drafting") badgeColor = "var(--c-blue)";
 
                                         return (
-                                            <tr key={c.id} style={{ borderBottom: "1px solid var(--c-border)" }}>
+                                            <tr key={c.id}>
                                                 <td className="axiom-td" style={{ paddingLeft: 16, color: "var(--c-text)", fontWeight: 500 }}>
                                                     {c.requirement}
                                                 </td>
