@@ -1916,11 +1916,11 @@ function DealAnalyzer() {
           <Card title="Verdict">
             <div style={{ textAlign: "center", padding: 20 }}>
               <div style={{ fontSize: 55, fontWeight: 700, color: VC[verdict], marginBottom: 8 }}>{verdict}</div>
-              <div style={{ fontSize: 16, color: C.dim }}>Overall Score: {overall}/100</div>
+              <div style={{ fontSize: 16, color: "var(--c-sub)" }}>Overall Score: {overall}/100</div>
               <div style={{ marginTop: 16 }}>
                 {[["Financial", scoreF], ["Entitlement", scoreE], ["Environmental", scoreR]].map(([l, v]) => (
                   <div key={l} style={{ marginBottom: 8 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.dim, marginBottom: 3 }}><span>{l}</span><span>{v}%</span></div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--c-sub)", marginBottom: 3 }}><span>{l}</span><span>{v}%</span></div>
                     <Progress value={v} color={v >= 75 ? C.green : v >= 50 ? C.amber : C.red} />
                   </div>
                 ))}
@@ -1940,8 +1940,8 @@ function DealAnalyzer() {
             ))}</tbody>
           </table>
           <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", background: C.bg, padding: 14, borderRadius: 4, border: `1px solid ${C.gold}44` }}>
-            <div><div style={{ fontSize: 9, color: C.dim }}>Sell-Out Timeline</div><div style={{ fontSize: 23, color: C.gold, fontWeight: 700 }}>{months} months</div></div>
-            <div style={{ textAlign: "right" }}><div style={{ fontSize: 9, color: C.dim }}>Profit/Lot</div><div style={{ fontSize: 23, color: profit >= 0 ? C.green : C.red, fontWeight: 700 }}>{fmt.usd(profit / (deal.lots || 1))}</div></div>
+            <div><div style={{ fontSize: 9, color: "var(--c-sub)" }}>Sell-Out Timeline</div><div style={{ fontSize: 23, color: C.gold, fontWeight: 700 }}>{months} months</div></div>
+            <div style={{ textAlign: "right" }}><div style={{ fontSize: 9, color: "var(--c-sub)" }}>Profit/Lot</div><div style={{ fontSize: 23, color: profit >= 0 ? C.green : C.red, fontWeight: 700 }}>{fmt.usd(profit / (deal.lots || 1))}</div></div>
           </div>
         </Card>
         <Card title="Deal Underwriter — · AI Agent">

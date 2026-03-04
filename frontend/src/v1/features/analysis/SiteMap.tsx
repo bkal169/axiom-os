@@ -13,7 +13,7 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 const DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Comp marker â€” smaller gold dot
+// Comp marker — smaller gold dot
 const CompIcon = L.divIcon({
     className: "",
     html: `<div style="width:10px;height:10px;background:#D4A017;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`,
@@ -58,7 +58,7 @@ export function SiteMap({ projectId }: Props) {
     const { project } = useProjectState(projectId);
     const site = project.site ?? DEFAULT_SITE;
 
-    // Default center â€” LA fallback
+    // Default center — LA fallback
     const [position, setPosition] = useState<LatLng>({ lat: 34.0522, lng: -118.2437 });
     const [geocoded, setGeocoded] = useState(false);
     const [geocoding, setGeocoding] = useState(false);
@@ -122,14 +122,14 @@ export function SiteMap({ projectId }: Props) {
         return { ...c, mapLat: position.lat + Math.sin(angle) * radius, mapLng: position.lng + Math.cos(angle) * radius };
     });
 
-    const fmt = (n?: number) => n ? "$" + n.toLocaleString() : "â€”";
+    const fmt = (n?: number) => n ? "$" + n.toLocaleString() : "—";
 
     return (
         <Card
             title="Subject Property & Context Map"
             action={
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {geocoding && <span style={{ fontSize: 10, color: "var(--c-dim)" }}>Locatingâ€¦</span>}
+                    {geocoding && <span style={{ fontSize: 10, color: "var(--c-dim)" }}>Locating...</span>}
                     {geocoded && <Badge label="GPS Located" color="var(--c-green)" />}
                     <button
                         className="axiom-btn"
@@ -137,7 +137,7 @@ export function SiteMap({ projectId }: Props) {
                         disabled={compsLoading}
                         style={{ padding: "4px 10px", fontSize: 11 }}
                     >
-                        {compsLoading ? "â€¦" : `â¬‡ Load Comps`}
+                        {compsLoading ? "..." : `⬇ Load Comps`}
                     </button>
                     {compsSource && <Badge label={compsSource} color={compsSource === "mock" ? "var(--c-dim)" : "var(--c-gold)"} />}
                 </div>
@@ -153,7 +153,7 @@ export function SiteMap({ projectId }: Props) {
                     style={{ height: "100%", width: "100%", zIndex: 1 }}
                 >
                     <TileLayer
-                        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                        attribution='© <a href="https://carto.com/">CARTO</a>'
                         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                     />
 
@@ -172,7 +172,7 @@ export function SiteMap({ projectId }: Props) {
                             <strong>{project.name || "Subject Property"}</strong><br />
                             {site?.address || "Site address not set"}<br />
                             {geocoded
-                                ? <span style={{ color: "#27ae60", fontSize: 11 }}>âœ“ GPS Located</span>
+                                ? <span style={{ color: "#27ae60", fontSize: 11 }}>✓ GPS Located</span>
                                 : <span style={{ color: "#e67e22", fontSize: 11 }}>Default location (set address in Project Setup)</span>
                             }
                         </Popup>
@@ -184,9 +184,9 @@ export function SiteMap({ projectId }: Props) {
                             <Popup>
                                 <strong>{c.name}</strong><br />
                                 {c.address}<br />
-                                {c.lots && <span>{c.lots} lots Â· </span>}
+                                {c.lots && <span>{c.lots} lots · </span>}
                                 <span style={{ color: "#D4A017", fontWeight: 600 }}>{fmt(c.price_per_lot)}/lot</span><br />
-                                {c.sale_date && <span style={{ fontSize: 10, color: "#666" }}>{c.sale_date} Â· {c.status}</span>}<br />
+                                {c.sale_date && <span style={{ fontSize: 10, color: "#666" }}>{c.sale_date} · {c.status}</span>}<br />
                                 <span style={{ fontSize: 9, color: "#999" }}>Source: {c.source}</span>
                             </Popup>
                         </Marker>
@@ -212,7 +212,7 @@ export function SiteMap({ projectId }: Props) {
             <div className="axiom-text-11-dim" style={{ marginTop: 8 }}>
                 {geocoded
                     ? `📍 Located: ${site?.address ?? project.municipality}${comps.length ? " · " + comps.length + " comps from " + compsSource : " · Click Load Comps to fetch comparables"}`
-                : "Set a project address in Project Setup to pin the exact location."
+                    : "Set a project address in Project Setup to pin the exact location."
                 }
             </div>
         </Card>

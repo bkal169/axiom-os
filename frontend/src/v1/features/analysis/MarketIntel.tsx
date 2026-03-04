@@ -55,13 +55,13 @@ function LiveSignals() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {lastUpdated && <span className="axiom-text-11-dim">Updated {lastUpdated}</span>}
                     <button className="axiom-btn" onClick={fetchSignals} disabled={loading} style={{ padding: "4px 10px", fontSize: 11 }}>
-                        {loading ? "â€¦" : "â†» Refresh"}
+                        {loading ? "..." : "↺ Refresh"}
                     </button>
                 </div>
             }
         >
             {loading && !signals.length ? (
-                <div style={{ padding: 32, textAlign: "center", color: "var(--c-dim)", fontSize: 13 }}>Loading signalsâ€¦</div>
+                <div style={{ padding: 32, textAlign: "center", color: "var(--c-dim)", fontSize: 13 }}>Loading signals...</div>
             ) : signals.length === 0 ? (
                 <div style={{ padding: 32, textAlign: "center", color: "var(--c-dim)", fontSize: 13 }}>No signals. FRED ingest runs daily at 06:00 UTC.</div>
             ) : (
@@ -73,7 +73,7 @@ function LiveSignals() {
                                     <span style={{ fontSize: 13, fontWeight: 600, color: "var(--c-text)" }}>{s.title}</span>
                                     {s.direction && (
                                         <span style={{ fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: DIRECTION_COLOR[s.direction] || "var(--c-dim)", fontWeight: 700 }}>
-                                            {s.direction === "inflationary" ? "â–²" : s.direction === "deflationary" ? "â–¼" : "â†’"} {s.direction}
+                                            {s.direction === "inflationary" ? "▲" : s.direction === "deflationary" ? "▼" : "→"} {s.direction}
                                         </span>
                                     )}
                                 </div>
@@ -115,7 +115,7 @@ export function MarketIntel({ projectId }: Props) {
     const [filt, setFilt] = useState("All");
     const [nc, setNc] = useState(EMPTY_COMP);
 
-    // â”€â”€ Derived stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Derived stats ──────────────────────────────────────────
     const filtered = comps.filter(c => filt === "All" || c.status === filt);
     const adjPrices = filtered.map(c => c.pricePerLot * (1 + (c.adj || 0) / 100));
     const avgPPL = adjPrices.length ? adjPrices.reduce((a, b) => a + b, 0) / adjPrices.length : 0;
@@ -125,7 +125,7 @@ export function MarketIntel({ projectId }: Props) {
         ? (project.municipality ? `${project.municipality}, ${project.state}` : project.state)
         : "Your Market";
 
-    // â”€â”€ Write helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Write helpers ──────────────────────────────────────────
     const addComp = useCallback(() => {
         if (!nc.name.trim()) return;
         const id = Date.now();
@@ -170,7 +170,7 @@ export function MarketIntel({ projectId }: Props) {
     return (
         <Tabs tabs={["Comparables", "Jurisdiction Intel", "Market Signals"]}>
 
-            {/* â”€â”€ Tab 1: Comparables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Tab 1: Comparables ────────────────────────── */}
             <div>
                 <div className="axiom-grid-4" style={{ marginBottom: 20 }}>
                     <KPI label="Comps Analyzed" value={filtered.length.toString()} />
@@ -180,7 +180,7 @@ export function MarketIntel({ projectId }: Props) {
                         label="Price Range"
                         value={filtered.length
                             ? `${fmt.k(Math.min(...filtered.map(c => c.pricePerLot)))} - ${fmt.k(Math.max(...filtered.map(c => c.pricePerLot)))}`
-                            : "â€”"}
+                            : "—"}
                         color="var(--c-amber)"
                     />
                 </div>
@@ -238,7 +238,7 @@ export function MarketIntel({ projectId }: Props) {
                                         <Badge label={c.status} color={c.status === "Sold" ? "var(--c-green)" : "var(--c-blue)"} />
                                     </td>
                                     <td className="axiom-td">
-                                        <button onClick={() => removeComp(c.id)} style={{ background: "none", border: "none", color: "var(--c-dim)", cursor: "pointer" }}>Ã—</button>
+                                        <button onClick={() => removeComp(c.id)} style={{ background: "none", border: "none", color: "var(--c-dim)", cursor: "pointer" }}>×</button>
                                     </td>
                                 </tr>
                             ))}
@@ -246,7 +246,7 @@ export function MarketIntel({ projectId }: Props) {
                     </table>
                 </Card>
 
-                {/* â”€â”€ Add Comp form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+                {/* ── Add Comp form ──────────────────────────── */}
                 <Card title="Add Comparable">
                     <div className="axiom-grid-4" style={{ gap: 10, marginBottom: 10 }}>
                         {[
@@ -289,9 +289,9 @@ export function MarketIntel({ projectId }: Props) {
                 </Card>
             </div>
 
-            {/* â”€â”€ Tab 2: Jurisdiction Intel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Tab 2: Jurisdiction Intel ────────────────── */}
             <div>
-                <Card title={`Jurisdiction Intel â€” ${loc}`}>
+                <Card title={`Jurisdiction Intel — ${loc}`}>
                     <div className="axiom-label" style={{ marginBottom: 16 }}>
                         Specialized AI agents pre-loaded with local zoning, permit, and fee knowledge for <b style={{ color: "var(--c-gold)" }}>{loc}</b>.
                     </div>
@@ -306,7 +306,7 @@ export function MarketIntel({ projectId }: Props) {
                 </Card>
             </div>
 
-            {/* â”€â”€ Tab 3: Live Market Signals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Tab 3: Live Market Signals ────────────────── */}
             <div>
                 <LiveSignals />
             </div>

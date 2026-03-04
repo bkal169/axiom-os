@@ -101,13 +101,13 @@ export function DealAnalyzer() {
                         <div style={{ fontSize: 64, fontWeight: "bold", color: verdictColor, marginBottom: 10 }}>
                             {analysis.verdict}
                         </div>
-                        <div className="axiom-text-18-dim" style={{ marginBottom: 30 }}>
+                        <div style={{ fontSize: 18, color: "var(--c-sub)", marginBottom: 30 }}>
                             Overall Score: {analysis.overall}/100
                         </div>
 
                         <div className="axiom-stack-15" style={{ width: "100%" }}>
                             <div>
-                                <div className="axiom-flex-between-dim-11" style={{ marginBottom: 5 }}>
+                                <div className="axiom-flex-between" style={{ marginBottom: 5, fontSize: 11, color: "var(--c-sub)" }}>
                                     <span>Financial Strength</span>
                                     <span>{analysis.scoreF}%</span>
                                 </div>
