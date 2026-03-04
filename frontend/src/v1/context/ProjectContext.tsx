@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLS } from "../hooks/useLS";
 import { useAuth } from "./AuthContext";
 import { supa } from "../lib/supabase";
@@ -91,6 +91,9 @@ export interface ProjectContextType {
     loan: any; setLoan: any;
     equity: any; setEquity: any;
     comps: any; setComps: any;
+    allProjects: any[]; setAllProjects: any;
+    createProject: (n: string, s: string, a: string) => Promise<void>;
+    switchProject: (id: string) => void;
     setChartSel?: any;
 }
 
@@ -109,6 +112,17 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const [loan, setLoan] = useLS("axiom_loan", { ltc: 70, rate: 9.5, termMonths: 24, extensionMonths: 12, origFee: 1.5, lender: "" });
     const [equity, setEquity] = useLS("axiom_equity", { gpPct: 10, lpPct: 90, prefReturn: 8, promotePct: 20, equityMultipleTarget: 2.0, irrTarget: 18 });
     const [comps, setComps] = useLS("axiom_comps", DEFAULT_COMPS);
+    const [allProjects, setAllProjects] = useState<any[]>([]);
+
+    const createProject = async (name: string, _state: string, _address: string) => {
+        const tempId = "proj_" + Date.now();
+        setAllProjects((prev: any[]) => [...prev, { id: tempId, name }]);
+        auth?.setActiveProjectId(tempId);
+    };
+
+    const switchProject = (id: string) => {
+        auth?.setActiveProjectId(id);
+    };
 
     // HYDRATION LOGIC (Simplified from monolith for this base pass)
     const hydrated = useRef(false);
@@ -124,12 +138,15 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         (async () => {
             try {
                 let pid = auth.activeProjectId;
-                if (!pid) {
-                    const projs = await supa.select("projects", `org_id=eq.${auth.userProfile.org_id}&order=updated_at.desc&limit=1`);
-                    if (projs && projs.length > 0) {
+                const projs = await supa.select("projects", `org_id=eq.${auth.userProfile.org_id}&order=updated_at.desc&limit=100`);
+                if (projs && Array.isArray(projs) && projs.length > 0) {
+                    setAllProjects(projs);
+                    if (!pid || !projs.find((p: any) => p.id === pid)) {
                         pid = projs[0].id;
                         auth.setActiveProjectId(pid);
                     }
+                } else {
+                    setAllProjects([]);
                 }
                 if (pid) {
                     const projData = await supa.select("projects", `id=eq.${pid}`);
@@ -171,6 +188,6 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         return () => clearTimeout(timer);
     }, [project, fin, risks, permits, comps, ddChecks, events, loan, equity, auth?.activeProjectId]);
 
-    const value = { project, setProject, fin, setFin, risks, setRisks, permits, setPermits, ddChecks, setDdChecks, events, setEvents, loan, setLoan, equity, setEquity, comps, setComps };
+    const value = { project, setProject, fin, setFin, risks, setRisks, permits, setPermits, ddChecks, setDdChecks, events, setEvents, loan, setLoan, equity, setEquity, comps, setComps, allProjects, setAllProjects, createProject, switchProject };
     return <ProjectCtx.Provider value={value}>{children}</ProjectCtx.Provider>;
 }
