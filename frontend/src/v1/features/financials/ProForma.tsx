@@ -257,7 +257,7 @@ export function ProForma() {
                                 value={fin.totalLots}
                                 onUpdate={(v) => setFin({ ...fin, totalLots: Number(v) })}
                             >
-                                <span className="axiom-text-high-contrast" style={{ fontSize: 18, fontWeight: 700 }}>
+                                <span style={{ color: "var(--c-text)", fontSize: 18, fontWeight: 700 }}>
                                     {calculations.totalLots}
                                 </span>
                             </Field>
