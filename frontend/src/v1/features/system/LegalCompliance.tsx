@@ -26,8 +26,8 @@ export function LegalCompliance() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
                     <KPI label="⚖️ Active Filings" value="12" />
-                    <KPI label="⏳ Pending Approval" value="4" />
-                    <KPI label="✅ Approved" value="7" />
+                    <KPI label="⏳ Pending Approval" value="4" color="var(--c-amber)" />
+                    <KPI label="✅ Approved" value="7" color="var(--c-teal)" />
                     <KPI label="⚠️ At Risk" value="1" color="var(--c-red)" />
                 </div>
 

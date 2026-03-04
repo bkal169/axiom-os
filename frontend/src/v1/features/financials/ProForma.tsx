@@ -59,11 +59,14 @@ export function ProForma() {
         { name: "Profit", value: calculations.profit, fill: "var(--c-green)" },
     ];
 
-    const cashFlowData = useMemo(() => Array.from({ length: 24 }, (_, i) => ({
-        month: i + 1,
-        outflow: Math.random() * 500000,
-        balance: Math.random() * 5000000
-    })), []);
+    const cashFlowData = useMemo(() => {
+        const base = calculations.totalProjectCost / 24;
+        return Array.from({ length: 24 }, (_, i) => ({
+            month: i + 1,
+            outflow: base * (0.8 + Math.sin(i / 3) * 0.2), // Deterministic pseudo-randomness
+            balance: calculations.totalProjectCost - (base * i)
+        }));
+    }, [calculations.totalProjectCost]);
 
     // Sensitivity Matrix (Price vs Hard Cost)
     const sensitivityX = [-15, -10, -5, 0, 5, 10, 15]; // Price delta %
@@ -254,7 +257,9 @@ export function ProForma() {
                                 value={fin.totalLots}
                                 onUpdate={(v) => setFin({ ...fin, totalLots: Number(v) })}
                             >
-                                {calculations.totalLots}
+                                <span className="axiom-text-high-contrast" style={{ fontSize: 18, fontWeight: 700 }}>
+                                    {calculations.totalLots}
+                                </span>
                             </Field>
                             <Field
                                 label="Land Cost"

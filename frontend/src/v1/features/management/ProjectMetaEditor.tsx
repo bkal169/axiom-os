@@ -2,19 +2,43 @@ import { useProject } from "../../context/ProjectContext";
 import { Field, Button } from "../../components/ui/components";
 
 export function ProjectMetaEditor({ onClose }: { onClose: () => void }) {
-    const { project, setProject } = useProject() as any;
+    const { project, setProject, activeProjectId, switchProject, allProjects, createProject } = useProject() as any;
 
     const handleChange = (key: string, value: any) => {
         setProject({ ...project, [key]: value });
     };
 
+    const handleCreateNew = async () => {
+        const name = prompt("Enter new project name:");
+        if (name) {
+            await createProject(name, "FL", "New Municipality");
+            alert("New project initialized.");
+        }
+    };
+
     return (
         <div className="axiom-modal-overlay" onClick={onClose}>
             <div className="axiom-modal-content axiom-animate-scale-in" onClick={e => e.stopPropagation()} style={{ width: 600 }}>
-                <div className="axiom-modal-header" style={{ marginBottom: 24 }}>
-                    <div className="axiom-label">PROJECT INTELLIGENCE</div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: "var(--c-gold)", marginTop: 4 }}>
-                        Meta & Jurisdiction Data
+                <div className="axiom-modal-header" style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                    <div>
+                        <div className="axiom-label">PROJECT INTELLIGENCE</div>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: "var(--c-gold)", marginTop: 4 }}>
+                            Meta & Jurisdiction Data
+                        </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                        <select
+                            className="axiom-select"
+                            style={{ width: 180, fontSize: 11 }}
+                            value={activeProjectId}
+                            onChange={(e) => switchProject(e.target.value)}
+                            title="Switch Active Project"
+                        >
+                            {allProjects.map((p: any) => (
+                                <option key={p.id} value={p.id}>{p.name || p.id}</option>
+                            ))}
+                        </select>
+                        <Button variant="gold" style={{ padding: "4px 8px" }} onClick={handleCreateNew}>+ NEW</Button>
                     </div>
                 </div>
 

@@ -184,10 +184,14 @@ body.light-mode {
 
 .axiom-kpi-value {
     font-size: 25px;
-    color: var(--c-gold);
+    color: var(--c-text);
     font-weight: 700;
     margin-top: 3px;
     line-height: 1;
+}
+
+.axiom-text-high-contrast {
+    color: var(--c-text) !important;
 }
 
 .axiom-kpi-sub {

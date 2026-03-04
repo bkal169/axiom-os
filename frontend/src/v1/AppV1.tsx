@@ -264,29 +264,29 @@ function ComingSoon({ name }: { name: string }) {
 }
 
 // ─── VIEW RENDERER ────────────────────────────────────────────
-function renderView(view: string) {
+function renderView(view: string, activeProjectId: string) {
     switch (view) {
-        case "dashboard": return <Dashboard projectId="default" />;
+        case "dashboard": return <Dashboard projectId={activeProjectId} />;
         case "contacts": return <Contacts />;
         case "deals": return <Deals />;
         case "analyzer": return <DealAnalyzer />;
         // ─── INTEL ───────────────────────────────────────
-        case "market": return <MarketIntel projectId="default" />;
+        case "market": return <MarketIntel projectId={activeProjectId} />;
         case "mls": return <MLSListings />;
         case "dataintel": return <DataIntel />;
         // ─── SITE ────────────────────────────────────────
-        case "analysis": return <SiteAnalysis projectId="default" />;
-        case "entitlements": return <Entitlements projectId="default" />;
-        case "infrastructure": return <Infrastructure projectId="default" />;
-        case "concept": return <ConceptDesign projectId="default" />;
-        case "sitemap": return <SiteMap projectId="default" />;
+        case "analysis": return <SiteAnalysis projectId={activeProjectId} />;
+        case "entitlements": return <Entitlements projectId={activeProjectId} />;
+        case "infrastructure": return <Infrastructure projectId={activeProjectId} />;
+        case "concept": return <ConceptDesign projectId={activeProjectId} />;
+        case "sitemap": return <SiteMap projectId={activeProjectId} />;
         // ─── FINANCE ─────────────────────────────────────
         case "financials": return <Financials />;
         case "calchub": return <CalcHub />;
         case "invoices": return <Invoices />;
         // ─── EXECUTION ───────────────────────────────────
-        case "process": return <ProjectManagement projectId="default" />;
-        case "risk": return <RiskRegistry projectId="default" />;
+        case "process": return <ProjectManagement projectId={activeProjectId} />;
+        case "risk": return <RiskRegistry projectId={activeProjectId} />;
         case "sitemgmt": return <SiteManagement />;
         case "vendors": return <VendorNetwork />;
         case "network": return <ProfessionalNetwork />;
@@ -320,6 +320,7 @@ function renderView(view: string) {
 function AppContent() {
     const [view, setView] = useState("dashboard");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const { activeProjectId } = useProject() as any;
 
     const sidebarWidth = sidebarCollapsed ? 54 : 220;
 
@@ -401,7 +402,7 @@ function AppContent() {
             <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <TopNav title={NAV_GROUPS.flatMap(g => g.items).find(i => i.id === view)?.label?.replace("⬡ ", "")?.toUpperCase() || "COMMAND CENTER"} setView={setView} />
                 <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
-                    {renderView(view)}
+                    {renderView(view, activeProjectId || "default")}
                 </div>
             </div>
         </div>

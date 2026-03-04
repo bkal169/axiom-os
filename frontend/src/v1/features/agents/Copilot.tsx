@@ -40,7 +40,7 @@ export function Copilot() {
 
     return (
         <div className="axiom-grid-1-280" style={{ gap: 20 }}>
-            <div style={{ height: 700 }}>
+            <div style={{ height: 500 }}>
                 <Agent
                     id="Axiom Copilot"
                     system={MODES[mode].system}
@@ -49,25 +49,17 @@ export function Copilot() {
                 />
             </div>
             <div className="axiom-stack-15">
-                <Card title="Expert Persona">
+                <Card title="Quick Inquiry">
                     <div className="axiom-stack-8">
                         {(Object.entries(MODES) as [keyof typeof MODES, any][]).map(([k, v]) => (
                             <div key={k}
                                 onClick={() => setMode(k)}
                                 className={`axiom-menu-item ${mode === k ? "active" : ""}`}
-                                style={{ fontSize: 12 }}
+                                style={{ fontSize: 12, padding: "8px 12px", background: "var(--c-bg2)", cursor: "pointer", borderRadius: 4, border: mode === k ? "1px solid var(--c-gold)" : "1px solid var(--c-border)", color: mode === k ? "var(--c-gold)" : "var(--c-dim)" }}
                             >
                                 {v.label}
                             </div>
                         ))}
-                    </div>
-                </Card>
-                <Card title="Quick Inquiries">
-                    <div className="axiom-stack-10">
-                        <div className="axiom-list-item-dim-11">Summary of this deal</div>
-                        <div className="axiom-list-item-dim-11">Stress-test construction costs</div>
-                        <div className="axiom-list-item-dim-11">Recommend capital stack</div>
-                        <div className="axiom-list-item-dim-11">Zoning feasibility report</div>
                     </div>
                 </Card>
             </div>
