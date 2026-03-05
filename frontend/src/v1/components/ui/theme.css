@@ -1105,6 +1105,8 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 0;
     overflow: hidden;
+    /* High-density override for split screens */
+    font-size: 0.95em; 
     /* Main area doesn't scroll, panels do */
 }
 
@@ -3276,7 +3278,7 @@ textarea::placeholder {
     --tap-target: 44px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
     .axiom-nav-item {
         padding: 12px 16px;
         font-size: 14px;
