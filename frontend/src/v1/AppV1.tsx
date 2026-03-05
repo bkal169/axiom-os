@@ -52,7 +52,7 @@ import { FloatingToolbar } from "./components/ui/FloatingToolbar";
 import { MeetingRecorder } from "./components/ui/MeetingRecorder";
 import { FloatingPanel } from "./components/ui/FloatingPanel";
 import { Dialer } from "./components/ui/components";
-import { useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./components/ui/theme.css";
 
 // ─── NAV STRUCTURE (matches V20 groups) ──────────────────────
@@ -291,7 +291,20 @@ function AppContent() {
     const [chatOpen, setChatOpen] = useState(false);
     const [meetingOpen, setMeetingOpen] = useState(false);
     const [dialerOpen, setDialerOpen] = useState(false);
-    const [dialerData, setDialerData] = useState({ number: '', name: '' });
+    const [dialerData, setDialerData] = useState({ number: "", name: "" });
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    // ─── Scroll Reset ──────────────────────────────────────────
+    useEffect(() => {
+        if (contentRef.current) {
+            contentRef.current.scrollTop = 0;
+            // Also reset split panes if they exist
+            contentRef.current.querySelectorAll('.axiom-split-pane, .axiom-main-content-area > div').forEach(el => {
+                el.scrollTop = 0;
+            });
+        }
+    }, [view, isSplit]);
+
     const [tickerOpen, setTickerOpen] = useState(true);
     const { activeProjectId, chartSel, setChartSel } = useProject() as unknown as { activeProjectId: string | null; chartSel: string | null; setChartSel: (sel: string | null) => void };
 
@@ -394,7 +407,7 @@ function AppContent() {
                     splitView={splitView} setSplitView={setSplitView}
                     onDetach={() => setFloatingPanels((prev: any) => [...prev, view])}
                 />
-                <div className={`axiom-main-content-area ${isSplit ? 'split' : ''}`}>
+                <div ref={contentRef} className={`axiom-main-content-area ${isSplit ? 'split' : ''}`}>
                     {renderView(view, activeProjectId || "default")}
                     {isSplit && (
                         <div className="axiom-split-pane">

@@ -4,7 +4,16 @@ import "./theme.css";
 // ─── TABS COMPONENT ─────────────────────────────
 export function Tabs({ tabs, children }: { tabs: string[], children: React.ReactNode }) {
     const [active, setActive] = useState(0);
+    const contentRef = React.useRef<HTMLDivElement>(null);
     const kids = React.Children.toArray(children);
+
+    React.useEffect(() => {
+        if (contentRef.current) {
+            const scroller = contentRef.current.closest('.axiom-main-content-area, .axiom-split-pane, [style*="overflow-y: auto"]');
+            if (scroller) scroller.scrollTop = 0;
+        }
+    }, [active]);
+
     return (
         <div>
             <div className="axiom-tabs-nav">
@@ -16,7 +25,7 @@ export function Tabs({ tabs, children }: { tabs: string[], children: React.React
                     </div>
                 ))}
             </div>
-            <div key={active} className="axiom-animate-fade">{kids[active]}</div>
+            <div ref={contentRef} key={active} className="axiom-animate-fade">{kids[active]}</div>
         </div>
     );
 }
