@@ -19,7 +19,7 @@ export function Reports() {
         <Tabs tabs={["IC Memo Generator", "Binder Contents", "Export Options"]}>
             <div>
                 <Card title="Investment Committee Memo Generator" action={<Badge label="AI-Powered" color="var(--c-gold)" />}>
-                    <div className="axiom-text-12-dim" style={{ marginBottom: 16 }}>
+                    <div className="axiom-text-12-dim axiom-mb-16">
                         Generate institutional-quality IC memos, lender packages, and risk assessments directly from your project data.
                     </div>
                     <ICMemoGenerator />
@@ -27,15 +27,15 @@ export function Reports() {
             </div>
             <div>
                 <Card title="Development Feasibility Binder" action={<Badge label={project?.name || "Unnamed Project"} color="var(--c-gold)" />}>
-                    <div className="axiom-text-12-dim" style={{ marginBottom: 16 }}>
+                    <div className="axiom-text-12-dim axiom-mb-16">
                         Complete investor and lender ready development package.
                     </div>
                     <div className="axiom-stack-8">
                         {sections.map((s, i) => (
-                            <div key={i} className="axiom-flex-sb-center" style={{ padding: "8px 12px", background: "var(--c-bg2)", borderRadius: 6, border: "1px solid var(--c-border)" }}>
-                                <div className="axiom-flex-gap-8-center">
-                                    <input type="checkbox" defaultChecked className="axiom-checkbox" title={`Include ${s}`} />
-                                    <span className="axiom-text-13">{s}</span>
+                            <div key={i} className="axiom-flex-sb-center axiom-p-8-12 axiom-radius-6 axiom-border-1 axiom-bg-2">
+                                <div className="axiom-flex-center-gap-8">
+                                    <input type="checkbox" defaultChecked className="axiom-checkbox" title={`Include ${s}`} id={`section-${i}`} />
+                                    <label htmlFor={`section-${i}`} className="axiom-text-13 axiom-pointer">{s}</label>
                                 </div>
                                 <Badge label="Ready" color="var(--c-green)" />
                             </div>
@@ -53,10 +53,10 @@ export function Reports() {
                         { fmt: "Word - DD Summary", desc: "Due diligence checklist and findings memo", ext: ".docx", type: "text" },
                         { fmt: "CSV - Data Export", desc: "Raw data export for external analysis", ext: ".csv", type: "csv" },
                     ].map((e, i) => (
-                        <div key={i} className="axiom-list-item-sb" style={{ padding: "12px 0" }}>
-                            <div style={{ flex: 1 }}>
-                                <div className="axiom-text-13">{e.fmt}</div>
-                                <div className="axiom-text-11-dim" style={{ marginTop: 2 }}>{e.desc}</div>
+                        <div key={i} className="axiom-list-item-sb axiom-py-12">
+                            <div className="axiom-flex-1">
+                                <div className="axiom-text-13-text-bold">{e.fmt}</div>
+                                <div className="axiom-text-11-dim axiom-mt-2">{e.desc}</div>
                             </div>
                             <Button label="Export" onClick={() => {
                                 if (e.type === "csv") {
@@ -151,23 +151,23 @@ ${permits?.length ? permits.filter((p: any) => p.status !== 'Approved' && p.req)
 
     return (
         <div>
-            <div className="axiom-grid-4" style={{ marginBottom: 20, gap: 12 }}>
+            <div className="axiom-grid-4 axiom-mb-20 axiom-gap-12">
                 {MEMO_TYPES.map(mt => (
-                    <div key={mt.id} onClick={() => setMemoType(mt.id)} className={`axiom-memo-card ${memoType === mt.id ? "active" : ""}`} style={{ cursor: "pointer", padding: 12, border: "1px solid var(--c-border)", borderRadius: 8, transition: "0.2s" }}>
-                        <div style={{ fontSize: 20, marginBottom: 8 }}>{mt.icon}</div>
+                    <div key={mt.id} onClick={() => setMemoType(mt.id)} className={`axiom-memo-card axiom-p-12 axiom-border-1 axiom-radius-8 ${memoType === mt.id ? "active" : ""}`} title={mt.desc}>
+                        <div className="axiom-text-20 axiom-mb-8">{mt.icon}</div>
                         <div className="axiom-text-12-bold">{mt.label}</div>
-                        <div className="axiom-text-10-dim" style={{ marginTop: 2 }}>{mt.desc}</div>
+                        <div className="axiom-text-10-dim axiom-mt-2">{mt.desc}</div>
                     </div>
                 ))}
             </div>
 
             <div className="axiom-snapshot">
-                <div className="axiom-label" style={{ marginBottom: 12 }}>DEAL SNAPSHOT — {project?.name || "No Active Project"}</div>
+                <div className="axiom-label axiom-mb-12">DEAL SNAPSHOT — {project?.name || "No Active Project"}</div>
                 <div className="axiom-grid-3">
                     {[["Lots", fin.totalLots || "—"], ["Total Cost", fmt.M(totalCost)], ["Revenue", fmt.M(revenue)], ["Profit", fmt.M(profit)], ["Margin", margin.toFixed(1) + "%"], ["ROI", roi.toFixed(1) + "%"]].map(([l, v]) => (
-                        <div key={l} style={{ textAlign: "center" }}>
+                        <div key={l} className="axiom-text-center">
                             <div className="axiom-text-9-dim-caps">{l}</div>
-                            <div className="axiom-text-14-bold" style={{ marginTop: 4 }}>{v}</div>
+                            <div className="axiom-text-14-bold axiom-mt-4">{v}</div>
                         </div>
                     ))}
                 </div>
@@ -182,12 +182,12 @@ ${permits?.length ? permits.filter((p: any) => p.status !== 'Approved' && p.req)
             />
 
             {memo && (
-                <div className="axiom-stack-15" style={{ marginTop: 20 }}>
-                    <div className="axiom-flex-sb-center" style={{ marginBottom: 10 }}>
+                <div className="axiom-stack-15 axiom-mt-20">
+                    <div className="axiom-flex-sb-center axiom-mb-10">
                         <div className="axiom-text-11-green-bold">✓ Document Generated</div>
                         <div className="axiom-flex-gap-8">
-                            <Button label="Copy" onClick={() => navigator.clipboard.writeText(memo)} />
-                            <Button label="Download" onClick={() => downloadText(memo, `axiom_${memoType}.txt`)} />
+                            <Button label="Copy" onClick={() => navigator.clipboard.writeText(memo)} className="axiom-p-4-10 axiom-text-10" />
+                            <Button label="Download" onClick={() => downloadText(memo, `axiom_${memoType}.txt`)} variant="gold" className="axiom-p-4-10 axiom-text-10" />
                         </div>
                     </div>
                     <div className="axiom-memo-output">

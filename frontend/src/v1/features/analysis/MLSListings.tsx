@@ -82,10 +82,10 @@ export function MLSListings() {
         <Tabs tabs={["Active Listings", "Saved Searches", "Data Feeds", "Property Alerts"]}>
             {/* ─ Active Listings ─ */}
             <div>
-                <div className="axiom-flex-row" style={{ gap: 8, marginBottom: 14 }}>
-                    <input className="axiom-input" style={{ flex: 1 }} placeholder="Search by address, city, APN, or keyword..." />
-                    <select className="axiom-select"><option>All Sources</option><option>Zillow</option><option>Redfin</option><option>MLS</option><option>ATTOM</option></select>
-                    <select className="axiom-select"><option>All Statuses</option><option>Active</option><option>New</option><option>Price Reduced</option></select>
+                <div className="axiom-flex-gap-8 axiom-mb-14">
+                    <input className="axiom-input axiom-flex-1" placeholder="Search by address, city, APN, or keyword..." title="Search Listings" />
+                    <select className="axiom-select" title="Filter by Source"><option>All Sources</option><option>Zillow</option><option>Redfin</option><option>MLS</option><option>ATTOM</option></select>
+                    <select className="axiom-select" title="Filter by Status"><option>All Statuses</option><option>Active</option><option>New</option><option>Price Reduced</option></select>
                     <Button variant="gold" label="Search" onClick={() => { }} />
                 </div>
                 <Card title="Matching Properties" action={<Badge label={loading ? "Syncing APIs..." : listings.length + " Results"} color={loading ? "var(--c-amber)" : "var(--c-blue)"} />}>
@@ -93,16 +93,18 @@ export function MLSListings() {
                         <thead><tr>{["Address", "City", "Price", "Acres", "Est. Lots", "Zoning", "Source", "DOM", "Status", ""].map(h => <th key={h} className="axiom-th">{h}</th>)}</tr></thead>
                         <tbody>{listings.map(l => (
                             <tr key={l.id}>
-                                <td className="axiom-td" style={{ color: "var(--c-text)", fontWeight: 600 }}>{l.address}</td>
+                                <td className="axiom-td axiom-text-sub axiom-text-bold">{l.address}</td>
                                 <td className="axiom-td">{l.city}</td>
-                                <td className="axiom-td" style={{ color: "var(--c-gold)" }}>{fmt.usd(l.price)}</td>
+                                <td className="axiom-td axiom-text-gold">{fmt.usd(l.price)}</td>
                                 <td className="axiom-td">{l.acres} ac</td>
                                 <td className="axiom-td">{l.lots}</td>
                                 <td className="axiom-td"><Badge label={l.zoning} color="var(--c-blue)" /></td>
                                 <td className="axiom-td"><Badge label={l.source} color={TYPE_COL[l.source] || "var(--c-dim)"} /></td>
                                 <td className="axiom-td">{l.dom}d</td>
                                 <td className="axiom-td"><Badge label={l.status} color={LISTING_COL[l.status] || "var(--c-dim)"} /></td>
-                                <td className="axiom-td"><Button label="Import" onClick={() => { }} style={{ padding: "2px 8px", fontSize: 9 }} /></td>
+                                <td className="axiom-td">
+                                    <Button label="Import" onClick={() => { }} className="axiom-p-2-8 axiom-text-9" />
+                                </td>
                             </tr>
                         ))}</tbody>
                     </table>
@@ -113,26 +115,26 @@ export function MLSListings() {
             <div>
                 <Card title="Saved Searches" action={<Badge label={(searches as any[]).length + " Saved"} color="var(--c-gold)" />}>
                     {(searches as any[]).map((s: any) => (
-                        <div key={s.id} className="axiom-flex-between" style={{ padding: "10px 0", borderBottom: "1px solid var(--c-border)" }}>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 600 }}>{s.name}</div>
-                                <div className="axiom-text-10-dim" style={{ marginTop: 2 }}>{s.criteria}</div>
+                        <div key={s.id} className="axiom-flex-sb-center axiom-py-20" style={{ borderBottom: "1px solid var(--c-border)" }}>
+                            <div className="axiom-flex-1">
+                                <div className="axiom-text-13-text-bold axiom-text-white">{s.name}</div>
+                                <div className="axiom-text-10-dim axiom-mt-4">{s.criteria}</div>
                             </div>
                             <Badge label={s.results + " results"} color="var(--c-blue)" />
-                            <span className="axiom-text-10-dim" style={{ margin: "0 8px" }}>{s.lastRun}</span>
+                            <span className="axiom-text-10-dim axiom-mx-8">{s.lastRun}</span>
                             <Badge label={s.alerts ? "Alerts On" : "Alerts Off"} color={s.alerts ? "var(--c-green)" : "var(--c-dim)"} />
-                            <Button label="x" onClick={() => setSearches((searches as any[]).filter((x: any) => x.id !== s.id))} style={{ marginLeft: 8, padding: "2px 7px", fontSize: 9 }} />
+                            <Button label="x" onClick={() => setSearches((searches as any[]).filter((x: any) => x.id !== s.id))} className="axiom-ml-8 axiom-p-2-7 axiom-text-9" />
                         </div>
                     ))}
                 </Card>
                 <Card title="Create Saved Search">
-                    <div className="axiom-grid-2" style={{ marginBottom: 12 }}>
-                        <Field label="Search Name"><input className="axiom-input" value={ns.name} onChange={e => setNs({ ...ns, name: e.target.value })} placeholder="e.g., Infill Lots - Sacramento" /></Field>
-                        <Field label="Criteria"><input className="axiom-input" value={ns.criteria} onChange={e => setNs({ ...ns, criteria: e.target.value })} placeholder="Acreage, zoning, price range, location..." /></Field>
+                    <div className="axiom-grid-2 axiom-mb-12">
+                        <Field label="Search Name"><input className="axiom-input" value={ns.name} onChange={e => setNs({ ...ns, name: e.target.value })} placeholder="e.g., Infill Lots - Sacramento" title="Search Name" /></Field>
+                        <Field label="Criteria"><input className="axiom-input" value={ns.criteria} onChange={e => setNs({ ...ns, criteria: e.target.value })} placeholder="Acreage, zoning, price range, location..." title="Criteria" /></Field>
                     </div>
-                    <div className="axiom-flex-row" style={{ gap: 8, marginBottom: 12 }}>
-                        <input type="checkbox" checked={ns.alerts} onChange={() => setNs({ ...ns, alerts: !ns.alerts })} style={{ accentColor: "var(--c-gold)" }} />
-                        <span style={{ fontSize: 12, color: "var(--c-sub)" }}>Email alerts when new matches found</span>
+                    <div className="axiom-flex-gap-8 axiom-mb-12 axiom-items-center">
+                        <input type="checkbox" checked={ns.alerts} onChange={() => setNs({ ...ns, alerts: !ns.alerts })} className="axiom-checkbox" title="Email Alerts" id="listing-alerts" />
+                        <label htmlFor="listing-alerts" className="axiom-text-12 color-sub axiom-pointer">Email alerts when new matches found</label>
                     </div>
                     <Button variant="gold" label="Save Search" onClick={addSearch} />
                 </Card>
@@ -145,19 +147,21 @@ export function MLSListings() {
                         <thead><tr>{["Feed Name", "Type", "Endpoint", "Records", "Last Sync", "Status", "Actions"].map(h => <th key={h} className="axiom-th">{h}</th>)}</tr></thead>
                         <tbody>{(feeds as any[]).map((f: any) => (
                             <tr key={f.id}>
-                                <td className="axiom-td" style={{ color: "var(--c-text)", fontWeight: 600 }}>{f.name}</td>
+                                <td className="axiom-td axiom-text-sub axiom-text-bold">{f.name}</td>
                                 <td className="axiom-td"><Badge label={f.type} color={TYPE_COL[f.type] || "var(--c-dim)"} /></td>
-                                <td className="axiom-td" style={{ fontSize: 10, color: "var(--c-dim)" }}>{f.endpoint}</td>
-                                <td className="axiom-td" style={{ color: "var(--c-gold)" }}>{f.records.toLocaleString()}</td>
-                                <td className="axiom-td" style={{ fontSize: 10, color: "var(--c-dim)" }}>{f.lastSync || "Never"}</td>
+                                <td className="axiom-td axiom-text-10-dim">{f.endpoint}</td>
+                                <td className="axiom-td axiom-text-gold">{f.records.toLocaleString()}</td>
+                                <td className="axiom-td axiom-text-10-dim">{f.lastSync || "Never"}</td>
                                 <td className="axiom-td">
-                                    <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: STATUS_COL[f.status], marginRight: 6 }} />
-                                    <span style={{ fontSize: 12 }}>{f.status}</span>
+                                    <div className="axiom-flex-center-gap-6">
+                                        <span className="axiom-w-7 axiom-h-7 axiom-radius-50p" style={{ background: STATUS_COL[f.status] }} title={f.status} />
+                                        <span className="axiom-text-12">{f.status}</span>
+                                    </div>
                                 </td>
                                 <td className="axiom-td">
-                                    <div className="axiom-flex-row" style={{ gap: 4 }}>
-                                        <Button label={f.status === "Connected" ? "Pause" : "Connect"} onClick={() => toggle(f.id)} style={{ padding: "2px 8px", fontSize: 9 }} />
-                                        <Button label="Sync" onClick={() => { }} style={{ padding: "2px 8px", fontSize: 9 }} />
+                                    <div className="axiom-flex-gap-4">
+                                        <Button label={f.status === "Connected" ? "Pause" : "Connect"} onClick={() => toggle(f.id)} className="axiom-p-2-8 axiom-text-9" />
+                                        <Button label="Sync" onClick={() => { }} className="axiom-p-2-8 axiom-text-9" />
                                     </div>
                                 </td>
                             </tr>
@@ -177,13 +181,15 @@ export function MLSListings() {
                         ["Off-Market Opportunities", "Broker network leads and pocket listings"],
                         ["Permit Activity", "New entitlement applications near target areas"],
                     ].map(([t, d], i) => (
-                        <div key={i} className="axiom-flex-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--c-border)" }}>
-                            <input type="checkbox" defaultChecked={i < 3} style={{ accentColor: "var(--c-gold)", marginRight: 10 }} />
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 13, color: "var(--c-text)" }}>{t}</div>
-                                <div className="axiom-text-10-dim">{d}</div>
+                        <div key={i} className="axiom-flex-sb-center axiom-mb-8 axiom-py-8" style={{ borderBottom: "1px solid var(--c-border)" }}>
+                            <div className="axiom-flex-center-gap-10 axiom-flex-1">
+                                <input type="checkbox" defaultChecked={i < 3} className="axiom-checkbox" title={t} id={`alert-${i}`} />
+                                <div>
+                                    <label htmlFor={`alert-${i}`} className="axiom-text-13-text-bold axiom-text-white axiom-pointer">{t}</label>
+                                    <div className="axiom-text-10-dim">{d}</div>
+                                </div>
                             </div>
-                            <select className="axiom-select" style={{ width: 90, padding: "3px 6px", fontSize: 10 }}>
+                            <select className="axiom-select axiom-w-90 axiom-p-3-6 axiom-text-10" title="Notification Channel">
                                 <option>Email</option><option>SMS</option><option>Both</option><option>Off</option>
                             </select>
                         </div>

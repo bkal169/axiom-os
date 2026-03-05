@@ -235,8 +235,8 @@ const buildMonthlyCashFlows = (fin) => {
 const Ctx = createContext(null);
 const usePrj = () => useContext(Ctx);
 
-function Card({ title, children, action }) {
-  return <div style={S.card}><div style={S.ct}><span>{title}</span>{action}</div>{children}</div>;
+function Card({ title, children, action, style, className }) {
+  return <div style={{ ...S.card, ...style }} className={className}><div style={S.ct}><span>{title}</span>{action}</div>{children}</div>;
 }
 function KPI({ label, value, sub, color, trend }) {
   return (

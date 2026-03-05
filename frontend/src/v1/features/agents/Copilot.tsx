@@ -39,8 +39,8 @@ export function Copilot() {
     }, [project, fin, loan, equity]);
 
     return (
-        <div className="axiom-grid-1-280" style={{ gap: 20 }}>
-            <div style={{ height: 500 }}>
+        <div className="axiom-grid-1-280 axiom-gap-20">
+            <div className="axiom-h-500">
                 <Agent
                     id="Axiom Copilot"
                     system={MODES[mode].system}
@@ -54,8 +54,8 @@ export function Copilot() {
                         {(Object.entries(MODES) as [keyof typeof MODES, any][]).map(([k, v]) => (
                             <div key={k}
                                 onClick={() => setMode(k)}
-                                className={`axiom-menu-item ${mode === k ? "active" : ""}`}
-                                style={{ fontSize: 12, padding: "8px 12px", background: "var(--c-bg2)", cursor: "pointer", borderRadius: 4, border: mode === k ? "1px solid var(--c-gold)" : "1px solid var(--c-border)", color: mode === k ? "var(--c-gold)" : "var(--c-dim)" }}
+                                className={`axiom-menu-item axiom-text-12 axiom-py-8 axiom-px-12 axiom-bg-2 axiom-pointer axiom-radius-4 axiom-border-1 ${mode === k ? "active" : ""}`}
+                                title={v.label}
                             >
                                 {v.label}
                             </div>

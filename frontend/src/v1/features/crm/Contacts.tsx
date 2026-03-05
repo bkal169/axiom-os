@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { supa } from "../../lib/supabase";
 import { useLS } from "../../hooks/useLS";
-import { Card, Field, Badge, Button } from "../../components/ui/components";
+import { Card, Field, Badge, Button, FileAttachment } from "../../components/ui/components";
 import { Tabs, Dot } from "../../components/ui/layout";
 import { downloadCSV } from "../../lib/utils";
 
@@ -122,12 +122,12 @@ export function Contacts() {
         <Tabs tabs={["Directory", "Add Contact", "Import/Export"]}>
             {/* ─── DIRECTORY ───────────────────────────────── */}
             <div>
-                <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                <div className="axiom-flex-gap-10 axiom-mb-14">
                     <input className="axiom-input" style={{ flex: 1 }} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search contacts by name or company..." title="Search Contacts" />
                     <select className="axiom-select" style={{ width: 140 }} value={filterType} onChange={e => setFilterType(e.target.value)} title="Filter by Type"><option>All</option>{TYPES.map(t => <option key={t}>{t}</option>)}</select>
                     <select className="axiom-select" style={{ width: 120 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)} title="Filter by Status"><option>All</option>{STATUSES.map(s => <option key={s}>{s}</option>)}</select>
                 </div>
-                <Card title={`Contact Directory (${filtered.length})`} action={<div style={{ display: "flex", gap: 8, alignItems: "center" }}>{syncing && <span style={{ fontSize: 9, color: "var(--c-gold)" }}>syncing...</span>}<Badge label={contacts.filter(c => c.status === "Active").length + " Active"} color="var(--c-green)" /></div>}>
+                <Card title={`Contact Directory (${filtered.length})`} action={<div className="axiom-flex-gap-8">{syncing && <span className="axiom-text-9-gold">syncing...</span>}<Badge label={contacts.filter(c => c.status === "Active").length + " Active"} color="var(--c-green)" /></div>}>
                     <table className="axiom-table">
                         <thead>
                             <tr>
@@ -136,15 +136,18 @@ export function Contacts() {
                         </thead>
                         <tbody>{filtered.map(c => (
                             <tr key={c.id} onClick={() => setDrawer(c)} className="premium-hover">
-                                <td className="axiom-td" style={{ color: "var(--c-text)", fontWeight: 600 }}>{c.name}</td>
+                                <td className="axiom-td axiom-text-12-text-b600">{c.name}</td>
                                 <td className="axiom-td"><Badge label={c.type} color={TC[c.type] || "var(--c-dim)"} /></td>
-                                <td className="axiom-td" style={{ fontSize: 12 }}>{c.company}</td>
-                                <td className="axiom-td" style={{ fontSize: 12, color: "var(--c-blue)" }}>{c.email}</td>
-                                <td className="axiom-td" style={{ fontSize: 12 }}>{c.phone}</td>
+                                <td className="axiom-td axiom-text-12">{c.company}</td>
+                                <td className="axiom-td axiom-text-12-blue">{c.email}</td>
+                                <td className="axiom-td axiom-text-12" style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                    {c.phone}
+                                    {c.phone && <button className="axiom-btn-icon axiom-text-gold" onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent("axiom_open_dialer", { detail: { number: c.phone, name: c.name } })); }}>📞</button>}
+                                </td>
                                 <td className="axiom-td">{c.deals?.length || 0}</td>
-                                <td className="axiom-td"><Dot color={SC2[c.status] || "var(--c-dim)"} /><span style={{ fontSize: 12 }}>{c.status}</span></td>
-                                <td className="axiom-td" style={{ fontSize: 10, color: "var(--c-dim)" }}>{c.lastContact}</td>
-                                <td className="axiom-td"><Button onClick={(e: any) => { e?.stopPropagation(); delContact(c.id); }}>x</Button></td>
+                                <td className="axiom-td axiom-text-12"><Dot color={SC2[c.status] || "var(--c-dim)"} />{c.status}</td>
+                                <td className="axiom-td axiom-text-10-dim">{c.lastContact}</td>
+                                <td className="axiom-td"><Button className="axiom-btn-icon" onClick={(e: React.MouseEvent) => { e.stopPropagation(); delContact(c.id); }} label="x" /></td>
                             </tr>
                         ))}</tbody>
                     </table>
@@ -159,7 +162,8 @@ export function Contacts() {
                             <Field label="Phone"><input className="axiom-input" value={drawer.phone} onChange={e => updContact(drawer.id, "phone", e.target.value)} title="Phone" /></Field>
                             <Field label="Status"><select className="axiom-select" value={drawer.status} onChange={e => updContact(drawer.id, "status", e.target.value)} title="Status">{STATUSES.map(s => <option key={s}>{s}</option>)}</select></Field>
                         </div>
-                        <Field label="Notes" style={{ marginTop: 14 }}><textarea className="axiom-input" style={{ height: 60 }} value={drawer.notes} onChange={e => updContact(drawer.id, "notes", e.target.value)} title="Notes" /></Field>
+                        <Field label="Notes" className="axiom-mt-14"><textarea className="axiom-input" style={{ height: 60 }} value={drawer.notes} onChange={e => updContact(drawer.id, "notes", e.target.value)} title="Notes" /></Field>
+                        <FileAttachment context={`contacts/${drawer.id}`} />
                     </Card>
                 )}
             </div>
@@ -175,8 +179,8 @@ export function Contacts() {
                         <Field label="Phone"><input className="axiom-input" value={nc.phone} onChange={e => setNc({ ...nc, phone: e.target.value })} placeholder="(555) 000-0000" title="Phone" /></Field>
                         <Field label="Status"><select className="axiom-select" value={nc.status} onChange={e => setNc({ ...nc, status: e.target.value })} title="Status">{STATUSES.map(s => <option key={s}>{s}</option>)}</select></Field>
                     </div>
-                    <Field label="Notes" style={{ marginTop: 14 }}><textarea className="axiom-input" style={{ height: 60 }} value={nc.notes} onChange={e => setNc({ ...nc, notes: e.target.value })} placeholder="Background, relationship, specialties..." title="Notes" /></Field>
-                    <div style={{ marginTop: 14 }}>
+                    <Field label="Notes" className="axiom-mt-14"><textarea className="axiom-input" style={{ height: 60 }} value={nc.notes} onChange={e => setNc({ ...nc, notes: e.target.value })} placeholder="Background, relationship, specialties..." title="Notes" /></Field>
+                    <div className="axiom-mt-14">
                         <Button variant="gold" onClick={addContact} label="Add Contact" />
                     </div>
                 </Card>
@@ -185,11 +189,11 @@ export function Contacts() {
             {/* ─── EXPORT ───────────────────────────────── */}
             <div>
                 <Card title="Import / Export Contacts">
-                    <div style={{ display: "flex", gap: "20px" }}>
-                        <div style={{ flex: 1 }}>
+                    <div className="axiom-flex" style={{ gap: "20px" }}>
+                        <div className="axiom-flex-1">
                             {[["Export All Contacts (CSV)", "Download all contacts as spreadsheet"], ["Export Active Only", "Active contacts with deal links"]].map(([l, d], i) => (
                                 <div key={i} className="axiom-checkbox-item">
-                                    <div style={{ flex: 1 }}><div style={{ fontSize: 13, color: "var(--c-text)" }}>{l}</div><div className="axiom-kpi-sub">{d}</div></div>
+                                    <div className="axiom-flex-1"><div className="axiom-text-13-text">{l}</div><div className="axiom-kpi-sub">{d}</div></div>
                                     <Button label="Export" onClick={() => {
                                         const headers = ["ID", "Name", "Type", "Company", "Email", "Phone", "Status", "Deals", "Notes", "Last Contact"];
                                         let rows = contacts;

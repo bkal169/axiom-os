@@ -107,31 +107,31 @@ export function DataIntel() {
         <Tabs tabs={["Intel Feed", "Add Record", "Analytics", "Live Market"]}>
             {/* ─ Intel Feed ─ */}
             <div>
-                <div className="axiom-flex-row" style={{ gap: 8, marginBottom: 14 }}>
-                    <input className="axiom-input" style={{ flex: 1 }} placeholder="Search intel records..." />
-                    <select className="axiom-select" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                <div className="axiom-flex-gap-8 axiom-mb-14">
+                    <input className="axiom-input axiom-flex-1" placeholder="Search intel records..." title="Search Intel" />
+                    <select className="axiom-select" value={filterType} onChange={e => setFilterType(e.target.value)} title="Filter by Type">
                         <option>All</option>{INTEL_TYPES.map(t => <option key={t}>{t}</option>)}
                     </select>
-                    <select className="axiom-select" value={filterRel} onChange={e => setFilterRel(e.target.value)}>
+                    <select className="axiom-select" value={filterRel} onChange={e => setFilterRel(e.target.value)} title="Filter by Relevance">
                         <option>All</option><option>High</option><option>Medium</option><option>Low</option>
                     </select>
                 </div>
                 <Card title={`Intelligence Feed (${filtered.length} records)`}>
                     {filtered.map((r: any) => (
-                        <div key={r.id} className="axiom-flex-row" style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid var(--c-border)" }}>
-                            <div style={{ flex: 1 }}>
-                                <div className="axiom-flex-row" style={{ gap: 6, alignItems: "center", marginBottom: 4 }}>
+                        <div key={r.id} className="axiom-flex-gap-12 axiom-py-12" style={{ borderBottom: "1px solid var(--c-border)" }}>
+                            <div className="axiom-flex-1">
+                                <div className="axiom-flex-gap-6 axiom-items-center axiom-mb-4">
                                     <Badge label={r.type} color={TYPE_COL[r.type] || "var(--c-dim)"} />
                                     <Badge label={r.relevance} color={REL_COL[r.relevance] || "var(--c-dim)"} />
                                     {r.linked && <Badge label="Linked" color="var(--c-gold)" />}
-                                    <span className="axiom-text-10-dim" style={{ marginLeft: "auto" }}>{r.date}</span>
+                                    <span className="axiom-text-10-dim axiom-ml-auto">{r.date}</span>
                                 </div>
-                                <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 600, marginBottom: 2 }}>{r.title}</div>
+                                <div className="axiom-text-13 axiom-text-sub axiom-text-bold axiom-mb-2">{r.title}</div>
                                 <div className="axiom-text-10-dim">Source: {r.source}</div>
-                                <div style={{ fontSize: 12, color: "var(--c-sub)", lineHeight: 1.4, marginTop: 2 }}>{r.summary}</div>
+                                <div className="axiom-text-12 axiom-text-sub axiom-lh-14 axiom-mt-2">{r.summary}</div>
                             </div>
-                            <div className="axiom-flex-col" style={{ gap: 4 }}>
-                                <Button label="x" onClick={() => setRecords((records as any[]).filter((x: any) => x.id !== r.id))} style={{ padding: "2px 7px", fontSize: 9 }} />
+                            <div className="axiom-flex-col axiom-flex-gap-4">
+                                <Button label="x" onClick={() => setRecords((records as any[]).filter((x: any) => x.id !== r.id))} className="axiom-p-2-7 axiom-text-9" />
                             </div>
                         </div>
                     ))}
@@ -141,17 +141,17 @@ export function DataIntel() {
             {/* ─ Add Record ─ */}
             <div>
                 <Card title="Add Intel Record">
-                    <div className="axiom-grid-3" style={{ marginBottom: 12 }}>
+                    <div className="axiom-grid-3 axiom-mb-12">
                         <Field label="Intel Type"><select className="axiom-select" value={nr.type} onChange={e => setNr({ ...nr, type: e.target.value })}>{INTEL_TYPES.map(t => <option key={t}>{t}</option>)}</select></Field>
                         <Field label="Title"><input className="axiom-input" value={nr.title} onChange={e => setNr({ ...nr, title: e.target.value })} placeholder="Brief descriptive title" /></Field>
                         <Field label="Source"><input className="axiom-input" value={nr.source} onChange={e => setNr({ ...nr, source: e.target.value })} placeholder="CoStar, County Records, MLS..." /></Field>
                     </div>
                     <Field label="Summary / Analysis" mb={12}>
-                        <textarea className="axiom-input" style={{ height: 80 }} value={nr.summary} onChange={e => setNr({ ...nr, summary: e.target.value })} placeholder="Detailed analysis and implications..." />
+                        <textarea className="axiom-input axiom-h-80" value={nr.summary} onChange={e => setNr({ ...nr, summary: e.target.value })} placeholder="Detailed analysis and implications..." title="Summary" />
                     </Field>
-                    <div className="axiom-grid-2" style={{ marginBottom: 12 }}>
-                        <Field label="Relevance"><select className="axiom-select" value={nr.relevance} onChange={e => setNr({ ...nr, relevance: e.target.value })}><option>High</option><option>Medium</option><option>Low</option></select></Field>
-                        <Field label="Link to Active Deal?"><select className="axiom-select" value={nr.linked ? "Yes" : "No"} onChange={e => setNr({ ...nr, linked: e.target.value === "Yes" })}><option>No</option><option>Yes</option></select></Field>
+                    <div className="axiom-grid-2 axiom-mb-12">
+                        <Field label="Relevance"><select className="axiom-select" value={nr.relevance} onChange={e => setNr({ ...nr, relevance: e.target.value })} title="Relevance"><option>High</option><option>Medium</option><option>Low</option></select></Field>
+                        <Field label="Link to Active Deal?"><select className="axiom-select" value={nr.linked ? "Yes" : "No"} onChange={e => setNr({ ...nr, linked: e.target.value === "Yes" })} title="Link to Deal"><option>No</option><option>Yes</option></select></Field>
                     </div>
                     <Button variant="gold" label="Save Intel Record" onClick={addRec} />
                 </Card>
@@ -178,13 +178,13 @@ export function DataIntel() {
             {/* ─ Live Market ─ */}
             <div>
                 <Card title="Live Market Feed" action={<Button label={refreshing ? "Syncing..." : "Sync FRED APIs"} onClick={handleRefreshData} variant="gold" />}>
-                    <div className="axiom-text-12-dim" style={{ marginBottom: 14 }}>Real-time data from connected APIs and MCP servers.</div>
+                    <div className="axiom-text-12-dim axiom-mb-14">Real-time data from connected APIs and MCP servers.</div>
                     {liveMetrics.map((m, i) => (
-                        <div key={i} className="axiom-flex-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--c-border)" }}>
-                            <div style={{ flex: 1, fontSize: 13, color: "var(--c-text)" }}>{m.metric}</div>
-                            <div style={{ fontSize: 15, color: "var(--c-gold)", fontWeight: 700 }}>{m.value}</div>
-                            <div style={{ fontSize: 12, color: m.change.includes("-") ? "var(--c-red)" : "var(--c-green)", width: 64, textAlign: "right" }}>{m.change}</div>
-                            <div className="axiom-text-10-dim" style={{ width: 70, textAlign: "right" }}>{m.src}</div>
+                        <div key={i} className="axiom-flex-sb-center axiom-py-8" style={{ borderBottom: "1px solid var(--c-border)" }}>
+                            <div className="axiom-flex-1 axiom-text-13 axiom-text-sub">{m.metric}</div>
+                            <div className="axiom-text-15-gold-bold">{m.value}</div>
+                            <div className="axiom-text-12 axiom-w-64 axiom-text-right" style={{ color: m.change.includes("-") ? "var(--c-red)" : "var(--c-green)" }}>{m.change}</div>
+                            <div className="axiom-text-10-dim axiom-w-70 axiom-text-right">{m.src}</div>
                         </div>
                     ))}
                 </Card>

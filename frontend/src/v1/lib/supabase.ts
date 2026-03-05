@@ -209,6 +209,49 @@ class SupabaseClient {
         });
         return r.json();
     }
+
+    get storage() {
+        return {
+            from: (bucket: string) => ({
+                upload: async (path: string, file: File, options: any = {}) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const r = await fetch(`${this.url}/storage/v1/object/${bucket}/${path}`, {
+                        method: "POST",
+                        headers: {
+                            apikey: this.key,
+                            Authorization: `Bearer ${this.token || this.key}`,
+                            ...options?.upsert ? { "x-upsert": "true" } : {}
+                        },
+                        body: formData
+                    });
+                    if (!r.ok) return { data: null, error: await r.json() };
+                    return { data: await r.json(), error: null };
+                },
+                getPublicUrl: (path: string) => ({
+                    data: { publicUrl: `${this.url}/storage/v1/object/public/${bucket}/${path}` }
+                }),
+                remove: async (paths: string[]) => {
+                    const r = await fetch(`${this.url}/storage/v1/object/${bucket}`, {
+                        method: "DELETE",
+                        headers: { ...this.headers() },
+                        body: JSON.stringify({ prefixes: paths })
+                    });
+                    if (!r.ok) return { data: null, error: await r.json() };
+                    return { data: await r.json(), error: null };
+                },
+                list: async (prefix: string) => {
+                    const r = await fetch(`${this.url}/storage/v1/object/list/${bucket}`, {
+                        method: "POST",
+                        headers: { ...this.headers() },
+                        body: JSON.stringify({ prefix, limit: 100, offset: 0, sortBy: { column: 'name', order: 'asc' } })
+                    });
+                    if (!r.ok) return { data: null, error: await r.json() };
+                    return { data: await r.json(), error: null };
+                }
+            })
+        };
+    }
 }
 
 export const supa = new SupabaseClient();

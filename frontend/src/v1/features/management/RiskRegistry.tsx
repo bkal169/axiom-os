@@ -1,192 +1,123 @@
 import { useState } from "react";
-import { useProjectState } from "../../hooks/useProjectState";
-import { useProject } from "../../context/ProjectContext";
-import { Card, KPI, Badge } from "../../components/ui/components";
-import { DEFAULT_RISKS } from "../../lib/defaults";
-import {
-    Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
-} from "recharts";
-import { CHART_TT_BAR } from "../../lib/chartTheme";
+import { Card, KPI, Badge, Progress, Button, Field, AxiomTable } from "../../components/ui/components";
+import { Tabs } from "../../components/ui/layout";
+import { useLS } from "../../hooks/useLS";
 
-interface Props { projectId: string; }
+interface Risk {
+    id: number;
+    title: string;
+    impact: "Low" | "Medium" | "High" | "Critical";
+    probability: number; // 0-100
+    owner: string;
+    status: string;
+}
 
-export function RiskRegistry({ projectId }: Props) {
-    const { project, updateProject } = useProjectState(projectId);
-    const { setChartSel } = useProject() as any;
-    const risks: any[] = project.risks ?? DEFAULT_RISKS;
+const IMPACT_COLORS: Record<string, string> = { Critical: "var(--c-red)", High: "var(--c-amber)", Medium: "var(--c-blue)", Low: "var(--c-dim)" };
 
-    const [nr, setNr] = useState({
-        cat: "Market", risk: "", likelihood: "Medium",
-        impact: "Medium", severity: "Medium", mitigation: "", status: "Open"
-    });
+export function RiskRegistry({ projectId: _projectId }: { projectId: string }) {
+    const [risks, setRisks] = useLS("axiom_risks", [
+        { id: 1, title: "Utility Connection Delay", impact: "High", probability: 65, owner: "Thompson", status: "Mitigating" },
+        { id: 2, title: "Steel Tariff Price Hike", impact: "Medium", probability: 40, owner: "Procurement", status: "Monitoring" },
+        { id: 3, title: "Nesting Bird Season", impact: "High", probability: 90, owner: "Environmental", status: "Action Required" },
+    ]);
 
-    // ── Derived stats ─────────────────────────────────────────
-    const openRisks = risks.filter(r => r.status === "Open").length;
-    const criticalRisks = risks.filter(r => r.severity === "Critical" || r.severity === "High").length;
-
-    // ── Chart data ────────────────────────────────────────────
-    const severityMap: any = { Low: 1, Medium: 2, High: 3, Critical: 4 };
-    const radarData = risks.map(r => ({
-        subject: r.cat || "Other",
-        A: severityMap[r.severity] || 1,
-        fullMark: 4,
-    }));
-
-    const catData = Object.entries(
-        risks.reduce((acc: any, r: any) => {
-            acc[r.cat || "Other"] = (acc[r.cat || "Other"] || 0) + 1;
-            return acc;
-        }, {})
-    ).map(([name, value]) => ({ name, value }));
-
-    const RC: any = {
-        Low: "var(--c-green)", Medium: "var(--c-amber)",
-        High: "var(--c-red)", Critical: "var(--c-purple)"
-    };
-
-    // ── Write helpers ─────────────────────────────────────────
-    const setRiskStatus = (i: number, status: string) => {
-        const next = [...risks];
-        next[i] = { ...next[i], status };
-        updateProject({ risks: next });
-    };
+    const [nr, setNr] = useState<Omit<Risk, "id">>({ title: "", impact: "Medium", probability: 50, owner: "", status: "Identified" });
 
     const addRisk = () => {
-        if (!nr.risk.trim()) return;
-        updateProject({ risks: [...risks, { ...nr, id: Date.now() }] });
-        setNr({ cat: "Market", risk: "", likelihood: "Medium", impact: "Medium", severity: "Medium", mitigation: "", status: "Open" });
+        if (!nr.title) return;
+        setRisks([...(risks as Risk[]), { ...nr, id: Date.now() }]);
+        setNr({ title: "", impact: "Medium", probability: 50, owner: "", status: "Identified" });
     };
 
-    const removeRisk = (id: number) =>
-        updateProject({ risks: risks.filter(r => r.id !== id) });
+    const avgProb = risks.length > 0 ? (risks as Risk[]).reduce((s, r) => s + r.probability, 0) / risks.length : 0;
+    const criticalCount = (risks as Risk[]).filter(r => r.impact === "Critical" || r.impact === "High").length;
 
     return (
-        <div className="axiom-fade-in">
-            <div className="axiom-flex-sb-center" style={{ marginBottom: 20 }}>
-                <h2 className="axiom-text-18-gold-ls1" style={{ margin: 0 }}>RISK COMMAND</h2>
-                <Badge label="Risk Management" color="var(--c-red)" />
-            </div>
+        <Tabs tabs={["Active Risks", "Mitigation Strategy", "Historical Data"]}>
+            <div className="axiom-stack-20">
+                <div className="axiom-grid-3 axiom-mb-15">
+                    <KPI label="Critical / High Risks" value={criticalCount} color="var(--c-red)" />
+                    <KPI label="Avg Probability" value={`${Math.round(avgProb)}%`} color="var(--c-amber)" />
+                    <KPI label="Total Registered" value={risks.length} />
+                </div>
 
-            {/* ── KPIs ─────────────────────────────────────── */}
-            <div className="axiom-grid-4" style={{ gap: 14, marginBottom: 20 }}>
-                <KPI label="Open Risks" value={openRisks} color="var(--c-amber)" />
-                <KPI label="Critical/High" value={criticalRisks} color="var(--c-red)" />
-                <KPI label="Mitigated" value={risks.filter(r => r.status === "Mitigated").length} color="var(--c-green)" />
-                <KPI label="Total Risks" value={risks.length} />
-            </div>
-
-            {/* ── Charts ───────────────────────────────────── */}
-            <div className="axiom-grid-2" style={{ gap: 20, marginBottom: 20 }}>
-                <Card title="Risk Severity Matrix">
-                    <div style={{ height: 250 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData} onClick={(e: any) => { if (e && e.activePayload && e.activePayload[0]) setChartSel(e.activePayload[0]); }} style={{ cursor: 'pointer' }}>
-                                <PolarGrid stroke="var(--c-border)" />
-                                <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--c-dim)", fontSize: 10 }} />
-                                <Radar name="Risk" dataKey="A" stroke="var(--c-gold)" fill="var(--c-gold)" fillOpacity={0.5} />
-                            </RadarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
-
-                <Card title="Risk by Category">
-                    <div style={{ height: 250 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={catData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }} onClick={(e: any) => { if (e && e.activePayload && e.activePayload[0]) setChartSel(e.activePayload[0]); }} style={{ cursor: 'pointer' }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border)" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fill: "var(--c-dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: "var(--c-dim)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <Tooltip {...CHART_TT_BAR} formatter={(v: any) => [Number(v).toLocaleString(), "Risks"]} />
-                                <Bar dataKey="value" fill="var(--c-gold)" radius={[4, 4, 0, 0]} barSize={30} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
-            </div>
-
-            {/* ── Risk Register table ───────────────────────── */}
-            <Card title="Risk Register">
-                <div className="axiom-table-container">
-                    <table className="axiom-table">
-                        <thead>
-                            <tr>
-                                <th className="axiom-th-left-10-dim-p10-bb">Category</th>
-                                <th className="axiom-th-left-10-dim-p10-bb">Risk Description</th>
-                                <th className="axiom-th-left-10-dim-p10-bb">Severity</th>
-                                <th className="axiom-th-left-10-dim-p10-bb">Status</th>
-                                <th className="axiom-th-right-10-dim-p10-bb">Mitigation Plan</th>
-                                <th className="axiom-th-right-10-dim-p10-bb"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {risks.map((r: any, i: number) => (
-                                <tr key={r.id || i}>
-                                    <td className="axiom-td-11-gold-p10-bb">{r.cat}</td>
-                                    <td className="axiom-td-13-p10-bb">{r.risk}</td>
-                                    <td className="axiom-td-p10-bb">
-                                        <Badge label={r.severity} color={RC[r.severity]} />
+                <div className="axiom-grid-6-4 axiom-gap-20">
+                    <Card title="Project Risk Registry" className="axiom-flex-1">
+                        <AxiomTable headers={["Risk Item", "Impact", "Probability", "Owner", "Status"]}>
+                            {(risks as Risk[]).map(r => (
+                                <tr key={r.id}>
+                                    <td className="axiom-td-13-bold">{r.title}</td>
+                                    <td className="axiom-td">
+                                        <Badge label={r.impact} color={IMPACT_COLORS[r.impact]} />
                                     </td>
-                                    <td className="axiom-td-p10-bb">
-                                        <select
-                                            className="axiom-select-transparent"
-                                            style={{ color: r.status === "Mitigated" ? "var(--c-green)" : "var(--c-text)" }}
-                                            value={r.status}
-                                            onChange={e => setRiskStatus(i, e.target.value)}
-                                        >
-                                            <option value="Open">Open</option>
-                                            <option value="Mitigated">Mitigated</option>
-                                            <option value="Closed">Closed</option>
-                                        </select>
+                                    <td className="axiom-td-w-120">
+                                        <div className="axiom-flex-sb axiom-mb-2">
+                                            <span className="axiom-text-9-dim">{r.probability}%</span>
+                                        </div>
+                                        <Progress value={r.probability} color={r.probability > 75 ? "var(--c-red)" : "var(--c-gold)"} />
                                     </td>
-                                    <td className="axiom-td-right-11-dim-p10-bb" style={{ maxWidth: 200, whiteSpace: "normal" }}>
-                                        {r.mitigation}
-                                    </td>
-                                    <td className="axiom-td-right-p10-bb">
-                                        <button
-                                            onClick={() => removeRisk(r.id)}
-                                            style={{ background: "none", border: "none", color: "var(--c-dim)", cursor: "pointer", fontSize: 14 }}
-                                        >×</button>
+                                    <td className="axiom-td-dim">{r.owner}</td>
+                                    <td className="axiom-td">
+                                        <Badge label={r.status} color="var(--c-teal)" />
                                     </td>
                                 </tr>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
-            </Card>
+                        </AxiomTable>
+                    </Card>
 
-            {/* ── Add Risk form ─────────────────────────────── */}
-            <Card title="Add Risk" >
-                <div className="axiom-grid-3" style={{ gap: 12, marginBottom: 12 }}>
-                    <div>
-                        <label className="axiom-label">Category</label>
-                        <select className="axiom-input" value={nr.cat} onChange={e => setNr({ ...nr, cat: e.target.value })}>
-                            {["Market", "Entitlement", "Construction", "Environmental", "Financial", "Regulatory", "Title", "Political"].map(o => <option key={o}>{o}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="axiom-label">Likelihood</label>
-                        <select className="axiom-input" value={nr.likelihood} onChange={e => setNr({ ...nr, likelihood: e.target.value })}>
-                            {["Low", "Medium", "High", "Critical"].map(o => <option key={o}>{o}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="axiom-label">Impact</label>
-                        <select className="axiom-input" value={nr.impact} onChange={e => setNr({ ...nr, impact: e.target.value })}>
-                            {["Low", "Medium", "High", "Critical"].map(o => <option key={o}>{o}</option>)}
-                        </select>
-                    </div>
+                    <Card title="Register New Risk" className="axiom-w-300">
+                        <div className="axiom-stack-12">
+                            <Field label="Risk Description">
+                                <input
+                                    className="axiom-input"
+                                    value={nr.title}
+                                    onChange={e => setNr({ ...nr, title: e.target.value })}
+                                    title="Risk Description"
+                                />
+                            </Field>
+                            <Field label="Impact Level">
+                                <select
+                                    className="axiom-input"
+                                    value={nr.impact}
+                                    onChange={e => setNr({ ...nr, impact: e.target.value as any })}
+                                    title="Impact Level"
+                                >
+                                    {Object.keys(IMPACT_COLORS).map(k => <option key={k}>{k}</option>)}
+                                </select>
+                            </Field>
+                            <Field label="Probability (%)">
+                                <input
+                                    className="axiom-input"
+                                    type="number"
+                                    value={nr.probability}
+                                    onChange={e => setNr({ ...nr, probability: +e.target.value })}
+                                    title="Probability Percentage"
+                                />
+                            </Field>
+                            <Field label="Assign Owner">
+                                <input
+                                    className="axiom-input"
+                                    value={nr.owner}
+                                    onChange={e => setNr({ ...nr, owner: e.target.value })}
+                                    title="Risk Owner"
+                                />
+                            </Field>
+                            <Button variant="gold" label="Log Risk" onClick={addRisk} className="axiom-mt-10" />
+                        </div>
+                    </Card>
                 </div>
-                <div style={{ marginBottom: 10 }}>
-                    <label className="axiom-label">Risk Description</label>
-                    <input className="axiom-input" value={nr.risk} onChange={e => setNr({ ...nr, risk: e.target.value })} placeholder="Describe the risk event..." />
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                    <label className="axiom-label">Mitigation Strategy</label>
-                    <textarea className="axiom-input" style={{ height: 60, resize: "vertical" }} value={nr.mitigation} onChange={e => setNr({ ...nr, mitigation: e.target.value })} placeholder="How will this risk be managed or transferred?" />
-                </div>
-                <button className="axiom-btn-gold" onClick={addRisk}>Add to Risk Register</button>
-            </Card>
-        </div>
+            </div>
+
+            <div>
+                <Card title="AI Mitigation Insights">
+                    <div className="axiom-p-30 axiom-text-center">
+                        <div className="axiom-text-14-gold axiom-mb-10">Intelligent Risk Correlation Enabled</div>
+                        <div className="axiom-text-11-dim">
+                            Axiom is analyzing external market data and historical project performance to predict potential "Utility Connection Delay" impacts based on current municipal backlog.
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        </Tabs>
     );
 }

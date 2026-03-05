@@ -149,7 +149,7 @@ function CapRateCalc() {
 
     return (
         <Card title="Cap Rate / NOI Calculator">
-            <div className="axiom-grid-2" style={{ marginBottom: 20 }}>
+            <div className="axiom-grid-2 axiom-mb-20">
                 <Field label="Purchase Price"><input className="axiom-input" type="number" value={v.price} onChange={u("price")} title="Purchase Price" /></Field>
                 <Field label="Gross Income (Annual)"><input className="axiom-input" type="number" value={v.gri} onChange={u("gri")} title="Gross Income" /></Field>
                 <Field label="OpExpenses (Annual)"><input className="axiom-input" type="number" value={v.opex} onChange={u("opex")} title="OpExpenses" /></Field>
@@ -216,7 +216,7 @@ function InsuranceCalc() {
 
     return (
         <Card title="Insurance Premium Estimator">
-            <div className="axiom-grid-2" style={{ marginBottom: 20 }}>
+            <div className="axiom-grid-2 axiom-mb-20">
                 <div className="axiom-stack-16">
                     <Field label="Replacement Cost"><input className="axiom-input" type="number" value={replacementCost} onChange={e => setReplacementCost(+e.target.value)} title="Replacement Cost" /></Field>
                     <Field label="Asset Class">
@@ -238,10 +238,10 @@ function InsuranceCalc() {
                         </select>
                     </Field>
                 </div>
-                <div className="axiom-kpi-highlight" style={{ background: "var(--c-bg4)", border: "1px solid var(--c-border2)" }}>
-                    <div style={{ fontSize: 10, color: "var(--c-sub)", letterSpacing: "1px", marginBottom: 5 }}>ANNUAL PREMIUM</div>
+                <div className="axiom-kpi-highlight axiom-bg-4 axiom-border-default">
+                    <div className="axiom-text-10-sub-spaced axiom-mb-5">ANNUAL PREMIUM</div>
                     <div className="axiom-text-32-bold-gold">{fmt.usd(Math.round(premium))}</div>
-                    <div style={{ fontSize: 10, color: "var(--c-dim)", marginTop: 8 }}>Dynamic ESG Factor: {(locationRisk * 10).toFixed(1)}</div>
+                    <div className="axiom-text-10-dim axiom-mt-8">Dynamic ESG Factor: {(locationRisk * 10).toFixed(1)}</div>
                 </div>
             </div>
         </Card>

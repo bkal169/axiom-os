@@ -52,16 +52,16 @@ export function ResourceCenter() {
         if (r) return (
             <div>
                 <Button label="← Back to Library" onClick={() => setActiveRes(null)} />
-                <div style={{ marginTop: 14 }}>
+                <div className="axiom-mt-14">
                     <Card title={r.title} action={
-                        <div className="axiom-flex-row" style={{ gap: 6 }}>
+                        <div className="axiom-flex-row axiom-gap-6">
                             <Badge label={r.type} color={TYPE_COLOR[r.type] || "var(--c-blue)"} />
                             <Badge label={r.level} color={LEVEL_COLOR[r.level] || "var(--c-dim)"} />
                             <Badge label={r.readTime} color="var(--c-dim)" />
                         </div>
                     }>
-                        <div style={{ fontSize: 13, color: "var(--c-sub)", marginBottom: 12, lineHeight: 1.4 }}>{r.desc}</div>
-                        <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontFamily: "'Courier New',monospace", fontSize: 13, color: "var(--c-sub)", lineHeight: 1.7, background: "var(--c-bg2)", padding: 18, borderRadius: 4, border: "1px solid var(--c-border)" }}>{r.content}</pre>
+                        <div className="axiom-text-13-sub axiom-lh-14 axiom-mb-12">{r.desc}</div>
+                        <pre className="axiom-resource-content">{r.content}</pre>
                     </Card>
                 </div>
             </div>
@@ -78,18 +78,16 @@ export function ResourceCenter() {
                         {CATS.map(c => <option key={c}>{c}</option>)}
                     </select>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12 }}>
+                <div className="axiom-resource-grid">
                     {filtered.map(r => (
-                        <div key={r.id} onClick={() => setActiveRes(r.id)} style={{ background: "var(--c-bg3)", border: "1px solid var(--c-border)", borderRadius: 4, padding: 16, cursor: "pointer", transition: "border-color 0.2s" }}
-                            onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--c-gold)")}
-                            onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--c-border)")}>
-                            <div className="axiom-flex-row" style={{ gap: 6, marginBottom: 8 }}>
+                        <div key={r.id} onClick={() => setActiveRes(r.id)} className="axiom-resource-card">
+                            <div className="axiom-flex-row axiom-gap-6 axiom-mb-8">
                                 <Badge label={r.type} color={TYPE_COLOR[r.type] || "var(--c-blue)"} />
                                 <Badge label={r.level} color={LEVEL_COLOR[r.level] || "var(--c-dim)"} />
                             </div>
-                            <div style={{ fontSize: 14, color: "var(--c-text)", fontWeight: 600, marginBottom: 4 }}>{r.title}</div>
-                            <div style={{ fontSize: 12, color: "var(--c-sub)", lineHeight: 1.4, marginBottom: 8 }}>{r.desc}</div>
-                            <div className="axiom-flex-between" style={{ alignItems: "center" }}>
+                            <div className="axiom-text-14-bold axiom-text-main axiom-mb-4">{r.title}</div>
+                            <div className="axiom-text-12-sub axiom-lh-14 axiom-mb-8">{r.desc}</div>
+                            <div className="axiom-flex-between-center">
                                 <span className="axiom-text-10-dim">{r.readTime} · {r.category}</span>
                                 <Button variant="gold" label={r.type === "Video" ? "Watch" : "Read"} onClick={() => setActiveRes(r.id)} />
                             </div>
@@ -102,14 +100,14 @@ export function ResourceCenter() {
             <div>
                 <Card title="Video Tutorials">
                     {RESOURCES.filter(r => r.type === "Video").map(r => (
-                        <div key={r.id} className="axiom-flex-row" style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid var(--c-border)" }}>
-                            <div style={{ width: 120, height: 68, background: "var(--c-bg2)", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid var(--c-border)" }}>
-                                <span style={{ fontSize: 28, color: "var(--c-gold)" }}>▶</span>
+                        <div key={r.id} className="axiom-flex-row axiom-gap-12 axiom-py-12 axiom-border-b">
+                            <div className="axiom-w-120 axiom-h-68 axiom-bg-2 axiom-rounded-3 axiom-flex-center axiom-flex-shrink-0 axiom-border">
+                                <span className="axiom-text-28 axiom-text-gold">▶</span>
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 14, color: "var(--c-text)", fontWeight: 600 }}>{r.title}</div>
-                                <div style={{ fontSize: 12, color: "var(--c-sub)", marginTop: 3 }}>{r.desc}</div>
-                                <div className="axiom-flex-row" style={{ gap: 8, marginTop: 6 }}>
+                            <div className="axiom-flex-1">
+                                <div className="axiom-text-14 axiom-text-main axiom-font-semibold">{r.title}</div>
+                                <div className="axiom-text-12-sub axiom-mt-3">{r.desc}</div>
+                                <div className="axiom-flex-row axiom-gap-8 axiom-mt-6">
                                     <Badge label={r.level} color={LEVEL_COLOR[r.level]} />
                                     <span className="axiom-text-10-dim">{r.readTime}</span>
                                 </div>

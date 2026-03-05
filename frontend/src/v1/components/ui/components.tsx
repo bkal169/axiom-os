@@ -1,11 +1,12 @@
 import React from "react";
 import "./theme.css";
 import { importCSV, RC } from "../../lib/utils";
+export * from "./Dialer";
+export * from "./FileAttachment";
 
-
-export function Card({ title, children, action, className = "" }: { title: React.ReactNode, children: React.ReactNode, action?: React.ReactNode, className?: string }) {
+export function Card({ title, children, action, className = "", style }: { title: React.ReactNode, children: React.ReactNode, action?: React.ReactNode, className?: string, style?: React.CSSProperties }) {
     return (
-        <div className={`axiom-card axiom-animate-slide-up ${className}`}>
+        <div className={`axiom-card axiom-animate-slide-up ${className}`} style={style}>
             <div className="axiom-card-header">
                 <span>{title}</span>
                 {action}
@@ -30,17 +31,17 @@ export function KPI({ label, value, sub, color, trend, onUpdate, style }: { labe
             {isEditing ? (
                 <input
                     autoFocus
-                    className="axiom-input"
-                    style={{ fontSize: 18, padding: "2px 4px", height: "auto", border: "1px solid var(--c-gold)" }}
+                    className="axiom-input axiom-text-18 axiom-p-2-4 axiom-h-auto axiom-border-gold"
                     value={editValue}
                     onChange={e => setEditValue(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={e => e.key === 'Enter' && handleBlur()}
+                    title={`Edit ${label}`}
                 />
             ) : (
                 <div className={`axiom-kpi-value ${!color ? "axiom-text-high-contrast" : ""}`} style={{ color: color || undefined, cursor: onUpdate ? "pointer" : "default" }}>
                     {value}
-                    {onUpdate && <span style={{ fontSize: 8, marginLeft: 4, opacity: 0.5 }}>✎</span>}
+                    {onUpdate && <span className="axiom-ml-4 axiom-opacity-50 axiom-text-8">✎</span>}
                 </div>
             )}
             {sub && <div className="axiom-kpi-sub">{sub}</div>}
@@ -53,7 +54,7 @@ export function KPI({ label, value, sub, color, trend, onUpdate, style }: { labe
     );
 }
 
-export function Field({ label, children, mb = 11, className = "", onUpdate, value, style }: { label: string, children: React.ReactNode, mb?: number, className?: string, onUpdate?: (val: any) => void, value?: any, style?: React.CSSProperties }) {
+export function Field({ label, children, mb = 11, className = "", onUpdate, value, style, title }: { label: string, children: React.ReactNode, mb?: number, className?: string, onUpdate?: (val: any) => void, value?: any, style?: React.CSSProperties, title?: string }) {
     const [isEditing, setIsEditing] = React.useState(false);
     const [editValue, setEditValue] = React.useState(value);
 
@@ -63,10 +64,10 @@ export function Field({ label, children, mb = 11, className = "", onUpdate, valu
     };
 
     return (
-        <div className={`axiom-field ${className}`} style={{ marginBottom: mb, ...style }}>
-            <label className="axiom-label" style={{ display: "flex", justifyContent: "space-between" }}>
+        <div className={`axiom-field ${className}`} style={{ marginBottom: mb, ...style }} title={title}>
+            <label className="axiom-label axiom-flex-sb">
                 {label}
-                {onUpdate && !isEditing && <span onClick={() => setIsEditing(true)} style={{ cursor: "pointer", fontSize: 8, opacity: 0.5 }}>✎ EDIT</span>}
+                {onUpdate && !isEditing && <span onClick={() => setIsEditing(true)} className="axiom-pointer axiom-text-8 axiom-opacity-50">✎ EDIT</span>}
             </label>
             {isEditing ? (
                 <input
@@ -76,6 +77,7 @@ export function Field({ label, children, mb = 11, className = "", onUpdate, valu
                     onChange={e => setEditValue(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={e => e.key === 'Enter' && handleBlur()}
+                    title={`Edit ${label}`}
                 />
             ) : children}
         </div>
@@ -110,16 +112,44 @@ export function Badge({ label, color = "var(--c-gold)" }: { label: string, color
     );
 }
 
-export function Button({ children, label, onClick, variant = "ghost", className = "", style, disabled = false }: { children?: React.ReactNode, label?: string, onClick?: (e?: any) => void, variant?: "gold" | "ghost", className?: string, style?: React.CSSProperties, disabled?: boolean }) {
+export function Button({ children, label, onClick, variant = "ghost", className = "", style, disabled = false, title }: { children?: React.ReactNode, label?: string, onClick?: (e?: any) => void, variant?: "gold" | "ghost" | "primary" | "secondary", className?: string, style?: React.CSSProperties, disabled?: boolean, title?: string }) {
+    const variantClass = variant === "gold" ? "axiom-btn-gold" : variant === "primary" ? "axiom-btn-gold" : variant === "secondary" ? "axiom-btn-ghost" : "";
     return (
         <button
-            className={`axiom-btn ${variant === "gold" ? "axiom-btn-gold" : ""} ${disabled ? "axiom-btn-disabled" : ""} ${className}`}
+            className={`axiom-btn ${variantClass} ${disabled ? "axiom-btn-disabled" : ""} ${className}`}
             onClick={onClick}
             style={style}
             disabled={disabled}
+            title={title || label || "Button"}
         >
             {label || children}
         </button>
+    );
+}
+
+export function AxiomTable({ headers, children, className = "", emptyMessage = "No data available." }: { headers: string[], children: React.ReactNode, className?: string, emptyMessage?: string }) {
+    const hasData = React.Children.count(children) > 0;
+    return (
+        <div className={`axiom-table-container ${className}`}>
+            <table className="axiom-table">
+                <thead>
+                    <tr>
+                        {headers.map((h, i) => (
+                            <th key={i} className={`axiom-th ${h === "" ? "axiom-th-min" : ""}`}>{h}</th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {hasData ? children : (
+                        <tr>
+                            <td colSpan={headers.length} className="axiom-td axiom-text-center axiom-py-40 axiom-text-dim">
+                                {emptyMessage}
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
     );
 }
 

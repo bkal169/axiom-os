@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Card, Badge, Button } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
+import { AgentHandoff } from "../agents/AgentHandoff";
+import { swarmEngine } from "../../services/SwarmEngine";
 
 interface AgentInfo {
     id: string;
@@ -29,13 +31,20 @@ export function AgentHub() {
 
     const [active, setActive] = useState<number | null>(null);
 
+    const startDemoSwarm = () => {
+        swarmEngine.init("Site Feasibility & Acquisition Analysis");
+        swarmEngine.addTask("Analyze zoning density for 455 Northeast 2nd St", "LEGAL");
+        swarmEngine.addTask("Calculate ProForma based on legal yield max", "FINANCIAL");
+        swarmEngine.addTask("Vet off-market comps for target area", "MARKET");
+    };
+
     if (active !== null) {
         const a = agents[active];
         return (
             <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-                    <Button label="← Back to Hub" onClick={() => setActive(null)} />
-                    <div style={{ fontSize: 18, fontWeight: 700, color: "var(--c-gold)" }}>{a.id}</div>
+                <div className="axiom-flex-center-gap-14 axiom-mb-20">
+                    <Button label="← Back to Hub" onClick={() => setActive(null)} title="Return to Agent Hub" />
+                    <div className="axiom-text-18-bold axiom-text-gold">{a.id}</div>
                 </div>
                 <Card title={`${a.id} - ✦ Live Session`}>
                     <Agent id={a.id} system={a.system} placeholder={a.placeholder} />
@@ -46,35 +55,49 @@ export function AgentHub() {
 
     return (
         <>
-            <Card title="AI Agent Hub - 12 Specialized Agents">
-                <div style={{ fontSize: 12, color: "var(--c-dim)", marginBottom: 16 }}>
-                    Each agent is a specialized instance with domain-specific context. Select an agent to open a live session.
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
-                    {agents.map((a, i) => (
-                        <div key={i}
-                            style={{
-                                background: "var(--c-bg)", border: "1px solid var(--c-border)", borderRadius: 4,
-                                padding: 14, cursor: "pointer", transition: "all 0.12s", borderLeft: `3px solid ${a.color}`
-                            }}
-                            onClick={() => setActive(i)}
-                        >
-                            <div style={{ fontSize: 18, color: a.color, marginBottom: 6, fontWeight: 700 }}>{a.icon}</div>
-                            <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 700, marginBottom: 4 }}>{a.id}</div>
-                            <div style={{ fontSize: 10, color: "var(--c-dim)", lineHeight: 1.4 }}>{a.desc}</div>
-                            <div style={{ marginTop: 10 }}>
-                                <Badge label="Launch Agent" color="var(--c-gold)" />
-                            </div>
+            <div className="axiom-grid-1-280 axiom-gap-20">
+                <div className="axiom-stack-20">
+                    <Card title="AI Agent Hub - 12 Specialized Agents">
+                        <div className="axiom-text-12-dim axiom-mb-16">
+                            Each agent is a specialized instance with domain-specific context. Select an agent to open a live session.
                         </div>
-                    ))}
+                        <div className="axiom-grid-3 axiom-gap-14">
+                            {agents.map((a, i) => (
+                                <div key={i}
+                                    className="axiom-bg-1 axiom-border-1 axiom-radius-4 axiom-p-14 axiom-pointer axiom-transition-12"
+                                    style={{ borderLeft: `3px solid ${a.color}` }}
+                                    onClick={() => setActive(i)}
+                                    title={`Launch ${a.id}`}
+                                >
+                                    <div className="axiom-text-18-bold axiom-mb-6" style={{ color: a.color }}>{a.icon}</div>
+                                    <div className="axiom-text-13-text-bold axiom-mb-4">{a.id}</div>
+                                    <div className="axiom-text-10-dim axiom-lh-14">{a.desc}</div>
+                                    <div className="axiom-mt-10">
+                                        <Badge label="Launch Agent" color="var(--c-gold)" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                    <Card title="Multi-Agent Query">
+                        <div className="axiom-text-12-dim axiom-mb-12">
+                            Broadcast a question to all agents simultaneously and compare their specialized perspectives.
+                        </div>
+                        <Agent id="MultiAgent" system="You are an orchestrating AI agent for real estate development." placeholder="Ask a question and get input from all specialist perspectives..." />
+                    </Card>
                 </div>
-            </Card>
-            <Card title="Multi-Agent Query">
-                <div style={{ fontSize: 12, color: "var(--c-dim)", marginBottom: 12 }}>
-                    Broadcast a question to all agents simultaneously and compare their specialized perspectives.
+                <div className="axiom-stack-20">
+                    <Card title="Swarm Orchestrator">
+                        <div className="axiom-text-10-dim axiom-mb-14">
+                            Coordinate multiple specialized agents on a single project objective.
+                        </div>
+                        <AgentHandoff />
+                        <div className="axiom-mt-20">
+                            <Button label="🚀 Launch Demo Swarm" onClick={startDemoSwarm} className="axiom-full-width axiom-btn-blue-soft" />
+                        </div>
+                    </Card>
                 </div>
-                <Agent id="MultiAgent" system="You are an orchestrating AI agent for real estate development." placeholder="Ask a question and get input from all specialist perspectives..." />
-            </Card>
+            </div>
         </>
     );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, KPI, Button } from "../../components/ui/components";
+import { Card, KPI, Button, AxiomTable } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 
 const MOCK_PROS = [
@@ -21,12 +21,12 @@ export function ProfessionalNetwork() {
     });
 
     return (
-        <div style={{ display: "flex", gap: 24, height: "100%" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="axiom-flex-row axiom-gap-24 axiom-h-full">
+            <div className="axiom-flex-1 axiom-flex-column axiom-gap-16">
+                <div className="axiom-flex-sb-center">
                     <div>
-                        <div style={{ fontSize: 24, fontWeight: 300, color: "var(--c-text)", marginBottom: 4 }}>Professional Network</div>
-                        <div style={{ color: "var(--c-dim)", fontSize: 13 }}>Manage relationships with architects, engineers, and legal counsel.</div>
+                        <div className="axiom-text-24-light-ls1 axiom-mb-4">Professional Network</div>
+                        <div className="axiom-text-13-dim">Manage relationships with architects, engineers, and legal counsel.</div>
                     </div>
                     <Button variant="gold" onClick={() => {
                         const name = prompt("Enter professional's name:");
@@ -34,24 +34,26 @@ export function ProfessionalNetwork() {
                     }}>+ Add Professional</Button>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+                <div className="axiom-grid-4 axiom-gap-12">
                     <KPI label="👥 Total Contacts" value="142" />
                     <KPI label="🏛️ Legal & Zoning" value="18" />
                     <KPI label="📐 Architects" value="34" />
                     <KPI label="🏗️ Engineers" value="56" />
                 </div>
 
-                <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                <div className="axiom-flex-row axiom-gap-12 axiom-mt-8">
                     <input
-                        style={{ flex: 1, background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-text)", padding: "8px 12px", borderRadius: 4, fontSize: 13 }}
+                        className="axiom-input-field axiom-flex-1"
                         placeholder="Search by name or firm..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
+                        title="Search Professionals"
                     />
                     <select
-                        style={{ width: 180, background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-text)", padding: "8px 12px", borderRadius: 4, fontSize: 13 }}
+                        className="axiom-select-field axiom-w-180"
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
+                        title="Filter Discipline"
                     >
                         <option value="All">All Disciplines</option>
                         <option value="Architect">Architects</option>
@@ -61,50 +63,30 @@ export function ProfessionalNetwork() {
                     </select>
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto" }}>
+                <div className="axiom-flex-1 axiom-overflow-y-auto">
                     <Card title="Network Directory">
-                        <div style={{ margin: "-16px" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                                <thead>
-                                    <tr>
-                                        <th className="axiom-th" style={{ paddingLeft: 16 }}>Professional</th>
-                                        <th className="axiom-th">Firm</th>
-                                        <th className="axiom-th">Location</th>
-                                        <th className="axiom-th">Projects</th>
-                                        <th className="axiom-th" style={{ paddingRight: 16, textAlign: "right" }}>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredPros.map(p => (
-                                        <tr key={p.id} style={{ borderBottom: "1px solid var(--c-border)" }}>
-                                            <td className="axiom-td" style={{ paddingLeft: 16 }}>
-                                                <div style={{ color: "var(--c-text)", fontWeight: 500 }}>{p.name}</div>
-                                                <div style={{ fontSize: 11, color: "var(--c-dim)" }}>{p.role}</div>
-                                            </td>
-                                            <td className="axiom-td">{p.firm}</td>
-                                            <td className="axiom-td">{p.location}</td>
-                                            <td className="axiom-td">{p.projects}</td>
-                                            <td className="axiom-td" style={{ paddingRight: 16, textAlign: "right" }}>
-                                                <Button variant="ghost" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => alert(`Opening profile for ${p.name}`)}>View Profile</Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {filteredPros.length === 0 && (
-                                        <tr>
-                                            <td colSpan={5} style={{ padding: 32, textAlign: "center", color: "var(--c-dim)" }}>
-                                                No professionals found matching your search.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                        <AxiomTable headers={["Professional", "Firm", "Location", "Projects", "Action"]}>
+                            {filteredPros.map((p) => (
+                                <tr key={p.id}>
+                                    <td className="axiom-td">
+                                        <div className="axiom-text-13-text-bold">{p.name}</div>
+                                        <div className="axiom-text-11-dim">{p.role}</div>
+                                    </td>
+                                    <td className="axiom-td">{p.firm}</td>
+                                    <td className="axiom-td">{p.location}</td>
+                                    <td className="axiom-td">{p.projects}</td>
+                                    <td className="axiom-td axiom-text-right">
+                                        <Button variant="ghost" className="axiom-p4-8 axiom-text-11" onClick={() => alert(`Opening profile for ${p.name}`)}>View Profile</Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </AxiomTable>
                     </Card>
                 </div>
             </div>
 
-            <div style={{ width: 320, display: "flex", flexDirection: "column", gap: 16, flexShrink: 0 }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div className="axiom-w-320 axiom-flex-column axiom-gap-16 axiom-no-shrink">
+                <div className="axiom-flex-1 axiom-flex-column">
                     <Card title="Relationship Intelligence">
                         <Agent
                             id="NetworkAdvisor"

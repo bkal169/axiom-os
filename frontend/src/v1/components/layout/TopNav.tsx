@@ -68,7 +68,23 @@ function NotifBell({ setView }: { setView: (v: string) => void }) {
     );
 }
 
-export function TopNav({ title, setView }: { title: string, setView: (v: string) => void }) {
+export function TopNav({
+    title, setView,
+    tickerOpen, setTickerOpen,
+    chatOpen, setChatOpen,
+    meetingOpen, setMeetingOpen,
+    isSplit, setIsSplit,
+    splitView, setSplitView,
+    onDetach
+}: {
+    title: string, setView: (v: string) => void,
+    tickerOpen?: boolean, setTickerOpen?: (v: boolean) => void,
+    chatOpen?: boolean, setChatOpen?: (v: boolean) => void,
+    meetingOpen?: boolean, setMeetingOpen?: (v: boolean) => void,
+    isSplit?: boolean, setIsSplit?: (v: boolean) => void,
+    splitView?: string, setSplitView?: (v: string) => void,
+    onDetach?: () => void
+}) {
     const { user, logout } = useAuth() as any;
     const tierCtx = useTier() as any;
     const tier = tierCtx?.tier || "FREE";
@@ -134,6 +150,90 @@ export function TopNav({ title, setView }: { title: string, setView: (v: string)
 
                 <div style={{ width: 1, height: 24, background: "var(--c-border)", margin: "0 4px" }}></div>
 
+                {setIsSplit && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <button
+                            style={{
+                                background: isSplit ? "var(--c-bg4)" : "var(--c-bg3)",
+                                border: "1px solid var(--c-border)",
+                                color: isSplit ? "var(--c-gold)" : "var(--c-dim)",
+                                width: 28, height: 28, borderRadius: 3, cursor: "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: 13, transition: "0.15s"
+                            }}
+                            onClick={() => setIsSplit(!isSplit)}
+                            title="Toggle Split Screen"
+                        >
+                            ⧉
+                        </button>
+                        <button
+                            style={{
+                                background: "var(--c-bg3)",
+                                border: "1px solid var(--c-border)",
+                                color: "var(--c-gold)",
+                                width: 28, height: 28, borderRadius: 3, cursor: "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                fontSize: 13, transition: "0.15s"
+                            }}
+                            onClick={onDetach}
+                            title="Detach view to floating panel"
+                        >
+                            ↗
+                        </button>
+                        {isSplit && setSplitView && (
+                            <select
+                                style={{
+                                    background: "var(--c-bg3)", border: "1px solid var(--c-border)", color: "var(--c-gold)",
+                                    fontSize: 10, fontWeight: 600, padding: "4px 8px", outline: "none", cursor: "pointer",
+                                    borderRadius: 3, minWidth: 100
+                                }}
+                                value={splitView}
+                                onChange={e => setSplitView(e.target.value)}
+                                title="Select view for split pane"
+                            >
+                                <option value="notes">NOTES</option>
+                                <option value="copilot">COPILOT</option>
+                                <option value="calendar">CALENDAR</option>
+                                <option value="mls">MLS</option>
+                                <option value="analyzer">ANALYZER</option>
+                                <option value="dashboard">DASHBOARD</option>
+                            </select>
+                        )}
+                    </div>
+                )}
+
+                <div style={{ width: 1, height: 24, background: "var(--c-border)", margin: "0 4px" }}></div>
+
+                {setTickerOpen && (
+                    <button
+                        style={{ background: tickerOpen ? "var(--c-bg4)" : "var(--c-bg3)", border: "1px solid var(--c-border)", color: tickerOpen ? "var(--c-gold)" : "var(--c-dim)", colorScheme: "dark", width: 28, height: 28, borderRadius: 3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, transition: "0.15s" }}
+                        onClick={() => setTickerOpen(!tickerOpen)}
+                        title="Toggle Market Ticker"
+                    >
+                        📈
+                    </button>
+                )}
+
+                {setChatOpen && (
+                    <button
+                        style={{ background: chatOpen ? "var(--c-bg4)" : "var(--c-bg3)", border: "1px solid var(--c-border)", color: chatOpen ? "var(--c-gold)" : "var(--c-dim)", colorScheme: "dark", width: 28, height: 28, borderRadius: 3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, transition: "0.15s" }}
+                        onClick={() => setChatOpen(!chatOpen)}
+                        title="Toggle Group Chat"
+                    >
+                        💬
+                    </button>
+                )}
+
+                {setMeetingOpen && (
+                    <button
+                        style={{ background: meetingOpen ? "var(--c-bg4)" : "var(--c-bg3)", border: "1px solid var(--c-border)", color: meetingOpen ? "var(--c-gold)" : "var(--c-dim)", colorScheme: "dark", width: 28, height: 28, borderRadius: 3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, transition: "0.15s" }}
+                        onClick={() => setMeetingOpen(!meetingOpen)}
+                        title="Toggle Meeting Recorder"
+                    >
+                        🎙️
+                    </button>
+                )}
+
                 <button
                     style={{ background: "var(--c-bg3)", border: "1px solid var(--c-border)", color: "var(--c-dim)", width: 28, height: 28, borderRadius: 3, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                     onClick={() => setLightMode(!lightMode)}
@@ -161,7 +261,7 @@ export function TopNav({ title, setView }: { title: string, setView: (v: string)
                 <NotifBell setView={setView} />
             </div>
 
-            {isEditingMeta && <ProjectMetaEditor onClose={() => setIsEditingMeta(false)} />}
+            {isEditingMeta && <ProjectMetaEditor projectId={activeProjectId} onClose={() => setIsEditingMeta(false)} />}
         </div>
     );
 }

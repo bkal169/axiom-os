@@ -77,9 +77,9 @@ export function DealAnalyzer() {
 
             <div className="axiom-grid-2">
                 <Card title="Deal Readiness Score">
-                    <div style={{ height: 300 }}>
+                    <div className="axiom-h-300">
                         <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analysis.radarData} onClick={(e: any) => { if (e && e.activePayload && e.activePayload[0]) setChartSel(e.activePayload[0]); }} style={{ cursor: 'pointer' }}>
+                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analysis.radarData} onClick={(e: any) => { if (e && e.activePayload && e.activePayload[0]) setChartSel(e.activePayload[0]); }} className="axiom-pointer">
                                 <PolarGrid stroke="var(--c-border)" />
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--c-dim)", fontSize: 11 }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
@@ -97,31 +97,31 @@ export function DealAnalyzer() {
                 </Card>
 
                 <Card title="Executive Verdict">
-                    <div className="axiom-flex-col-center" style={{ height: "100%", padding: "20px 0" }}>
-                        <div style={{ fontSize: 64, fontWeight: "bold", color: verdictColor, marginBottom: 10 }}>
+                    <div className="axiom-flex-col-center axiom-h-full axiom-py-20">
+                        <div className="axiom-text-64-bold axiom-mb-10" style={{ color: verdictColor } as any}>
                             {analysis.verdict}
                         </div>
-                        <div style={{ fontSize: 18, color: "var(--c-sub)", marginBottom: 30 }}>
+                        <div className="axiom-text-18-sub axiom-mb-30">
                             Overall Score: {analysis.overall}/100
                         </div>
 
-                        <div className="axiom-stack-15" style={{ width: "100%" }}>
+                        <div className="axiom-stack-15 axiom-w-full">
                             <div>
-                                <div className="axiom-flex-between" style={{ marginBottom: 5, fontSize: 11, color: "var(--c-sub)" }}>
+                                <div className="axiom-flex-sb-center axiom-text-11-sub axiom-mb-5">
                                     <span>Financial Strength</span>
                                     <span>{analysis.scoreF}%</span>
                                 </div>
                                 <Progress value={analysis.scoreF} color={analysis.scoreF >= 75 ? "var(--c-green)" : "var(--c-gold)"} />
                             </div>
                             <div>
-                                <div className="axiom-flex-between" style={{ marginBottom: 5, fontSize: 11, color: "var(--c-muted)" }}>
+                                <div className="axiom-flex-sb-center axiom-text-11-dim axiom-mb-5">
                                     <span>Entitlement Progress</span>
                                     <span>{analysis.entitlementScore}%</span>
                                 </div>
                                 <Progress value={analysis.entitlementScore} color={analysis.entitlementScore >= 75 ? "var(--c-green)" : "var(--c-gold)"} />
                             </div>
                             <div>
-                                <div className="axiom-flex-between" style={{ marginBottom: 5, fontSize: 11, color: "var(--c-muted)" }}>
+                                <div className="axiom-flex-sb-center axiom-text-11-dim axiom-mb-5">
                                     <span>Environmental Safety</span>
                                     <span>{analysis.environmentalScore}%</span>
                                 </div>

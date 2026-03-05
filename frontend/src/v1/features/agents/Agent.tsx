@@ -12,9 +12,10 @@ interface AgentProps {
     system: string;
     placeholder?: string;
     context?: string;
+    title?: string;
 }
 
-export function Agent({ id, system, placeholder, context }: AgentProps) {
+export function Agent({ id, system, placeholder, context, title }: AgentProps) {
     const [msgs, setMsgs] = useState<Message[]>([]);
     const [inp, setInp] = useState("");
     const [busy, setBusy] = useState(false);
@@ -40,48 +41,51 @@ export function Agent({ id, system, placeholder, context }: AgentProps) {
     };
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 400 }}>
-            <div style={{ flex: 1, overflowY: "auto", padding: "10px 0", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="axiom-flex-column axiom-h-full axiom-min-h-400">
+            {title && (
+                <div className="axiom-pb-10 axiom-border-b-default axiom-mb-10">
+                    <div className="axiom-text-10-gold-ls2-caps">{title}</div>
+                </div>
+            )}
+            <div className="axiom-flex-1 axiom-overflow-y-auto axiom-py-10 axiom-flex-column axiom-gap-12">
                 {!msgs.length && (
-                    <div style={{ padding: 40, textAlign: "center", color: "var(--c-dim)" }}>
-                        <div style={{ fontSize: 24, marginBottom: 10 }}>—</div>
-                        <div style={{ fontSize: 13, color: "var(--c-teal)", fontWeight: 600 }}>✓ Secure session established with {id}</div>
-                        <div style={{ fontSize: 11, marginTop: 6, color: "var(--c-text)" }}>Waiting for your input...</div>
+                    <div className="axiom-p-40 axiom-text-center axiom-text-dim">
+                        <div className="axiom-text-24 axiom-mb-10">—</div>
+                        <div className="axiom-text-13-teal-bold">✓ Secure session established with {id}</div>
+                        <div className="axiom-text-11-text axiom-mt-6">Waiting for your input...</div>
                     </div>
                 )}
                 {msgs.map((m, i) => (
-                    <div key={i} style={{
-                        alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-                        maxWidth: "85%",
-                        background: m.role === "user" ? "var(--c-bg3)" : "var(--c-bg2)",
-                        border: "1px solid var(--c-border)",
-                        borderRadius: 6,
-                        padding: "10px 14px"
-                    }}>
-                        <div style={{ fontSize: 9, color: "var(--c-dim)", textTransform: "uppercase", marginBottom: 4, letterSpacing: 1 }}>
+                    <div key={i}
+                        className={`axiom-p-10-14 axiom-radius-6 axiom-border-1 axiom-max-w-85-pct ${m.role === "user" ? "axiom-self-end axiom-bg-3" : "axiom-self-start axiom-bg-2"}`}
+                    >
+                        <div className="axiom-text-9-dim-caps axiom-mb-4-spaced">
                             {m.role === "user" ? "You" : id}
                         </div>
-                        <div style={{ fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap", color: m.role === "user" ? "#94A3B8" : "var(--c-text)" }}>{m.content}</div>
+                        <div className={`axiom-text-13-lh-15 axiom-whitespace-pre-wrap ${m.role === "user" ? "axiom-text-slate-400" : "axiom-text-main"}`}>
+                            {m.content}
+                        </div>
                     </div>
                 ))}
                 {busy && (
-                    <div style={{ alignSelf: "flex-start", background: "var(--c-bg2)", border: "1px solid var(--c-border)", borderRadius: 6, padding: "10px 14px" }}>
-                        <div style={{ fontSize: 9, color: "var(--c-gold)", textTransform: "uppercase", marginBottom: 4 }}>— Thinking</div>
-                        <div style={{ fontSize: 12, color: "var(--c-gold)" }}>Analyzing...</div>
+                    <div className="axiom-self-start axiom-bg-2 axiom-border-1 axiom-radius-6 axiom-p-10-14">
+                        <div className="axiom-text-9-gold-caps axiom-mb-4">— Thinking</div>
+                        <div className="axiom-text-12-gold">Analyzing...</div>
                     </div>
                 )}
                 <div ref={endRef} />
             </div>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 15, padding: "10px 0", borderTop: "1px solid var(--c-border)" }}>
+            <div className="axiom-flex-gap-8 axiom-mt-15 axiom-py-10 axiom-border-t-default">
                 <input
-                    style={{ flex: 1, background: "var(--c-bg)", border: "1px solid var(--c-border)", color: "var(--c-text)", padding: "8px 12px", borderRadius: 4, fontSize: 13 }}
+                    className="axiom-flex-1 axiom-bg-main axiom-border-default axiom-text-main axiom-p-8-12 axiom-radius-4 axiom-text-13"
                     value={inp}
                     onChange={e => setInp(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && send()}
                     placeholder={placeholder || "Ask the agent..."}
+                    title="Agent message input"
                 />
-                <Button variant="gold" onClick={send} disabled={busy}>Send</Button>
+                <Button variant="gold" onClick={send} disabled={busy} label="Send" />
             </div>
         </div>
     );

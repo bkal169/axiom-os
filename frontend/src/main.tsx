@@ -33,3 +33,13 @@ try {
   console.error('Failed to render app', e);
   rootElement.innerHTML = `<div style="padding: 20px; color: red;"><h1>App Crashed</h1><pre>${e}</pre></div>`;
 }
+
+// Service Worker Registration for Phase 6 (Offline Support)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('SW registered:', reg))
+      .catch(err => console.error('SW reg failed:', err));
+  });
+}
+

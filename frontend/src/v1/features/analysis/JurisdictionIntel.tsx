@@ -172,35 +172,47 @@ export function JurisdictionIntel() {
     const aiSystem = `You are a senior real estate development regulatory expert specializing in ${data.name}. Entitlement phases: ${data.entitlement.map(e => e.phase).join(", ")}. Key fees: ${data.fees.map(f => f.type).join(", ")}. Environmental constraints: ${data.env.map(e => e.item).join(", ")}. Tips: ${data.tips.join(" | ")}. Provide accurate, specific, actionable guidance. Reference specific statutes, agencies, timelines, and dollar amounts.`;
 
     return (
-        <div>
+        <div className="axiom-flex-col axiom-flex-gap-24">
             {/* State selector */}
-            <div className="axiom-flex-row" style={{ gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                <div className="axiom-text-10-dim" style={{ fontWeight: 700, letterSpacing: 1 }}>SELECT STATE:</div>
-                {STATES.map(st => (
-                    <button key={st} style={{ padding: "5px 12px", fontSize: 10, fontWeight: sel === st ? 700 : 400, background: sel === st ? "var(--c-gold)" : "var(--c-bg2)", color: sel === st ? "#000" : "var(--c-sub)", border: `1px solid ${sel === st ? "var(--c-gold)" : "var(--c-border)"}`, borderRadius: 3, cursor: "pointer" }} onClick={() => setSel(st)}>
-                        {JURIS_DATA[st].flag} {JURIS_DATA[st].abbr}
-                    </button>
-                ))}
+            <div className="axiom-flex-gap-8 axiom-flex-wrap">
+                <div className="axiom-text-10-dim axiom-text-bold-700 axiom-ls-1">SELECT STATE:</div>
+                <div className="axiom-flex-gap-6 axiom-flex-wrap">
+                    {STATES.map(st => (
+                        <button
+                            key={st}
+                            className={`axiom-p-5-12 axiom-text-10 axiom-radius-3 axiom-pointer ${sel === st ? "axiom-btn-gold axiom-text-bold-700" : "axiom-btn-secondary"}`}
+                            onClick={() => setSel(st)}
+                        >
+                            {JURIS_DATA[st].flag} {JURIS_DATA[st].abbr}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* State header */}
-            <div style={{ background: "var(--c-bg2)", border: "1px solid rgba(212,168,67,0.25)", borderRadius: 6, padding: "14px 18px", marginBottom: 14 }} className="axiom-flex-between">
+            <div className="axiom-flex-sb-center axiom-bg-2 axiom-p-14-18 axiom-radius-6 axiom-mb-14" style={{ border: "1px solid rgba(212,168,67,0.25)" }}>
                 <div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "var(--c-gold)" }}>{data.flag} {data.name} Development Intelligence</div>
-                    <div style={{ fontSize: 12, color: "var(--c-sub)", marginTop: 4, maxWidth: 640, lineHeight: 1.5 }}>{data.overview}</div>
+                    <div className="axiom-text-20-gold-bold">{data.flag} {data.name} Development Intelligence</div>
+                    <div className="axiom-text-12-sub axiom-mt-4 axiom-max-w-640 axiom-lh-15">{data.overview}</div>
                 </div>
-                <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 16 }}>
+                <div className="axiom-text-right axiom-flex-shrink-0 axiom-ml-16">
                     <div className="axiom-text-11-dim">Entitlement Phases</div>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: "var(--c-text)" }}>{data.entitlement.length}</div>
-                    <div className="axiom-text-11-dim" style={{ marginTop: 4 }}>Typical Timeline</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--c-amber)" }}>6–18 months</div>
+                    <div className="axiom-text-28-bold axiom-text-white">{data.entitlement.length}</div>
+                    <div className="axiom-text-11-dim axiom-mt-4">Typical Timeline</div>
+                    <div className="axiom-text-14-bold axiom-text-amber">6–18 months</div>
                 </div>
             </div>
 
             {/* Tab bar */}
-            <div className="axiom-flex-row" style={{ gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+            <div className="axiom-flex-gap-6 axiom-mb-14 axiom-flex-wrap">
                 {TABS.map((t, i) => (
-                    <button key={i} style={{ padding: "5px 12px", fontSize: 10, fontWeight: tab === i ? 700 : 400, background: tab === i ? "var(--c-gold)" : "var(--c-bg2)", color: tab === i ? "#000" : "var(--c-sub)", border: `1px solid ${tab === i ? "var(--c-gold)" : "var(--c-border)"}`, borderRadius: 3, cursor: "pointer" }} onClick={() => setTab(i)}>{t}</button>
+                    <button
+                        key={i}
+                        className={`axiom-p-5-12 axiom-text-10 axiom-radius-3 axiom-pointer ${tab === i ? "axiom-btn-gold axiom-text-bold-700" : "axiom-btn-secondary"}`}
+                        onClick={() => setTab(i)}
+                    >
+                        {t}
+                    </button>
                 ))}
             </div>
 
@@ -209,14 +221,14 @@ export function JurisdictionIntel() {
                 <div className="axiom-grid-2" style={{ gap: 12 }}>
                     <Card title={`${data.name} Developer Tips`}>
                         {data.tips.map((tip, i) => (
-                            <div key={i} className="axiom-flex-row" style={{ gap: 10, padding: "8px 0", borderBottom: "1px solid var(--c-border)", alignItems: "flex-start" }}>
-                                <span style={{ color: "var(--c-gold)", fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
-                                <div style={{ fontSize: 12, color: "var(--c-sub)", lineHeight: 1.5 }}>{tip}</div>
+                            <div key={i} className="axiom-flex-gap-10 axiom-py-8 axiom-items-start" style={{ borderBottom: "1px solid var(--c-border)" }}>
+                                <span className="axiom-text-gold axiom-text-bold-700 axiom-flex-shrink-0">{i + 1}.</span>
+                                <div className="axiom-text-12-sub axiom-lh-15">{tip}</div>
                             </div>
                         ))}
                     </Card>
                     <Card title="Zoning Framework">
-                        <div style={{ fontSize: 12, color: "var(--c-sub)", lineHeight: 1.7 }}>{data.zones}</div>
+                        <div className="axiom-text-12-sub axiom-lh-17">{data.zones}</div>
                     </Card>
                 </div>
             )}
@@ -227,13 +239,13 @@ export function JurisdictionIntel() {
                     <div style={{ position: "relative", paddingLeft: 24 }}>
                         <div style={{ position: "absolute", left: 10, top: 0, bottom: 0, width: 2, background: "rgba(212,168,67,0.3)" }} />
                         {data.entitlement.map((e, i) => (
-                            <div key={i} style={{ position: "relative", marginBottom: 18, paddingLeft: 20 }}>
-                                <div style={{ position: "absolute", left: -18, top: 4, width: 10, height: 10, borderRadius: "50%", background: "var(--c-gold)", border: "2px solid var(--c-bg)" }} />
-                                <div className="axiom-flex-between">
-                                    <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 600 }}>Phase {i + 1}: {e.phase}</div>
+                            <div key={i} className="axiom-relative axiom-mb-18 axiom-pl-20">
+                                <div className="axiom-absolute axiom-w-10 axiom-h-10 axiom-radius-50p axiom-bg-gold" style={{ left: -18, top: 4, border: "2px solid var(--c-bg)" }} />
+                                <div className="axiom-flex-sb-center">
+                                    <div className="axiom-text-13-text-bold axiom-text-white">Phase {i + 1}: {e.phase}</div>
                                     <Badge label={e.duration} color="var(--c-blue)" />
                                 </div>
-                                <div className="axiom-text-11-dim" style={{ marginTop: 3 }}>{e.notes}</div>
+                                <div className="axiom-text-11-dim axiom-mt-3">{e.notes}</div>
                             </div>
                         ))}
                     </div>
@@ -254,9 +266,9 @@ export function JurisdictionIntel() {
                         <tbody>
                             {data.fees.map((f, i) => (
                                 <tr key={i}>
-                                    <td className="axiom-td" style={{ color: "var(--c-gold)", fontWeight: 600 }}>{f.type}</td>
-                                    <td className="axiom-td" style={{ color: "var(--c-green)", fontWeight: 700 }}>{f.range}</td>
-                                    <td className="axiom-td" style={{ fontSize: 10 }}>{f.notes}</td>
+                                    <td className="axiom-td axiom-text-gold-bold">{f.type}</td>
+                                    <td className="axiom-td axiom-text-green-bold-700">{f.range}</td>
+                                    <td className="axiom-td axiom-text-10">{f.notes}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -268,9 +280,9 @@ export function JurisdictionIntel() {
             {tab === 3 && (
                 <Card title={`${data.name} Environmental Requirements`}>
                     {data.env.map((e, i) => (
-                        <div key={i} style={{ padding: "12px 0", borderBottom: "1px solid var(--c-border)" }}>
-                            <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 600, marginBottom: 4 }}>🌿 {e.item}</div>
-                            <div style={{ fontSize: 12, color: "var(--c-sub)", lineHeight: 1.6 }}>{e.detail}</div>
+                        <div key={i} className="axiom-py-12" style={{ borderBottom: "1px solid var(--c-border)" }}>
+                            <div className="axiom-text-13-text-bold axiom-text-white axiom-mb-4">🌿 {e.item}</div>
+                            <div className="axiom-text-12-sub axiom-lh-16">{e.detail}</div>
                         </div>
                     ))}
                 </Card>
@@ -279,18 +291,18 @@ export function JurisdictionIntel() {
             {/* Tab: Zoning */}
             {tab === 4 && (
                 <Card title={`${data.name} Zoning & Land Use`}>
-                    <div style={{ fontSize: 13, color: "var(--c-sub)", lineHeight: 1.8 }}>{data.zones}</div>
+                    <div className="axiom-text-13-sub axiom-lh-18">{data.zones}</div>
                 </Card>
             )}
 
             {/* Tab: External Resources */}
             {tab === 5 && (
                 <Card title={`${data.name} Regulatory Resources`}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div className="axiom-flex-col axiom-flex-gap-12">
                         {data.resources.map((r, i) => (
-                            <a key={i} href={r.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "inherit", display: "block", padding: "12px", background: "var(--c-bg2)", border: "1px solid var(--c-border)", borderRadius: 6, transition: "border-color 0.2s" }} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--c-gold)"} onMouseLeave={e => e.currentTarget.style.borderColor = "var(--c-border)"}>
-                                <div style={{ fontSize: 13, color: "var(--c-gold)", fontWeight: 600, marginBottom: 4 }}>{r.name} ↗</div>
-                                <div style={{ fontSize: 12, color: "var(--c-sub)", lineHeight: 1.5 }}>{r.desc}</div>
+                            <a key={i} href={r.url} target="_blank" rel="noreferrer" className="axiom-btn-link-card">
+                                <div className="axiom-text-13-gold-bold axiom-mb-4">{r.name} ↗</div>
+                                <div className="axiom-text-12-sub axiom-lh-15">{r.desc}</div>
                             </a>
                         ))}
                     </div>

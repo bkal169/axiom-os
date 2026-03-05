@@ -1,124 +1,117 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Map as MapIcon, Zap, Smartphone } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
     const navigate = useNavigate();
-    // user/auth is not used here yet
+    const [email, setEmail] = useState('');
 
-    const features = [
-        {
-            title: "Command Center",
-            desc: "Unified mission control for your entire portfolio.",
-            icon: "⬡"
-        },
-        {
-            title: "Deal Analyzer",
-            desc: "Investor-grade analytics and pro-forma modeling.",
-            icon: "📈"
-        },
-        {
-            title: "Site Intelligence",
-            desc: "Instant entitlements, zoning, and GIS data mapping.",
-            icon: "🗺️"
-        },
-        {
-            title: "Neural Engine",
-            desc: "AI-driven insights for strategic decision making.",
-            icon: "🧠"
-        }
-    ];
+    const handleRequestBeta = (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log(`[Marketing] Beta Access Requested for: ${email}`);
+        alert("Beta Request Submitted. Our team will contact you for an architecture review.");
+        setEmail('');
+    };
 
     return (
-        <div className="min-h-screen bg-[#0D0F13] text-[#F8FAFC] overflow-hidden selection:bg-[#D4A843] selection:text-[#0D0F13]">
-            {/* Background Effects */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#D4A843] opacity-[0.03] blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#3B82F6] opacity-[0.03] blur-[120px] rounded-full" />
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.05]" />
-            </div>
+        <div className="axiom-landing-wrapper" style={{ backgroundColor: '#0A0A0A', color: '#ECECEC', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
 
-            {/* Navigation */}
-            <nav className="relative z-10 flex items-center justify-between px-8 py-6 border-bottom border-[#1E2330] backdrop-blur-md bg-[#0D0F13]/50">
-                <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold tracking-tighter text-[#D4A843]">AXIOM</span>
-                    <span className="text-[8px] font-bold px-1.5 py-0.5 border border-[#D4A843] rounded text-[#D4A843] uppercase tracking-widest mt-1">OS</span>
+            {/* ─── NAVIGATION ──────────────────────────────────────────────────────── */}
+            <nav style={{ padding: '24px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '2px', color: '#fff' }}>
+                    ⬡ AXIOM<span style={{ color: '#D4A843' }}>OS</span>
                 </div>
-                <div className="flex items-center gap-6">
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="text-sm font-medium hover:text-[#D4A843] transition-colors"
-                    >
-                        Log In
-                    </button>
+                <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+                    <button onClick={() => navigate('/login')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14 }}>Log In</button>
                     <button
                         onClick={() => navigate('/axiom')}
-                        className="px-5 py-2 text-sm font-bold bg-[#D4A843] text-[#0D0F13] rounded hover:bg-[#E8C76A] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#D4A843]/10"
+                        style={{ padding: '10px 20px', background: '#D4A843', color: '#000', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}
                     >
                         Launch App
                     </button>
                 </div>
             </nav>
 
-            {/* Hero Section */}
-            <main className="relative z-10 flex flex-col items-center justify-center pt-32 pb-20 px-4 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#D4A843]/20 bg-[#D4A843]/5 text-[#D4A843] text-[10px] uppercase tracking-[0.2em] font-bold mb-8 animate-fade-in">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4A843] opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4A843]"></span>
-                    </span>
-                    Now in Premiere Release
+            {/* ─── HERO SECTION ────────────────────────────────────────────────────── */}
+            <section style={{ padding: '120px 48px', textAlign: 'center', maxWidth: 900, margin: '0 auto' }}>
+                <div style={{ display: 'inline-block', padding: '6px 12px', background: 'rgba(212, 168, 67, 0.1)', color: '#D4A843', borderRadius: 20, fontSize: 13, fontWeight: 600, letterSpacing: 1, marginBottom: 24 }}>
+                    V3 IS NOW LIVE — 50 INVITES REMAINING
                 </div>
-
-                <h1 className="text-6xl md:text-8xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-[#F8FAFC] to-[#94A3B8]">
-                    The Operating System<br />
-                    <span className="text-[#D4A843]">For Real Estate.</span>
+                <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 24, color: '#FFFFFF' }}>
+                    The Physical Asset, <br />
+                    <span style={{ color: '#D4A843' }}>Synchronized.</span>
                 </h1>
-
-                <p className="max-w-2xl text-lg md:text-xl text-[#94A3B8] mb-12 leading-relaxed">
-                    Axiom OS is the next-generation platform for real estate investment,
-                    development, and management. Powered by neural intelligence and
-                    investor-grade analytics.
+                <p style={{ fontSize: 20, color: '#888', marginBottom: 48, lineHeight: 1.6 }}>
+                    Axiom OS is the first spatial intelligence and underwriting engine designed to eliminate the friction between the physical lot and the financial model.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-20">
-                    <button
-                        onClick={() => navigate('/axiom')}
-                        className="px-8 py-4 text-lg font-bold bg-[#D4A843] text-[#0D0F13] rounded hover:bg-[#E8C76A] transition-all transform hover:scale-105 shadow-xl shadow-[#D4A843]/20"
-                    >
-                        Enter the Workspace
+                <form onSubmit={handleRequestBeta} style={{ display: 'flex', gap: 16, justifyContent: 'center', maxWidth: 500, margin: '0 auto' }}>
+                    <input
+                        type="email"
+                        placeholder="Enter your work email..."
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        style={{ flex: 1, padding: '16px 24px', borderRadius: 8, background: '#111', border: '1px solid #333', color: '#fff', fontSize: 16, outline: 'none' }}
+                        required
+                    />
+                    <button type="submit" style={{ padding: '16px 32px', borderRadius: 8, background: '#D4A843', color: '#000', border: 'none', fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        Request Access <ArrowRight size={18} />
                     </button>
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="px-8 py-4 text-lg font-bold border border-[#1E2330] bg-[#111318]/50 text-[#F8FAFC] rounded hover:bg-[#1A1E2A] transition-all backdrop-blur-sm"
-                    >
-                        Sign Up for Free
-                    </button>
-                </div>
+                </form>
+            </section>
 
-                {/* Features Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full px-4">
-                    {features.map((f, i) => (
-                        <div key={i} className="p-8 rounded-xl border border-[#1E2330] bg-[#111318]/40 backdrop-blur-sm hover:border-[#D4A843]/30 transition-all group text-left">
-                            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 inline-block">{f.icon}</div>
-                            <h3 className="text-lg font-bold mb-2 text-[#D4A843]">{f.title}</h3>
-                            <p className="text-sm text-[#94A3B8] leading-relaxed">{f.desc}</p>
+            {/* ─── THE CORE TRINITY (FEATURES) ─────────────────────────────────────── */}
+            <section id="features" style={{ padding: '96px 48px', background: '#111' }}>
+                <h2 style={{ textAlign: 'center', fontSize: 32, marginBottom: 64, color: '#fff' }}>The Core Trinity</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 32, maxWidth: 1200, margin: '0 auto' }}>
+
+                    {/* Feature 1 */}
+                    <div style={{ background: '#1A1A1A', padding: 40, borderRadius: 16, border: '1px solid #222' }}>
+                        <div style={{ background: '#222', width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                            <Smartphone size={24} color="#D4A843" />
                         </div>
-                    ))}
-                </div>
-            </main>
+                        <h3 style={{ fontSize: 20, marginBottom: 16, color: '#fff' }}>Field Intelligence</h3>
+                        <p style={{ color: '#888', lineHeight: 1.6 }}>
+                            iPad Pro optimized. Offline sync architecture. Capture photos and dictate voice logs on-site; sync instantly to the underwriter's desk when you regain signal.
+                        </p>
+                    </div>
 
-            {/* Footer */}
-            <footer className="relative z-10 py-12 px-8 border-t border-[#1E2330] mt-20 flex flex-col md:flex-row items-center justify-between gap-6 text-[#94A3B8] text-sm">
-                <div className="flex items-center gap-2">
-                    <span className="font-bold tracking-tighter text-[#F8FAFC]">AXIOM OS</span>
-                    <span>© 2026 Juniper Rose Systems</span>
+                    {/* Feature 2 */}
+                    <div style={{ background: '#1A1A1A', padding: 40, borderRadius: 16, border: '1px solid #222' }}>
+                        <div style={{ background: '#222', width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                            <MapIcon size={24} color="#D4A843" />
+                        </div>
+                        <h3 style={{ fontSize: 20, marginBottom: 16, color: '#fff' }}>Spatial Command</h3>
+                        <p style={{ color: '#888', lineHeight: 1.6 }}>
+                            3D Mapbox GIS integration. Render terrain, calculate zoning heuristics, and display 5-mile sales comps visually on high-definition satellite layers.
+                        </p>
+                    </div>
+
+                    {/* Feature 3 */}
+                    <div style={{ background: '#1A1A1A', padding: 40, borderRadius: 16, border: '1px solid #222' }}>
+                        <div style={{ background: '#222', width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+                            <Zap size={24} color="#D4A843" />
+                        </div>
+                        <h3 style={{ fontSize: 20, marginBottom: 16, color: '#fff' }}>The Financial Engine</h3>
+                        <p style={{ color: '#888', lineHeight: 1.6 }}>
+                            Connect directly to the Copilot. Turn zoning codes into Max GFA, and let the AI generate a 10-year baseline pro-forma projecting IRRs in seconds.
+                        </p>
+                    </div>
+
                 </div>
-                <div className="flex gap-8">
-                    <a href="#" className="hover:text-[#D4A843] transition-colors">Documentation</a>
-                    <a href="#" className="hover:text-[#D4A843] transition-colors">API Reference</a>
-                    <a href="#" className="hover:text-[#D4A843] transition-colors">Contact Support</a>
+            </section>
+
+            {/* ─── FOOTER ──────────────────────────────────────────────────────────── */}
+            <footer style={{ padding: '48px', textAlign: 'center', borderTop: '1px solid #222', color: '#666', fontSize: 14 }}>
+                <p>&copy; 2026 Axiom OS. All rights reserved.</p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 16 }}>
+                    <a href="#" style={{ color: '#666', textDecoration: 'none' }}>Download E-Book</a>
+                    <a href="#" style={{ color: '#666', textDecoration: 'none' }}>Privacy Policy</a>
+                    <a href="#" style={{ color: '#666', textDecoration: 'none' }}>Terms of Service</a>
                 </div>
             </footer>
+
         </div>
     );
 };
+

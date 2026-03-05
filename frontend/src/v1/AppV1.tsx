@@ -34,9 +34,11 @@ import { Notes } from "./features/workspace/Notes";
 import { CalendarView } from "./features/workspace/CalendarView";
 import { Email } from "./features/workspace/Email";
 import { Spreadsheets } from "./features/workspace/Spreadsheets";
-import { Workflows } from "./features/workspace/Workflows";
+import { WorkflowHub } from "./features/agents/WorkflowHub";
 import { ResourceCenter } from "./features/workspace/ResourceCenter";
 import { JurisdictionIntel } from "./features/analysis/JurisdictionIntel";
+import { ProspectingEngine } from "./features/prospecting/ProspectingEngine";
+import FieldDashboard from "./features/field/FieldDashboard";
 import { TopNav } from "./components/layout/TopNav";
 import { AuthGate, OnboardingWizard } from "./components/auth/AuthGate";
 import { supa } from "./lib/supabase";
@@ -44,6 +46,12 @@ import { useAuth } from "./context/AuthContext";
 import { useProject } from "./context/ProjectContext";
 import { DataExplorerModal } from "./components/ui/components";
 import { CommandPalette } from "./components/ui/CommandPalette";
+import { ChatPanel } from "./components/ui/ChatPanel";
+import { TickerStrip } from "./components/ui/TickerStrip";
+import { FloatingToolbar } from "./components/ui/FloatingToolbar";
+import { MeetingRecorder } from "./components/ui/MeetingRecorder";
+import { FloatingPanel } from "./components/ui/FloatingPanel";
+import { Dialer } from "./components/ui/components";
 import { useEffect } from "react";
 import "./components/ui/theme.css";
 
@@ -60,6 +68,7 @@ const NAV_GROUPS = [
         group: "CRM",
         items: [
             { id: "contacts", label: "⬡ Contacts" },
+            { id: "prospecting", label: "⬡ Prospecting Engine" },
             { id: "deals", label: "⬡ Deal Pipeline" },
             { id: "analyzer", label: "⬡ Deal Analyzer" },
         ],
@@ -94,6 +103,7 @@ const NAV_GROUPS = [
     {
         group: "EXECUTION",
         items: [
+            { id: "field", label: "⬡ Field Dashboard" },
             { id: "process", label: "⬡ Process Control" },
             { id: "risk", label: "⬡ Risk Command" },
             { id: "sitemgmt", label: "⬡ Site Management" },
@@ -152,23 +162,13 @@ function NavSection({
     if (sidebarCollapsed) {
         // Icon-only mode: show dots
         return (
-            <div style={{ padding: "4px 0", borderBottom: "1px solid var(--c-border)" }}>
+            <div className="axiom-nav-section-icon-mode">
                 {items.map(item => (
                     <div
                         key={item.id}
                         onClick={() => onSelect(item.id)}
                         title={item.label.replace("⬡ ", "")}
-                        style={{
-                            width: 40, height: 36,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            cursor: "pointer",
-                            borderRadius: 4,
-                            margin: "1px auto",
-                            background: activeView === item.id ? "var(--c-bg4)" : "transparent",
-                            color: activeView === item.id ? "var(--c-gold)" : "var(--c-muted)",
-                            fontSize: 14,
-                            transition: "all 0.15s",
-                        }}
+                        className={`axiom-nav-item-icon ${activeView === item.id ? 'active' : ''}`}
                     >
                         ◆
                     </div>
@@ -178,29 +178,16 @@ function NavSection({
     }
 
     return (
-        <div style={{ marginBottom: 4 }}>
+        <div className="axiom-mb-4">
             {/* Section header — clickable to collapse */}
             <div
-                onClick={() => setOpen(o => !o)}
-                style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "6px 10px 5px",
-                    cursor: "pointer",
-                    userSelect: "none",
-                }}
+                onClick={() => setOpen((o: any) => !o)}
+                className="axiom-nav-section-header"
             >
-                <span style={{
-                    fontSize: 9, letterSpacing: "2.5px", color: "var(--c-dim)",
-                    textTransform: "uppercase", fontWeight: 700,
-                }}>
+                <span className="axiom-nav-section-label">
                     {group}
                 </span>
-                <span style={{
-                    fontSize: 9, color: "var(--c-dim)",
-                    transform: open ? "rotate(0deg)" : "rotate(-90deg)",
-                    transition: "transform 0.2s",
-                    lineHeight: 1,
-                }}>
+                <span className={`axiom-nav-section-caret ${open ? 'open' : ''}`}>
                     ▾
                 </span>
             </div>
@@ -212,32 +199,7 @@ function NavSection({
                     <div
                         key={item.id}
                         onClick={() => onSelect(item.id)}
-                        style={{
-                            display: "flex", alignItems: "center",
-                            padding: "8px 12px 8px 14px",
-                            cursor: "pointer",
-                            borderRadius: 4,
-                            margin: "1px 4px",
-                            fontSize: 12,
-                            fontWeight: isActive ? 600 : 400,
-                            color: isActive ? "var(--c-gold)" : "var(--c-sub)",
-                            background: isActive ? "color-mix(in srgb, var(--c-gold) 8%, var(--c-bg3))" : "transparent",
-                            borderLeft: isActive ? "2px solid var(--c-gold)" : "2px solid transparent",
-                            transition: "all 0.15s",
-                            letterSpacing: "0.3px",
-                        }}
-                        onMouseEnter={e => {
-                            if (!isActive) {
-                                (e.currentTarget as HTMLElement).style.background = "var(--c-bg3)";
-                                (e.currentTarget as HTMLElement).style.color = "var(--c-text)";
-                            }
-                        }}
-                        onMouseLeave={e => {
-                            if (!isActive) {
-                                (e.currentTarget as HTMLElement).style.background = "transparent";
-                                (e.currentTarget as HTMLElement).style.color = "var(--c-sub)";
-                            }
-                        }}
+                        className={`axiom-nav-item ${isActive ? 'active' : ''}`}
                     >
                         {item.label}
                     </div>
@@ -269,6 +231,7 @@ function renderView(view: string, activeProjectId: string) {
     switch (view) {
         case "dashboard": return <Dashboard projectId={activeProjectId} />;
         case "contacts": return <Contacts />;
+        case "prospecting": return <ProspectingEngine />;
         case "deals": return <Deals />;
         case "analyzer": return <DealAnalyzer />;
         // ─── INTEL ───────────────────────────────────────
@@ -287,6 +250,7 @@ function renderView(view: string, activeProjectId: string) {
         case "invoices": return <Invoices />;
         // ─── EXECUTION ───────────────────────────────────
         case "process": return <ProjectManagement projectId={activeProjectId} />;
+        case "field": return <FieldDashboard />;
         case "risk": return <RiskRegistry projectId={activeProjectId} />;
         case "sitemgmt": return <SiteManagement />;
         case "vendors": return <VendorNetwork />;
@@ -302,7 +266,7 @@ function renderView(view: string, activeProjectId: string) {
         case "billing": return <Billing />;
         case "legal": return <LegalCompliance />;
         // ─── SECURITY ────────────────────────────────────
-        case "audit": return <div style={{ padding: 0 }}><AuditLog /></div>;
+        case "audit": return <div className="axiom-p-0"><AuditLog /></div>;
         // ─── INTEL ───────────────────────────────────────
         case "jurisdintel": return <JurisdictionIntel />;
         // ─── WORKSPACE ───────────────────────────────────
@@ -310,7 +274,7 @@ function renderView(view: string, activeProjectId: string) {
         case "calendar": return <CalendarView />;
         case "email": return <Email />;
         case "sheets": return <Spreadsheets />;
-        case "workflows": return <Workflows />;
+        case "workflows": return <WorkflowHub />;
         case "resources": return <ResourceCenter />;
         default: return <ComingSoon name={view} />;
     }
@@ -319,11 +283,18 @@ function renderView(view: string, activeProjectId: string) {
 // ─── MAIN APP CONTENT ─────────────────────────────────────────
 function AppContent() {
     const [view, setView] = useState("dashboard");
+    const [isSplit, setIsSplit] = useState(false);
+    const [splitView, setSplitView] = useState("notes");
+    const [floatingPanels, setFloatingPanels] = useState<string[]>([]);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [cpOpen, setCpOpen] = useState(false);
-    const { activeProjectId, chartSel, setChartSel } = useProject() as any;
+    const [chatOpen, setChatOpen] = useState(false);
+    const [meetingOpen, setMeetingOpen] = useState(false);
+    const [dialerOpen, setDialerOpen] = useState(false);
+    const [dialerData, setDialerData] = useState({ number: '', name: '' });
+    const [tickerOpen, setTickerOpen] = useState(true);
+    const { activeProjectId, chartSel, setChartSel } = useProject() as unknown as { activeProjectId: string | null; chartSel: string | null; setChartSel: (sel: string | null) => void };
 
-    // ─── ⌘K / Ctrl+K keyboard shortcut ──────────────────────
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -335,50 +306,42 @@ function AppContent() {
         return () => window.removeEventListener("keydown", handler);
     }, []);
 
+    // ─── Global Event Listeners ─────────────────────────────────
+    useEffect(() => {
+        const handleOpenDialer = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            setDialerOpen(true);
+            setDialerData(customEvent.detail || { number: '', name: '' });
+        };
+        const handleGotoView = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            if (customEvent.detail) setView(customEvent.detail);
+        };
+        window.addEventListener("axiom_open_dialer", handleOpenDialer);
+        window.addEventListener("axiom_goto_view", handleGotoView);
+        return () => {
+            window.removeEventListener("axiom_open_dialer", handleOpenDialer);
+            window.removeEventListener("axiom_goto_view", handleGotoView);
+        };
+    }, []);
+
     const sidebarWidth = sidebarCollapsed ? 54 : 220;
 
     return (
         <div className="axiom-layout">
             {/* ─── SIDEBAR ──────────────────────────────────── */}
-            <div style={{
-                width: sidebarWidth,
-                minWidth: sidebarWidth,
-                background: "#09090D",
-                borderRight: "1px solid var(--c-border)",
-                display: "flex",
-                flexDirection: "column",
-                transition: "width 0.22s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1)",
-                overflow: "hidden",
-            }}>
+            <div className={`axiom-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`} style={{ width: sidebarWidth, minWidth: sidebarWidth }}>
                 {/* Header */}
-                <div style={{
-                    padding: sidebarCollapsed ? "16px 0" : "16px 18px",
-                    borderBottom: "1px solid var(--c-border)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: sidebarCollapsed ? "center" : "space-between",
-                    flexShrink: 0,
-                }}>
+                <div className={`axiom-sidebar-header ${sidebarCollapsed ? 'collapsed' : ''}`}>
                     {!sidebarCollapsed && (
-                        <div style={{
-                            fontSize: 11, fontWeight: 800, letterSpacing: "3px",
-                            color: "var(--c-gold)",
-                        }}>
-                            AXIOM <span style={{ fontSize: 8, color: "var(--c-dim)", verticalAlign: "top" }}>OS</span>
+                        <div className="axiom-sidebar-logo">
+                            AXIOM <span className="axiom-sidebar-logo-os">OS</span>
                         </div>
                     )}
                     <button
-                        onClick={() => setSidebarCollapsed(c => !c)}
+                        onClick={() => setSidebarCollapsed((c: any) => !c)}
                         title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                        style={{
-                            background: "transparent", border: "none",
-                            cursor: "pointer", padding: "2px 4px",
-                            color: "var(--c-dim)", fontSize: 14,
-                            lineHeight: 1, borderRadius: 3,
-                            transition: "color 0.15s",
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.color = "var(--c-text)")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "var(--c-dim)")}
+                        className="axiom-sidebar-toggle"
                     >
                         {sidebarCollapsed ? "▶" : "◀"}
                     </button>
@@ -389,25 +352,16 @@ function AppContent() {
                     <button
                         onClick={() => setCpOpen(true)}
                         title="Search Axiom OS (Ctrl+K / ⌘K)"
-                        style={{
-                            display: "flex", alignItems: "center", gap: 8,
-                            margin: "8px 10px", padding: "6px 10px",
-                            background: "var(--c-bg3)", border: "1px solid var(--c-border)",
-                            borderRadius: 4, cursor: "pointer", width: "calc(100% - 20px)",
-                            color: "var(--c-dim)", fontSize: 11, textAlign: "left",
-                            transition: "border-color 0.15s", flexShrink: 0,
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--c-border2)")}
-                        onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--c-border)")}
+                        className="axiom-sidebar-search-btn"
                     >
-                        <span style={{ fontSize: 13 }}>⌕</span>
-                        <span style={{ flex: 1 }}>Search...</span>
-                        <kbd style={{ fontSize: 9, background: "var(--c-bg)", border: "1px solid var(--c-border2)", borderRadius: 2, padding: "1px 5px", color: "var(--c-dim)", fontFamily: "inherit" }}>⌘K</kbd>
+                        <span className="axiom-text-13">⌕</span>
+                        <span className="axiom-flex-1">Search...</span>
+                        <kbd className="axiom-kbd">⌘K</kbd>
                     </button>
                 )}
 
                 {/* Nav */}
-                <nav style={{ flex: 1, overflowY: "auto", padding: "10px 0", overflowX: "hidden" }}>
+                <nav className="axiom-sidebar-nav">
                     {NAV_GROUPS.map(g => (
                         <NavSection
                             key={g.group}
@@ -422,22 +376,31 @@ function AppContent() {
 
                 {/* Footer version */}
                 {!sidebarCollapsed && (
-                    <div style={{
-                        padding: "10px 14px",
-                        borderTop: "1px solid var(--c-border)",
-                        fontSize: 9, letterSpacing: 2,
-                        color: "var(--c-dim)",
-                    }}>
+                    <div className="axiom-sidebar-footer">
                         AXIOM OS · V1 · 2026
                     </div>
                 )}
             </div>
 
             {/* ─── MAIN CONTENT ─────────────────────────────── */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-                <TopNav title={NAV_GROUPS.flatMap(g => g.items).find(i => i.id === view)?.label?.replace("⬡ ", "")?.toUpperCase() || "COMMAND CENTER"} setView={setView} />
-                <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px", position: "relative" }}>
+            <div className="axiom-main-content-col">
+                <TopNav
+                    title={NAV_GROUPS.flatMap(g => g.items).find(i => i.id === view)?.label?.replace("⬡ ", "")?.toUpperCase() || "COMMAND CENTER"}
+                    setView={setView}
+                    tickerOpen={tickerOpen} setTickerOpen={setTickerOpen}
+                    chatOpen={chatOpen} setChatOpen={setChatOpen}
+                    meetingOpen={meetingOpen} setMeetingOpen={setMeetingOpen}
+                    isSplit={isSplit} setIsSplit={setIsSplit}
+                    splitView={splitView} setSplitView={setSplitView}
+                    onDetach={() => setFloatingPanels((prev: any) => [...prev, view])}
+                />
+                <div className={`axiom-main-content-area ${isSplit ? 'split' : ''}`}>
                     {renderView(view, activeProjectId || "default")}
+                    {isSplit && (
+                        <div className="axiom-split-pane">
+                            {renderView(splitView, activeProjectId || "default")}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -450,15 +413,37 @@ function AppContent() {
                 onClose={() => setCpOpen(false)}
                 onNavigate={(id) => { setView(id); setCpOpen(false); }}
             />
+
+            {/* Phase 4 Overlays */}
+            {floatingPanels.map((fp: any, idx: number) => (
+                <FloatingPanel
+                    key={`${fp}-${idx}`}
+                    id={fp}
+                    title={NAV_GROUPS.flatMap(g => g.items).find(i => i.id === fp)?.label?.replace("⬡ ", "") || "Panel"}
+                    onClose={() => setFloatingPanels((prev: any) => prev.filter((_: any, i: number) => i !== idx))}
+                    initialX={200 + (idx * 30)}
+                    initialY={200 + (idx * 30)}
+                >
+                    {renderView(fp, activeProjectId || "default")}
+                </FloatingPanel>
+            ))}
+
+            <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+            <TickerStrip visible={tickerOpen} />
+            <FloatingToolbar />
+            <MeetingRecorder open={meetingOpen} onClose={() => setMeetingOpen(false)} />
+            <Dialer open={dialerOpen} onClose={() => setDialerOpen(false)} initialNumber={dialerData.number} initialName={dialerData.name} />
         </div>
     );
 }
 
 // ─── AUTH ROUTER ────────────────────────────────────────────────
 function AuthRouter() {
-    const authCtx = useAuth() as any;
+    const authCtx = useAuth();
+    const projCtx = useProject();
+    if (!authCtx || !projCtx) return null;
+
     const { user, userProfile, authLoading } = authCtx;
-    const projCtx = useProject() as any;
     const { allProjects, createProject } = projCtx;
 
     // Show login gate if Supabase configured but not logged in

@@ -52,45 +52,45 @@ function LiveSignals() {
         <Card
             title="Live Market Signals"
             action={
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div className="axiom-flex-center axiom-flex-gap-10">
                     {lastUpdated && <span className="axiom-text-11-dim">Updated {lastUpdated}</span>}
-                    <button className="axiom-btn" onClick={fetchSignals} disabled={loading} style={{ padding: "4px 10px", fontSize: 11 }}>
+                    <button className="axiom-btn axiom-p-4-10 axiom-text-11" onClick={fetchSignals} disabled={loading} title="Refresh Signals">
                         {loading ? "..." : "↺ Refresh"}
                     </button>
                 </div>
             }
         >
             {loading && !signals.length ? (
-                <div style={{ padding: 32, textAlign: "center", color: "var(--c-dim)", fontSize: 13 }}>Loading signals...</div>
+                <div className="axiom-p-32 axiom-text-center axiom-text-13-dim">Loading signals...</div>
             ) : signals.length === 0 ? (
-                <div style={{ padding: 32, textAlign: "center", color: "var(--c-dim)", fontSize: 13 }}>No signals. FRED ingest runs daily at 06:00 UTC.</div>
+                <div className="axiom-p-32 axiom-text-center axiom-text-13-dim">No signals. FRED ingest runs daily at 06:00 UTC.</div>
             ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <div className="axiom-flex-col axiom-flex-gap-1">
                     {signals.map((s) => (
-                        <div key={s.id} style={{ padding: "10px 12px", borderBottom: "1px solid var(--c-border)", display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "start" }}>
+                        <div key={s.id} className="axiom-py-10 axiom-px-12 axiom-grid-2-auto-gap-10 axiom-items-start" style={{ borderBottom: "1px solid var(--c-border)" }}>
                             <div>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--c-text)" }}>{s.title}</span>
+                                <div className="axiom-flex-center-gap-8 axiom-mb-4">
+                                    <span className="axiom-text-13-bold axiom-text-sub">{s.title}</span>
                                     {s.direction && (
-                                        <span style={{ fontSize: 9, letterSpacing: 1, textTransform: "uppercase", color: DIRECTION_COLOR[s.direction] || "var(--c-dim)", fontWeight: 700 }}>
+                                        <span className="axiom-text-10-b-up-ls1" style={{ color: DIRECTION_COLOR[s.direction] || "var(--c-dim)" }}>
                                             {s.direction === "inflationary" ? "▲" : s.direction === "deflationary" ? "▼" : "→"} {s.direction}
                                         </span>
                                     )}
                                 </div>
-                                <div style={{ fontSize: 12, color: "var(--c-sub)", lineHeight: 1.5 }}>{s.summary}</div>
+                                <div className="axiom-text-12 axiom-text-sub axiom-lh-15">{s.summary}</div>
                                 {s.strength != null && (
-                                    <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                                        <div style={{ flex: 1, height: 3, background: "var(--c-border)", borderRadius: 2 }}>
-                                            <div style={{ height: "100%", width: `${Math.min(1, s.strength) * 100}%`, background: DIRECTION_COLOR[s.direction] || "var(--c-gold)", borderRadius: 2, transition: "width 0.4s" }} />
+                                    <div className="axiom-flex-center-gap-8 axiom-mt-6">
+                                        <div className="axiom-flex-1 axiom-h-3 axiom-bg-border axiom-radius-2">
+                                            <div className="axiom-h-full axiom-radius-2 axiom-trans-w-400" style={{ width: `${Math.min(1, s.strength) * 100}%`, background: DIRECTION_COLOR[s.direction] || "var(--c-gold)" }} />
                                         </div>
-                                        <span style={{ fontSize: 9, color: "var(--c-dim)", width: 28 }}>{(s.strength * 100).toFixed(0)}%</span>
+                                        <span className="axiom-text-9-dim axiom-w-28">{(s.strength * 100).toFixed(0)}%</span>
                                     </div>
                                 )}
                             </div>
-                            <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                <div style={{ fontSize: 9, color: "var(--c-dim)", letterSpacing: 1, textTransform: "uppercase" }}>{s.domain}</div>
-                                <div style={{ fontSize: 9, color: "var(--c-dim)", marginTop: 2 }}>{s.source_name}</div>
-                                <div style={{ fontSize: 9, color: "var(--c-dim)", marginTop: 2 }}>{new Date(s.created_at).toLocaleDateString()}</div>
+                            <div className="axiom-text-right axiom-flex-shrink-0">
+                                <div className="axiom-text-9-dim-ls1-up">{s.domain}</div>
+                                <div className="axiom-text-9-dim axiom-mt-2">{s.source_name}</div>
+                                <div className="axiom-text-9-dim axiom-mt-2">{new Date(s.created_at).toLocaleDateString()}</div>
                             </div>
                         </div>
                     ))}
@@ -172,7 +172,7 @@ export function MarketIntel({ projectId }: Props) {
 
             {/* ── Tab 1: Comparables ────────────────────────── */}
             <div>
-                <div className="axiom-grid-4" style={{ marginBottom: 20 }}>
+                <div className="axiom-grid-4 axiom-mb-20">
                     <KPI label="Comps Analyzed" value={filtered.length.toString()} />
                     <KPI label="Avg Adj. $/Lot" value={fmt.usd(avgPPL)} color="var(--c-green)" />
                     <KPI label="Avg $/SF" value={"$" + avgPPSF.toFixed(2)} color="var(--c-blue)" />
@@ -186,9 +186,9 @@ export function MarketIntel({ projectId }: Props) {
                 </div>
 
                 <Card title="Comparable Sales Database" action={
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div className="axiom-flex-gap-8">
                         <CSVImportButton onImport={importComps} />
-                        <select className="axiom-select" style={{ width: 140 }} value={filt} onChange={e => setFilt(e.target.value)} title="Filter by status">
+                        <select className="axiom-select axiom-w-140" value={filt} onChange={e => setFilt(e.target.value)} title="Filter by status">
                             <option>All</option>
                             <option>Sold</option>
                             <option>Listed</option>
@@ -198,7 +198,7 @@ export function MarketIntel({ projectId }: Props) {
                 }>
                     <table className="axiom-table">
                         <thead>
-                            <tr style={{ textAlign: "left" }}>
+                            <tr className="axiom-text-left">
                                 <th className="axiom-th">Project</th>
                                 <th className="axiom-th">Lots</th>
                                 <th className="axiom-th">Lot SF</th>
@@ -214,31 +214,32 @@ export function MarketIntel({ projectId }: Props) {
                             {filtered.map((c: any) => (
                                 <tr key={c.id} className="premium-hover">
                                     <td className="axiom-td">
-                                        <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 600 }}>{c.name}</div>
-                                        <div style={{ fontSize: 9, color: "var(--c-dim)" }}>{c.address}</div>
+                                        <div className="axiom-text-13 axiom-text-bold axiom-text-sub">{c.name}</div>
+                                        <div className="axiom-text-9-dim">{c.address}</div>
                                     </td>
                                     <td className="axiom-td">{c.lots}</td>
                                     <td className="axiom-td">{fmt.num(c.lotSF)}</td>
                                     <td className="axiom-td">{c.saleDate}</td>
-                                    <td className="axiom-td" style={{ color: "var(--c-gold)", fontWeight: 500 }}>{fmt.usd(c.pricePerLot)}</td>
+                                    <td className="axiom-td axiom-text-gold axiom-text-bold-500">{fmt.usd(c.pricePerLot)}</td>
                                     <td className="axiom-td">
                                         <input
                                             type="number"
                                             title="Adjustment %"
                                             placeholder="0"
-                                            style={{ width: 60, background: "transparent", border: "none", color: c.adj > 0 ? "var(--c-green)" : c.adj < 0 ? "var(--c-red)" : "var(--c-dim)", fontSize: 12 }}
+                                            className="axiom-w-60 axiom-bg-trans axiom-border-none axiom-text-12"
+                                            style={{ color: c.adj > 0 ? "var(--c-green)" : c.adj < 0 ? "var(--c-red)" : "var(--c-dim)" }}
                                             value={c.adj}
                                             onChange={e => updateCompAdj(comps.findIndex(x => x.id === c.id), +e.target.value)}
                                         />%
                                     </td>
-                                    <td className="axiom-td" style={{ color: "var(--c-gold)", fontWeight: 600 }}>
+                                    <td className="axiom-td axiom-text-gold axiom-text-bold">
                                         {fmt.usd(c.pricePerLot * (1 + c.adj / 100))}
                                     </td>
                                     <td className="axiom-td">
                                         <Badge label={c.status} color={c.status === "Sold" ? "var(--c-green)" : "var(--c-blue)"} />
                                     </td>
                                     <td className="axiom-td">
-                                        <button onClick={() => removeComp(c.id)} style={{ background: "none", border: "none", color: "var(--c-dim)", cursor: "pointer" }}>×</button>
+                                        <button onClick={() => removeComp(c.id)} className="axiom-bg-none axiom-border-none axiom-text-dim axiom-pointer">×</button>
                                     </td>
                                 </tr>
                             ))}
@@ -248,7 +249,7 @@ export function MarketIntel({ projectId }: Props) {
 
                 {/* ── Add Comp form ──────────────────────────── */}
                 <Card title="Add Comparable">
-                    <div className="axiom-grid-4" style={{ gap: 10, marginBottom: 10 }}>
+                    <div className="axiom-grid-4 axiom-flex-gap-10 axiom-mb-10">
                         {[
                             ["Project Name", "name", "text"],
                             ["Address", "address", "text"],
@@ -292,8 +293,8 @@ export function MarketIntel({ projectId }: Props) {
             {/* ── Tab 2: Jurisdiction Intel ────────────────── */}
             <div>
                 <Card title={`Jurisdiction Intel — ${loc}`}>
-                    <div className="axiom-label" style={{ marginBottom: 16 }}>
-                        Specialized AI agents pre-loaded with local zoning, permit, and fee knowledge for <b style={{ color: "var(--c-gold)" }}>{loc}</b>.
+                    <div className="axiom-label axiom-mb-16">
+                        Specialized AI agents pre-loaded with local zoning, permit, and fee knowledge for <b className="axiom-text-gold">{loc}</b>.
                     </div>
                     <div className="axiom-grid-2">
                         <Card title="Fee Estimator">

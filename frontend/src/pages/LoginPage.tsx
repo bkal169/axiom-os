@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { Shield, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
@@ -30,7 +31,6 @@ export const LoginPage: React.FC = () => {
     const handleSignUp = async () => {
         setLoading(true);
         setError(null);
-        // For Lean Launch: Standard signup
         const { error } = await supabase.auth.signUp({
             email,
             password
@@ -45,58 +45,142 @@ export const LoginPage: React.FC = () => {
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="flex justify-center mb-6">
-                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">AXIOM</h1>
+        <div style={{ backgroundColor: '#0A0A0A', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
+            <div style={{
+                width: '100%',
+                maxWidth: 420,
+                padding: 40,
+                backgroundColor: '#111',
+                borderRadius: 16,
+                border: '1px solid #222',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                textAlign: 'center'
+            }}>
+                <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '2px', color: '#fff', marginBottom: 40 }}>
+                    ⬡ AXIOM<span style={{ color: '#D4A843' }}>OS</span>
                 </div>
-                <h2 className="text-xl font-semibold mb-6 text-center text-gray-700">Sign in to your account</h2>
+
+                <h2 style={{ fontSize: 20, color: '#fff', marginBottom: 12 }}>Welcome Back</h2>
+                <p style={{ color: '#888', fontSize: 14, marginBottom: 32 }}>Authenticate to access your workspace</p>
 
                 {error && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
+                    <div style={{
+                        marginBottom: 24,
+                        padding: '12px 16px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        color: '#FCA5A5',
+                        borderRadius: 8,
+                        fontSize: 13,
+                        textAlign: 'left'
+                    }}>
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
-                            required
-                        />
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    <div style={{ textAlign: 'left' }}>
+                        <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Email Address</label>
+                        <div style={{ position: 'relative' }}>
+                            <Mail size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#444' }} />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px 16px 12px 48px',
+                                    borderRadius: 8,
+                                    backgroundColor: '#0A0A0A',
+                                    border: '1px solid #333',
+                                    color: '#fff',
+                                    outline: 'none',
+                                    transition: 'border-color 0.2s'
+                                }}
+                                onFocus={(e) => e.currentTarget.style.borderColor = '#D4A843'}
+                                onBlur={(e) => e.currentTarget.style.borderColor = '#333'}
+                                required
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-slate-500"
-                            required
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full py-2 px-4 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:opacity-50 transition-colors"
-                    >
-                        {loading ? 'Signing in...' : 'Sign In'}
-                    </button>
 
-                    <button
-                        type="button"
-                        onClick={handleSignUp}
-                        disabled={loading}
-                        className="w-full py-2 px-4 bg-white text-slate-900 border border-slate-300 rounded hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                    >
-                        Create Account
-                    </button>
+                    <div style={{ textAlign: 'left' }}>
+                        <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Password</label>
+                        <div style={{ position: 'relative' }}>
+                            <Lock size={16} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#444' }} />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '12px 16px 12px 48px',
+                                    borderRadius: 8,
+                                    backgroundColor: '#0A0A0A',
+                                    border: '1px solid #333',
+                                    color: '#fff',
+                                    outline: 'none',
+                                    transition: 'border-color 0.2s'
+                                }}
+                                onFocus={(e) => e.currentTarget.style.borderColor = '#D4A843'}
+                                onBlur={(e) => e.currentTarget.style.borderColor = '#333'}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: 8,
+                                backgroundColor: '#D4A843',
+                                color: '#000',
+                                border: 'none',
+                                fontWeight: 700,
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                transition: 'transform 0.1s, background-color 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 8
+                            }}
+                        >
+                            {loading ? <Loader2 className="animate-spin" size={20} /> : <>Sign In <ArrowRight size={18} /></>}
+                        </button>
+                    </div>
+
+                    <div style={{ marginTop: 8 }}>
+                        <button
+                            type="button"
+                            onClick={handleSignUp}
+                            disabled={loading}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: 8,
+                                backgroundColor: 'transparent',
+                                color: '#D4A843',
+                                border: '1px solid #D4A843',
+                                fontWeight: 600,
+                                cursor: 'not-allowed', // Signup disabled for Beta
+                                opacity: 0.5
+                            }}
+                            title="Signup currently disabled for private beta"
+                        >
+                            Request Invite
+                        </button>
+                    </div>
                 </form>
+
+                <div style={{ marginTop: 32, fontSize: 12, color: '#444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Shield size={12} /> Secure Enterprise Authentication
+                </div>
             </div>
         </div>
     );
 };
+

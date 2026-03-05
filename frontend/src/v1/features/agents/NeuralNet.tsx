@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useProject } from "../../context/ProjectContext";
-import { Card } from "../../components/ui/components";
+import { Card, Button } from "../../components/ui/components";
 import { buildMonthlyCashFlows } from "../../lib/math";
 import { fmt } from "../../lib/utils";
 
@@ -74,12 +74,12 @@ export function NeuralNet() {
                 case "Demographics": data.metrics = [["Med. Income", "$98K"], ["Pop Growth", "2.1%"], ["Age", "34"]]; data.insight = `Target demographic aligns with product mix. Strong influx of millennial buyers matching the entry-level price point.`; break;
                 case "Finance": {
                     const { totalCost } = buildMonthlyCashFlows(fin);
-                    data.metrics = [["Total Cost", fmt.M(totalCost)], ["Hard Cost/Lot", fmt.usd(fin.hardCostPerLot)]];
-                    data.insight = `Capital stack modeled for ${pName}. Cost structure aligns with benchmark medians.`;
+                    data.metrics = [["Total Cost", fmt.M(totalCost)], ["Hard Cost/Lot", fmt.usd(fin.hardCostPerLot)], ["Land Cost", fmt.M(fin.landCost)]];
+                    data.insight = `Capital stack modeled for ${pName}. Land cost accounts for ${Math.round(fin.landCost / totalCost * 100)}% of total capitalization. Cost structure aligns with benchmark medians.`;
                     break;
                 }
                 case "Location Score": data.metrics = [["Walk Score", "74"], ["Transit", "Good"], ["Schools", "8/10"]]; data.insight = `Location ranks in the 85th percentile relative to the MSA. Strong driver for premium pricing.`; break;
-                case "Density Potential": data.metrics = [["Yield Test", "Pass"], ["Efficiency", "82%"], ["Max Lots", "54"]]; data.insight = `Site geometry allows for high density. Current plan of ${fin.totalLots} lots is optimal for FAR limits.`; break;
+                case "Density Potential": data.metrics = [["Yield Test", "Pass"], ["Efficiency", "82%"], ["Max Lots", fin.totalLots]]; data.insight = `Site geometry allows for high density. Current plan of ${fin.totalLots} lots is optimal for FAR limits.`; break;
                 case "Market Velocity": data.metrics = [["Absorp.", `~${fin.absorbRate}/mo`], ["Sales Pace", "Fast"], ["Inv. Months", "4.1"]]; data.insight = `High velocity expected upon delivery. Absorption modeled at ${fin.absorbRate} units per month.`; break;
                 case "Cost Index": data.metrics = [["Hard Cost", `$${fin.hardCostPerLot}/lot`], ["Soft Cost", `${fin.softCostPct}%`], ["Fees", "Avg"]]; data.insight = `Construction costs in ${loc} are trending slightly above national average. Contingency reserves verified.`; break;
                 case "Risk Factors": data.metrics = [["Entitlement", "Med"], ["Const.", "Low"], ["Market", "Med"]]; data.insight = `Environmental and geotechnical risks are minimal. Primary risk remains timeline elongation during permits.`; break;
@@ -88,7 +88,7 @@ export function NeuralNet() {
                 case "IRR Prediction": data.metrics = [["Base", "18.4%"], ["Bull", "24.1%"], ["Bear", "12.2%"]]; data.insight = `Monte Carlo simulation across 10,000 runs confirms expected returns exceed the internal hurdle rate.`; break;
                 case "Absorption Model": data.metrics = [["Duration", "16 mo"], ["Phase 1", "Fast"], ["Phase 2", "Stabilized"]]; data.insight = `Non-linear absorption curve applied. Initial 3 months expected to capture pent-up demand.`; break;
                 case "Risk Heatmap": data.metrics = [["Concentration", "Front-end"], ["Severity", "2.4/5"], ["Mitigation", "Active"]]; data.insight = `Highest risk concentration occurs during horizontal construction phase. Buffer added to carry costs.`; break;
-                case "Deal Score": data.metrics = [["Final Score", `${dealScore}/100`], ["Percentile", "88th"], ["Confidence", `${confidence}%`]]; data.insight = `Computed deal intelligence. The asset presents an asymmetric risk/reward profile favorable to the sponsor.`; break;
+                case "Deal Score": data.metrics = [["Final Score", `${dealScore}/100`], ["Percentile", "88th"], ["Confidence", `${confidence}%`]]; data.insight = `Computed deal intelligence for ${pName}. The asset presents an asymmetric risk/reward profile favorable to the sponsor.`; break;
                 case "Go/No-Go": data.metrics = [["Decision", dealScore > 70 ? "GO" : "REVIEW"], ["Conviction", "High"], ["Next Step", "LOI"]]; data.insight = `Proceed with acquisition. Initiate deep-dive physical due diligence and finalize equity syndication materials.`; break;
                 case "Optimal Price": data.metrics = [["Strike", fmt.usd(fin.landCost)], ["Ceiling", fmt.usd(fin.landCost * 1.15)], ["Target ROI", "18%"]]; data.insight = `Land residual model suggests a maximum un-entitled bid of ${fmt.usd(fin.landCost * 1.15)} to maintain target margins.`; break;
                 case "Timeline": data.metrics = [["Close", "90 Days"], ["Entitle", "14 Mo"], ["Deliver", "24 Mo"]]; data.insight = `Critical path mapped. The primary critical path runs through map recordation and final engineering approval.`; break;
@@ -104,38 +104,30 @@ export function NeuralNet() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const NeuronNode = ({ label, color, active, activeGlobal, onClick }: any) => (
-        <div onClick={onClick} style={{
-            padding: "6px 10px", borderRadius: 20,
-            border: `1.5px solid ${active ? color : 'var(--c-border)'}`,
-            background: active ? `color-mix(in srgb, ${color} 15%, transparent)` : "transparent",
-            cursor: "pointer", fontSize: 11,
-            color: active ? color : (activeGlobal ? "var(--c-dim)" : "var(--c-text)"),
-            fontWeight: active ? 600 : 400, transition: "all 0.3s",
-            fontFamily: "Inter, sans-serif", textAlign: "center", width: "100%", position: "relative"
-        }}>
-            {active && <div style={{ position: "absolute", top: -2, right: -2, width: 6, height: 6, background: color, borderRadius: 3, boxShadow: `0 0 8px ${color}` }} />}
+        <div
+            onClick={onClick}
+            className={`axiom-neuron ${active ? "active" : ""}`}
+            style={{ color: active ? color : (activeGlobal ? "var(--c-dim)" : "var(--c-text)") }}
+        >
+            {active && <div className="axiom-neuron-indicator" style={{ color }} />}
             {label}
         </div>
     );
 
     return (
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div className="axiom-mx-auto axiom-max-w-1200">
             <Card title="Deal Scoring Neural Network">
-                <div style={{ fontSize: 13, color: "var(--c-sub)", marginBottom: 16 }}>
+                <div className="axiom-text-13-sub axiom-mb-16">
                     Visual neural network showing how deal intelligence is computed through feature extraction and pattern recognition layers.
                 </div>
 
                 {/* Visual Neural Network Container (Restored V20 glow effect & layout) */}
-                <div style={{
-                    display: "flex", gap: 12, justifyContent: "space-between", padding: "24px 0",
-                    background: "var(--c-bg2)", borderRadius: 6, border: "1px solid var(--c-border)",
-                    marginBottom: 16, position: "relative", overflow: "hidden"
-                }}>
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: `radial-gradient(ellipse at center, var(--c-gold) 0%, transparent 60%)`, opacity: 0.05 }} />
+                <div className="axiom-neural-container">
+                    <div className="axiom-neural-glow" />
 
                     {LAYERS.map((layer) => (
-                        <div key={layer.id} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "0 12px", zIndex: 1 }}>
-                            <div style={{ fontSize: 10, color: layer.color, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, fontFamily: "Inter, sans-serif" }}>
+                        <div key={layer.id} className="axiom-flex-1 axiom-flex-column axiom-items-center axiom-gap-8 axiom-px-12 axiom-z-1">
+                            <div className="axiom-text-10-bold-spaced-caps axiom-mb-6" style={{ color: layer.color }}>
                                 {layer.name}
                             </div>
                             {layer.nodes.map((node) => (
@@ -154,36 +146,44 @@ export function NeuralNet() {
 
                 {/* Node Output Display (Restored V20 specific layout & computation UI) */}
                 {activeNode && (
-                    <div style={{ background: "var(--c-bg2)", borderRadius: 6, border: `1px solid ${LAYERS.find(l => l.id === activeLayer)?.color}44`, marginBottom: 16, overflow: "hidden", transition: "all 0.3s" }}>
-                        <div style={{ padding: "8px 14px", background: `color-mix(in srgb, ${LAYERS.find(l => l.id === activeLayer)?.color} 15%, transparent)`, borderBottom: `1px solid ${LAYERS.find(l => l.id === activeLayer)?.color}33`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                <div style={{ width: 8, height: 8, borderRadius: "50%", background: LAYERS.find(l => l.id === activeLayer)?.color, boxShadow: `0 0 5px ${LAYERS.find(l => l.id === activeLayer)?.color}` }} />
-                                <span style={{ fontSize: 12, color: LAYERS.find(l => l.id === activeLayer)?.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{activeNode}</span>
+                    <div className="axiom-bg-2 axiom-radius-6 axiom-mb-16 axiom-overflow-hidden axiom-transition-3 axiom-border-default" style={{ borderColor: `${LAYERS.find(l => l.id === activeLayer)?.color}44` }}>
+                        <div className="axiom-telemetry-header" style={{ background: `color-mix(in srgb, ${LAYERS.find(l => l.id === activeLayer)?.color} 15%, transparent)`, borderBottom: `1px solid ${LAYERS.find(l => l.id === activeLayer)?.color}33` }}>
+                            <div className="axiom-flex-center-gap-8">
+                                <div className="axiom-telemetry-status" style={{ color: LAYERS.find(l => l.id === activeLayer)?.color, background: "currentColor" }} />
+                                <span className="axiom-text-12-bold-spaced-caps" style={{ color: LAYERS.find(l => l.id === activeLayer)?.color }}>{activeNode}</span>
                             </div>
-                            <div style={{ fontSize: 10, color: "var(--c-dim)" }}>{LAYERS.find(l => l.id === activeLayer)?.name}</div>
+                            <div className="axiom-text-10-dim">{LAYERS.find(l => l.id === activeLayer)?.name}</div>
                         </div>
 
-                        <div style={{ padding: 16 }}>
+                        <div className="axiom-p-16">
                             {isGenerating ? (
-                                <div style={{ color: "var(--c-gold)", fontSize: 13, padding: "16px 0", display: "flex", gap: 10, alignItems: "center", fontStyle: "italic" }}>
-                                    <div className="axiom-spin" style={{ width: 14, height: 14, border: "2px solid var(--c-gold)", borderTopColor: "transparent", borderRadius: "50%" }} />
+                                <div className="axiom-text-13-gold-italic axiom-py-16 axiom-flex-center-gap-10">
+                                    <div className="axiom-spin axiom-w-14 axiom-h-14 axiom-border-2 axiom-radius-full axiom-border-gold axiom-border-t-transparent" />
                                     Computing neural pathways for {activeNode}...
                                 </div>
                             ) : nodeData ? (
-                                <div style={{ display: "flex", gap: 20 }}>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: 10, color: "var(--c-dim)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Computed Insight</div>
-                                        <div style={{ fontSize: 14, color: "var(--c-text)", lineHeight: 1.6 }}>{nodeData.insight}</div>
+                                <div className="axiom-flex-gap-20">
+                                    <div className="axiom-flex-1">
+                                        <div className="axiom-text-10-dim-caps axiom-mb-8">Computed Insight</div>
+                                        <div className="axiom-text-14-text axiom-lh-16">{nodeData.insight}</div>
                                     </div>
-                                    <div style={{ width: 1, background: "var(--c-border)" }} />
-                                    <div style={{ minWidth: 200 }}>
-                                        <div style={{ fontSize: 10, color: "var(--c-dim)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Data Telemetry</div>
+                                    <div className="axiom-w-1 axiom-bg-border" />
+                                    <div className="axiom-min-w-200">
+                                        <div className="axiom-text-10-dim-caps axiom-mb-8">Data Telemetry</div>
                                         {nodeData.metrics.map(([label, val]: any, i: number) => (
-                                            <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                                                <span style={{ fontSize: 12, color: "var(--c-sub)" }}>{label}</span>
-                                                <span style={{ fontSize: 12, color: "var(--c-text)", fontWeight: 600 }}>{val}</span>
+                                            <div key={i} className="axiom-flex-sb-center axiom-mb-6">
+                                                <span className="axiom-text-12-sub">{label}</span>
+                                                <span className="axiom-text-12-bold">{val}</span>
                                             </div>
                                         ))}
+                                        <Button
+                                            label="✦ Deep Dive with Copilot"
+                                            variant="gold"
+                                            className="axiom-mt-10 axiom-full-width axiom-p-4-10 axiom-text-10"
+                                            onClick={() => {
+                                                window.dispatchEvent(new CustomEvent("axiom_goto_view", { detail: "copilot" }));
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             ) : null}
@@ -192,13 +192,13 @@ export function NeuralNet() {
                 )}
 
                 {!activeNode && (
-                    <div style={{ padding: 12, background: "var(--c-bg)", borderRadius: 4, border: "1px solid var(--c-border)", fontSize: 13, color: "var(--c-sub)", marginBottom: 16 }}>
-                        <b style={{ color: "var(--c-dim)", marginRight: 6 }}>Interactive Network:</b>
+                    <div className="axiom-p-12 axiom-bg-main axiom-radius-4 axiom-border-default axiom-text-13-sub axiom-mb-16">
+                        <b className="axiom-text-dim axiom-mr-6">Interactive Network:</b>
                         Click any node above to analyze real-time data streaming through that pathway.
                     </div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12 }}>
+                <div className="axiom-grid-5 axiom-gap-12">
                     {[
                         ["Deal Score", dealScore + "/100", dealScore > 70 ? "var(--c-green)" : dealScore > 50 ? "var(--c-amber)" : "var(--c-red)"],
                         ["Confidence", confidence + "%", "var(--c-blue)"],
@@ -206,9 +206,9 @@ export function NeuralNet() {
                         ["Feasibility", dealScore > 60 ? "Viable" : "Review", dealScore > 60 ? "var(--c-green)" : "var(--c-amber)"],
                         ["Recommendation", dealScore > 70 ? "GO" : dealScore > 50 ? "CONDITIONS" : "NO-GO", dealScore > 70 ? "var(--c-green)" : dealScore > 50 ? "var(--c-amber)" : "var(--c-red)"]
                     ].map(([l, v, c]: any, i) => (
-                        <div key={i} style={{ background: `color-mix(in srgb, ${c} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${c} 30%, transparent)`, borderRadius: 4, padding: 12, textAlign: "center" }}>
-                            <div style={{ fontSize: 10, color: "var(--c-dim)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{l}</div>
-                            <div style={{ fontSize: 20, color: c, fontWeight: 700 }}>{v}</div>
+                        <div key={i} className="axiom-p-12 axiom-radius-4 axiom-text-center axiom-border-1" style={{ background: `color-mix(in srgb, ${c} 10%, transparent)`, borderColor: `color-mix(in srgb, ${c} 30%, transparent)` }}>
+                            <div className="axiom-text-10-dim-caps axiom-mb-6">{l}</div>
+                            <div className="axiom-text-20-bold" style={{ color: c }}>{v}</div>
                         </div>
                     ))}
                 </div>

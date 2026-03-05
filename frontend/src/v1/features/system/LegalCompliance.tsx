@@ -11,8 +11,8 @@ const MOCK_COMPLIANCE = [
 
 export function LegalCompliance() {
     return (
-        <div style={{ display: "flex", gap: 24, height: "100%" }}>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="axiom-flex-gap-24 axiom-h-full">
+            <div className="axiom-flex-col axiom-flex-gap-16 axiom-flex-1">
                 <div className="axiom-flex-sb-center">
                     <div>
                         <div className="axiom-page-title">Legal & Compliance</div>
@@ -24,20 +24,20 @@ export function LegalCompliance() {
                     }}>+ New Filing</Button>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+                <div className="axiom-grid-4 axiom-flex-gap-12">
                     <KPI label="⚖️ Active Filings" value="12" />
                     <KPI label="⏳ Pending Approval" value="4" color="var(--c-amber)" />
                     <KPI label="✅ Approved" value="7" color="var(--c-teal)" />
                     <KPI label="⚠️ At Risk" value="1" color="var(--c-red)" />
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto" }}>
+                <div className="axiom-flex-1 axiom-overflow-y-auto">
                     <Card title="Compliance Tracker">
-                        <div style={{ margin: "-16px" }}>
+                        <div className="axiom-card-neg-margin">
                             <table className="axiom-table">
                                 <thead>
                                     <tr>
-                                        <th className="axiom-th" style={{ paddingLeft: 16 }}>Requirement</th>
+                                        <th className="axiom-th axiom-pl-16">Requirement</th>
                                         <th className="axiom-th">Jurisdiction</th>
                                         <th className="axiom-th">Status</th>
                                         <th className="axiom-th">Due Date</th>
@@ -53,7 +53,7 @@ export function LegalCompliance() {
 
                                         return (
                                             <tr key={c.id}>
-                                                <td className="axiom-td" style={{ paddingLeft: 16, color: "var(--c-text)", fontWeight: 500 }}>
+                                                <td className="axiom-td axiom-pl-16 axiom-text-sub axiom-text-500">
                                                     {c.requirement}
                                                 </td>
                                                 <td className="axiom-td">{c.jurisdiction}</td>
@@ -72,8 +72,8 @@ export function LegalCompliance() {
                 </div>
             </div>
 
-            <div style={{ width: 320, display: "flex", flexDirection: "column", gap: 16, flexShrink: 0 }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div className="axiom-w-320 axiom-flex-col axiom-flex-gap-16 axiom-shrink-0">
+                <div className="axiom-flex-col axiom-flex-1">
                     <Card title="Legal Intelligence">
                         <Agent
                             id="LegalAdvisor"

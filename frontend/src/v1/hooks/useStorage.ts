@@ -138,7 +138,7 @@ export function useStorage(userId?: string) {
             if (!supa.storage) return [];
             const { data, error } = await supa.storage.from(SUPABASE_BUCKET).list(prefix);
             if (error || !data) return [];
-            return data.map(f => `${prefix}${f.name}`);
+            return data.map((f: any) => `${prefix}${f.name}`);
         } else {
             return idbList(prefix);
         }

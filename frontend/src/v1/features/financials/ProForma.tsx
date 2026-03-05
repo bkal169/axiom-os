@@ -85,8 +85,9 @@ export function ProForma() {
                 <div className="axiom-deal-score-container">
                     <div className="axiom-deal-score-circle">
                         <svg width="50" height="50">
-                            <circle cx="25" cy="25" r="22" fill="none" stroke="var(--c-border)" strokeWidth="4" />
-                            <circle cx="25" cy="25" r="22" fill="none" stroke={calculations.dealScore >= 70 ? "var(--c-green)" : calculations.dealScore >= 50 ? "var(--c-gold)" : "var(--c-red)"} strokeWidth="4"
+                            <circle cx="25" cy="25" r="22" className="axiom-stroke-border" fill="none" strokeWidth="4" />
+                            <circle cx="25" cy="25" r="22" fill="none" strokeWidth="4"
+                                stroke={calculations.dealScore >= 70 ? "var(--c-green)" : calculations.dealScore >= 50 ? "var(--c-gold)" : "var(--c-red)"}
                                 strokeDasharray={`${2 * Math.PI * 22 * calculations.dealScore / 100} ${2 * Math.PI * 22}`}
                                 strokeDashoffset={2 * Math.PI * 22 / 4}
                                 strokeLinecap="round"
@@ -97,8 +98,8 @@ export function ProForma() {
                         </div>
                     </div>
                     <div className="axiom-stack-4">
-                        <span className="axiom-label" style={{ marginBottom: 0 }}>DEAL SCORE</span>
-                        <span className="axiom-text-10-dim">Institutional Grade</span>
+                        <div className="axiom-label axiom-mb-0">DEAL SCORE</div>
+                        <div className="axiom-text-10-dim">Institutional Grade</div>
                     </div>
                 </div>
 
@@ -112,9 +113,9 @@ export function ProForma() {
                 <KPI label="Equity Required" value={fmt.usd(calculations.equityRequired)} sub={`${equity.lpPct}% LP / ${equity.gpPct}% GP`} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 16 }}>
+            <div className="axiom-grid-large-small">
                 <Card title="Waterfall Cost Analysis">
-                    <div style={{ height: 260 }}>
+                    <div className="axiom-h-260">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={waterfallData} onClick={(data: any) => data && setChartSel(data.activePayload?.[0]?.payload)}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
@@ -139,17 +140,17 @@ export function ProForma() {
                 <div className="axiom-stack-16">
                     <Card title="Market Scenario Comparison">
                         <div className="axiom-scenario-grid">
-                            <div className="axiom-scenario-card">
+                            <div className="axiom-scenario-card axiom-p-12 axiom-bg-2 axiom-radius-6">
                                 <div className="axiom-label">BEAR CASE</div>
                                 <div className="axiom-text-14-bold">{fmt.usd(calculations.profit * 0.6)}</div>
                                 <div className="axiom-text-10-dim">{(calculations.margin * 0.7).toFixed(1)}% Margin</div>
                             </div>
-                            <div className="axiom-scenario-card axiom-scenario-card-base">
-                                <div className="axiom-label" style={{ color: 'var(--c-gold)' }}>BASE CASE</div>
+                            <div className="axiom-scenario-card axiom-p-12 axiom-bg-gold-sub axiom-radius-6 axiom-border-gold">
+                                <div className="axiom-label axiom-text-gold">BASE CASE</div>
                                 <div className="axiom-text-14-bold">{fmt.usd(calculations.profit)}</div>
                                 <div className="axiom-text-10-dim">{calculations.margin.toFixed(1)}% Margin</div>
                             </div>
-                            <div className="axiom-scenario-card">
+                            <div className="axiom-scenario-card axiom-p-12 axiom-bg-2 axiom-radius-6">
                                 <div className="axiom-label">BULL CASE</div>
                                 <div className="axiom-text-14-bold">{fmt.usd(calculations.profit * 1.3)}</div>
                                 <div className="axiom-text-10-dim">{(calculations.margin * 1.25).toFixed(1)}% Margin</div>
@@ -165,7 +166,7 @@ export function ProForma() {
                                 onUpdate={(v) => setEquity({ ...equity, irrTarget: Number(v) })}
                             >
                                 <Progress value={equity.irrTarget} color="var(--c-purple)" />
-                                <div className="axiom-flex-sb" style={{ marginTop: 4 }}>
+                                <div className="axiom-flex-sb-center axiom-mt-4">
                                     <span className="axiom-text-11-dim">Current Projection</span>
                                     <span className="axiom-text-12-bold">18.4%</span>
                                 </div>
@@ -174,6 +175,7 @@ export function ProForma() {
                                 label="Equity Multiple"
                                 value={equity.equityMultipleTarget}
                                 onUpdate={(v) => setEquity({ ...equity, equityMultipleTarget: Number(v) })}
+                                title="Set Target Equity Multiple"
                             >
                                 <div className="axiom-text-20-bold">{equity.equityMultipleTarget}x</div>
                                 <div className="axiom-text-10-dim">Institutional Threshold: 1.8x</div>
@@ -201,7 +203,7 @@ export function ProForma() {
                                     {sensitivityX.map(x => {
                                         const val = calcSensitivity(x, y);
                                         return (
-                                            <td key={x} className={`axiom-sensitivity-td ${x === 0 && y === 0 ? 'axiom-sensitivity-td-base' : ''}`} style={{ color: val > 20 ? 'var(--c-green)' : val > 10 ? 'var(--c-gold)' : 'var(--c-red)' }}>
+                                            <td key={x} className={`axiom-sensitivity-td ${x === 0 && y === 0 ? 'axiom-sensitivity-td-base' : ''} ${val > 20 ? 'axiom-text-green' : val > 10 ? 'axiom-text-gold' : 'axiom-text-red'}`}>
                                                 {val.toFixed(1)}%
                                             </td>
                                         );

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Card, KPI, Field, Badge, Button } from "../../components/ui/components";
+import { Card, KPI, Field, Badge, Button, FileAttachment } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 import { Tabs } from "../../components/ui/layout";
 import { useAuth, useTier } from "../../context/AuthContext";
@@ -16,7 +16,7 @@ import {
 const CHART_STYLE = { fontSize: 11, fontFamily: "Inter, sans-serif" };
 const TT = () => ({ contentStyle: { background: "#0D0F13", border: "1px solid #1A1D24", borderRadius: 4, color: "#E0E2E8", fontSize: 11, boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }, itemStyle: { color: "#C4A052" }, separator: " " });
 const TT_BAR = () => ({ ...TT(), cursor: { fill: "#1A1D24", opacity: 0.4 } });
-const onChartClick = (setSel: (data: unknown) => void) => (data: any) => {
+const onChartClick = (setSel: (data: any) => void) => (data: any) => {
     if (data && data.activePayload) setSel(data.activePayload[0].payload);
 };
 
@@ -141,36 +141,36 @@ export function Deals() {
     return (
         <Tabs tabs={["Board View", "List View", "Pipeline Analytics"]}>
             <div>
-                <div style={{ marginBottom: 24 }}>
+                <div className="axiom-mb-24">
                     <div className="axiom-grid-4">
                         <KPI label="Active Deals" value={deals.length} />
                         <KPI label="Pipeline Value" value={fmt.M(totalValue)} color="var(--c-blue)" />
                         <KPI label="Est. Profit" value={fmt.M(totalProfit)} color="var(--c-green)" />
                         <KPI label="Avg Deal Size" value={fmt.M(totalValue / (deals.length || 1))} color="var(--c-gold)" />
                     </div>
-                    {syncing && <div style={{ fontSize: 9, color: "var(--c-gold)", marginTop: 8 }}>syncing with cloud...</div>}
+                    {syncing && <div className="axiom-text-9-gold-mt8">syncing with cloud...</div>}
                 </div>
-                <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 10 }}>
+                <div className="axiom-flex-gap-10 axiom-pb-10 axiom-overflow-x-auto">
                     {STAGES.map(stage => {
                         const stageDeals = deals.filter((d: Deal) => d.stage === stage);
                         return (
-                            <div key={stage} style={{ minWidth: 220, flex: 1, background: "var(--c-bg3)", border: "1px solid var(--c-border)", borderRadius: 4 }}>
-                                <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--c-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: SCOL[stage], fontWeight: 700 }}>{SL[stage]}</span>
-                                    <span style={{ fontSize: 12, color: "var(--c-dim)", background: "var(--c-bg)", padding: "2px 6px", borderRadius: 3 }}>{stageDeals.length}</span>
+                            <div key={stage} className="axiom-pipeline-column">
+                                <div className="axiom-pipeline-header">
+                                    <span className="axiom-text-10-b-up-ls2" style={{ color: SCOL[stage] } as React.CSSProperties}>{SL[stage]}</span>
+                                    <span className="axiom-badge-dim">{stageDeals.length}</span>
                                 </div>
-                                <div style={{ padding: 8, minHeight: 120 }}>
+                                <div className="axiom-pipeline-body">
                                     {stageDeals.map((deal: Deal) => (
-                                        <div key={deal.id} className="axiom-card" style={{ padding: 12, marginBottom: 8, cursor: "pointer", borderLeft: `3px solid ${SCOL[stage]}` }} onClick={() => setSelectedDeal(deal)}>
-                                            <div style={{ fontSize: 13, color: "var(--c-text)", fontWeight: 600, marginBottom: 4 }}>{deal.name}</div>
-                                            <div style={{ fontSize: 10, color: "var(--c-dim)" }}>{deal.address}</div>
-                                            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-                                                <span style={{ fontSize: 12, color: "var(--c-gold)" }}>{fmt.M(deal.value)}</span>
-                                                <span style={{ fontSize: 10, color: "var(--c-green)" }}>{deal.lots} lots</span>
+                                        <div key={deal.id} className="axiom-deal-card" style={{ borderLeftColor: SCOL[stage] } as React.CSSProperties} onClick={() => setSelectedDeal(deal)}>
+                                            <div className="axiom-text-13-bold axiom-mb-4">{deal.name}</div>
+                                            <div className="axiom-text-10-dim">{deal.address}</div>
+                                            <div className="axiom-flex-sb-center axiom-mt-8">
+                                                <span className="axiom-text-12-gold">{fmt.M(deal.value)}</span>
+                                                <span className="axiom-text-10-green">{deal.lots} lots</span>
                                             </div>
-                                            <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-                                                <Button label="—" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "prev"); }} style={{ padding: "2px 6px", fontSize: 10 }} />
-                                                <Button label="→" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "next"); }} style={{ padding: "2px 6px", fontSize: 10 }} />
+                                            <div className="axiom-flex-gap-6 axiom-mt-10">
+                                                <Button label="—" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "prev"); }} className="axiom-btn-icon" />
+                                                <Button label="→" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "next"); }} className="axiom-btn-icon" />
                                             </div>
                                         </div>
                                     ))}
@@ -179,16 +179,16 @@ export function Deals() {
                         );
                     })}
                 </div>
-                <div style={{ marginTop: 10 }}>
+                <div className="axiom-mt-10">
                     {deals.length >= dealLimit && dealLimit < 999 ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "color-mix(in srgb, var(--c-gold) 10%, transparent)", border: "1px solid rgba(196, 160, 82, 0.2)", borderRadius: 4 }}>
-                            <span style={{ fontSize: 10, color: "var(--c-gold)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Deal limit reached ({deals.length}/{dealLimit})</span>
-                            <Button variant="gold" label="Upgrade for Unlimited →" onClick={() => { const el = document.querySelector('[data-nav="billing"]') as HTMLElement; if (el) el.click(); }} style={{ padding: "4px 10px", fontSize: 9 }} />
+                        <div className="axiom-deal-limit-banner">
+                            <span className="axiom-text-10-gold-b-ls1-up">Deal limit reached ({deals.length}/{dealLimit})</span>
+                            <Button variant="gold" label="Upgrade for Unlimited →" onClick={() => { const el = document.querySelector('[data-nav="billing"]') as HTMLElement; if (el) el.click(); }} className="axiom-p-4-10 axiom-text-9" />
                         </div>
                     ) : !showForm && !showOMIngestor ? (
-                        <div style={{ display: "flex", gap: 12 }}>
+                        <div className="axiom-flex-gap-12">
                             <Button variant="gold" label="+ Add Deal (Manual)" onClick={() => setShowForm(true)} />
-                            <Button label="📄 Upload OM (Auto-Parse)" onClick={() => setShowOMIngestor(true)} style={{ background: "color-mix(in srgb, var(--c-blue) 25%, transparent)", color: "var(--c-blue)", borderColor: "color-mix(in srgb, var(--c-blue) 40%, transparent)" }} />
+                            <Button label="📄 Upload OM (Auto-Parse)" onClick={() => setShowOMIngestor(true)} className="axiom-btn-blue-soft" />
                         </div>
                     ) : showOMIngestor ? (
                         <OMIngestor
@@ -220,8 +220,8 @@ export function Deals() {
                                 <Field label="Type"><select className="axiom-select" value={nd.type} onChange={e => setNd({ ...nd, type: e.target.value })} title="Type"><option>SFR Subdivision</option><option>PUD</option><option>Condo</option><option>Townhome</option><option>Mixed-Use</option><option>Land Bank</option><option>Multifamily</option></select></Field>
                                 <Field label="Assignee"><input className="axiom-input" value={nd.assignee} onChange={e => setNd({ ...nd, assignee: e.target.value })} title="Assignee" /></Field>
                             </div>
-                            <Field label="Notes" mb={20}><textarea className="axiom-input" style={{ height: 60 }} value={nd.notes} onChange={e => setNd({ ...nd, notes: e.target.value })} title="Notes" /></Field>
-                            <div style={{ display: "flex", gap: 12 }}>
+                            <Field label="Notes" mb={20}><textarea className="axiom-input axiom-h-60" value={nd.notes} onChange={e => setNd({ ...nd, notes: e.target.value })} title="Notes" /></Field>
+                            <div className="axiom-flex-gap-12">
                                 <Button variant="gold" label="Create Deal" onClick={addDeal} />
                                 <Button label="Cancel" onClick={() => setShowForm(false)} />
                             </div>
@@ -230,19 +230,20 @@ export function Deals() {
                 </div>
                 {selectedDeal && (
                     <Card title={`Deal: ${selectedDeal.name}`} action={<Button label="Close" onClick={() => setSelectedDeal(null)} />}>
-                        <div className="axiom-grid-3" style={{ gap: 24 }}>
+                        <div className="axiom-grid-3 axiom-gap-24">
                             {[["Project", selectedDeal.name], ["Address", selectedDeal.address], ["Type", selectedDeal.type], ["Stage", SL[selectedDeal.stage]], ["Value", fmt.usd(selectedDeal.value)], ["Est. Profit", fmt.usd(selectedDeal.profit)], ["Lots", selectedDeal.lots], ["Assignee", selectedDeal.assignee || "— "], ["Last Updated", selectedDeal.updated]].map(([l, v]) => (
                                 <div key={l as string}>
-                                    <div className="axiom-label" style={{ marginBottom: 4 }}>{l as string}</div>
-                                    <div style={{ fontSize: 14, color: "var(--c-text)", fontWeight: 500 }}>{v as string | number}</div>
+                                    <div className="axiom-label axiom-mb-4">{l as string}</div>
+                                    <div className="axiom-text-14-text-b500">{v as string | number}</div>
                                 </div>
                             ))}
                         </div>
-                        <div style={{ marginTop: 24, padding: 16, background: "var(--c-bg2)", borderRadius: 6 }}>
-                            <div className="axiom-label" style={{ marginBottom: 8 }}>INTERNAL NOTES</div>
-                            <div className="axiom-kpi-sub" style={{ fontSize: 13, lineHeight: 1.5 }}>{selectedDeal.notes}</div>
+                        <div className="axiom-bg-2 axiom-p-16 axiom-radius-6 axiom-mt-24">
+                            <div className="axiom-label axiom-mb-8">INTERNAL NOTES</div>
+                            <div className="axiom-kpi-sub axiom-text-13 axiom-lh-15">{selectedDeal.notes}</div>
                         </div>
-                        <div style={{ marginTop: 24 }}>
+                        <FileAttachment context={`deals/${selectedDeal.id}`} />
+                        <div className="axiom-mt-24">
                             <Agent id="DealReview" system={`You are reviewing this specific deal: ${selectedDeal.name} at ${selectedDeal.address}. ${selectedDeal.lots} lots, value $${selectedDeal.value}. Provide detailed analysis.`} placeholder="Ask about this specific deal..." />
                         </div>
                         <DealTeaser deal={selectedDeal as any} />
@@ -259,15 +260,15 @@ export function Deals() {
                         </thead>
                         <tbody>{deals.map((d: Deal) => (
                             <tr key={d.id} onClick={() => setSelectedDeal(d)} className="premium-hover">
-                                <td className="axiom-td" style={{ color: "var(--c-text)", fontWeight: 600 }}>{d.name}<div style={{ fontSize: 9, color: "var(--c-dim)" }}>{d.address}</div></td>
+                                <td className="axiom-td axiom-text-sub axiom-text-bold">{d.name}<div className="axiom-text-9-dim">{d.address}</div></td>
                                 <td className="axiom-td"><Badge label={SL[d.stage]} color={SCOL[d.stage]} /></td>
                                 <td className="axiom-td"><Badge label={d.type} color="var(--c-blue)" /></td>
                                 <td className="axiom-td">{d.lots}</td>
-                                <td className="axiom-td" style={{ color: "var(--c-gold)" }}>{fmt.M(d.value)}</td>
-                                <td className="axiom-td" style={{ color: "var(--c-green)" }}>{fmt.M(d.profit)}</td>
-                                <td className="axiom-td" style={{ fontSize: 12 }}>{d.assignee || "— "}</td>
-                                <td className="axiom-td" style={{ fontSize: 10, color: "var(--c-dim)" }}>{d.updated}</td>
-                                <td className="axiom-td"><Button label="x" onClick={(e: any) => { e.stopPropagation(); setDeals(deals.filter((x: Deal) => x.id !== d.id)); }} style={{ padding: "2px 7px", fontSize: 10 }} /></td>
+                                <td className="axiom-td axiom-text-gold">{fmt.M(d.value)}</td>
+                                <td className="axiom-td axiom-text-green">{fmt.M(d.profit)}</td>
+                                <td className="axiom-td axiom-text-12">{d.assignee || "— "}</td>
+                                <td className="axiom-td axiom-text-10-dim">{d.updated}</td>
+                                <td className="axiom-td"><Button label="x" onClick={(e: any) => { e.stopPropagation(); setDeals(deals.filter((x: Deal) => x.id !== d.id)); }} className="axiom-btn-icon" /></td>
                             </tr>
                         ))}</tbody>
                     </table>
