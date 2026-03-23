@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { S, C, MODELS } from '../../constants';
 import { useLS, callLLM } from '../../utils';
 import { Badge } from './Badge';
+import { useAgentMemory } from '../../AI/memory/useAgentMemory';
 
 export function Agent({ id, system, placeholder }) {
     // Per-agent conversation persistence (keyed by id) — BUG-H4 fix
@@ -11,6 +12,10 @@ export function Agent({ id, system, placeholder }) {
     // Per-agent model selection — BUG-H2 fix (was global "axiom_agent_model" key shared by all instances)
     const [model, setModel] = useLS(`axiom_agent_model_${id}`, "claude-sonnet-4-20250514");
 
+    const [model, setModel] = useLS(`axiom_agent_model_${id}`, "claude-sonnet-4-20250514");
+
+    const mem = useAgentMemory({ tenantId: '00000000-0000-0000-0000-000000000000', agentId: id, domain: 'general' });
+
     const send = useCallback(async () => {
         if (!inp.trim() || busy) return;
         const um = { role: "user", content: inp };
@@ -18,10 +23,22 @@ export function Agent({ id, system, placeholder }) {
         setMsgs(nm);
         setInp("");
         setBusy(true);
-        const reply = await callLLM(nm, system, model);
+
+        // Retrieve memory context
+        const memData = await mem.loadMemory(um.content);
+        let augmentedSystem = system;
+        if (memData && memData.contextString) {
+            augmentedSystem += `\n\n--- MEMORY CONTEXT ---\n${memData.contextString}`;
+        }
+
+        const reply = await callLLM(nm, augmentedSystem, model);
         setMsgs([...nm, { role: "assistant", content: reply }]);
+        
+        // Log episodic memory
+        mem.logEvent('output', `Q: ${um.content}\nA: ${reply}`).catch(console.error);
+        
         setBusy(false);
-    }, [inp, msgs, system, busy, model]);
+    }, [inp, msgs, system, busy, model, mem]);
 
     return (
         <div>
@@ -45,7 +62,8 @@ export function Agent({ id, system, placeholder }) {
                         <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 13, lineHeight: 1.5 }}>{m.content}</pre>
                     </div>
                 ))}
-                {busy && <div style={{ ...S.bub("assistant"), color: C.gold, fontSize: 12 }}>· Processing...</div>}
+                {busy && !mem.isLoading && <div style={{ ...S.bub("assistant"), color: C.gold, fontSize: 12 }}>· Processing...</div>}
+                {mem.isLoading && <div style={{ ...S.bub("assistant"), color: C.blue, fontSize: 12 }}>· Searching neural memory...</div>}
             </div>
             <div style={{ display: "flex", gap: 7 }}>
                 <input

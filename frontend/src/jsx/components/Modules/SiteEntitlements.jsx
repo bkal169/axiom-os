@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { C, S } from '../../constants';
 import { useLS } from '../../utils';
 import { Tabs } from '../UI/Tabs';
@@ -8,10 +8,49 @@ import { Field } from '../UI/Field';
 import { Agent } from '../UI/Agent';
 
 export default function SiteEntitlements() {
-    const [site, setSite] = useLS("axiom_site", { address: "", apn: "", grossAcres: "", netAcres: "", jurisdiction: "", county: "", state: "", generalPlan: "", existingUse: "", proposedUse: "SFR Subdivision", shape: "Rectangular", frontage: "", access: "", legalDesc: "" });
+    const [site, setSite] = useLS("axiom_site", { address: "", apn: "", grossAcres: "", netAcres: "", jurisdiction: "", county: "", state: "", generalPlan: "", existingUse: "", proposedUse: "SFR Subdivision", shape: "Rectangular", frontage: "", access: "", legalDesc: "", floodZone: "" });
     const [zon, setZon] = useLS("axiom_zoning", { zone: "", overlay: "", du_ac: "", maxHeight: "", minLotSize: "", minLotWidth: "", minLotDepth: "", frontSetback: "", rearSetback: "", sideSetback: "", maxLot: "", parkingRatio: "", entitlementType: "Tentative Map", entitlementStatus: "Not Started", notes: "" });
     const [sur, setSur] = useLS("axiom_survey", { altaOrdered: "No", altaDate: "", surveyorName: "", easements: "", encroachments: "", soilType: "", percRate: "", slopeMax: "", cutFill: "", expansiveSoil: "No", liquefaction: "No" });
     const [altaA, setAltaA] = useLS("axiom_alta", ["1-Monuments", "2-Address", "3-Flood Zone", "4-Topography", "5-Utilities", "6-Parking", "7-Setbacks", "8-Substantial Features", "11a-Utilities", "13-Adjoiner Names", "16-Wetlands", "17-Gov't Agency", "18-Offsite Easements", "20a-Zoning Label"].map(i => ({ item: i, checked: false })));
+
+    const [femaBusy, setFemaBusy] = useState(false);
+    const [femaMsg, setFemaMsg] = useState("");
+
+    const fetchFEMA = async () => {
+        if (!site.address) { setFemaMsg("Enter an address first"); return; }
+        setFemaBusy(true); setFemaMsg("Querying FEMA NFHL API...");
+        try {
+            const keys = JSON.parse(localStorage.getItem('axiom_keys') || '{}');
+            const p = keys.proxyUrl || 'https://ubdhpacoqmlxudcvhyuu.supabase.co/functions/v1';
+            let headers = { "Content-Type": "application/json" };
+            if (keys.anonKey) headers["Authorization"] = `Bearer ${keys.anonKey}`;
+            
+            const r = await fetch(`${p.replace(/\/+$/, '')}/fema-lookup`, {
+                method: "POST", headers, body: JSON.stringify({ address: site.address })
+            });
+            const d = await r.json();
+            if (d.error) throw new Error(d.error);
+            const z = d.floodZone || "X";
+            
+            setSite(s => ({ ...s, floodZone: z,
+                jurisdiction: d.county || s.jurisdiction,
+                county: d.county || s.county,
+                state: d.state || s.state
+            }));
+            
+            let risk = "Low";
+            if(z.startsWith('A') || z.startsWith('V')) risk = "High";
+            else if(z === 'B' || z.includes('500')) risk = "Moderate";
+            
+            setZon(zState => ({ ...zState, overlay: `Flood Zone ${z} (${risk} Risk) ${zState.overlay ? '| '+zState.overlay : ''}` }));
+            setFemaMsg("✓ FEMA Data Linked");
+            setTimeout(() => setFemaMsg(""), 3000);
+        } catch(e) {
+            setFemaMsg(`Error: ${e.message}`);
+        } finally {
+            setFemaBusy(false);
+        }
+    };
 
     const su = k => e => setSite({ ...site, [k]: e.target.value });
     const zu = k => e => setZon({ ...zon, [k]: e.target.value });
@@ -38,8 +77,16 @@ export default function SiteEntitlements() {
         <Tabs tabs={["Site ID", "Zoning & Entitlements", "Survey & ALTA", "Constraints", "Design Import"]}>
             <div>
                 <Card title="Property Identification">
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            {femaMsg && <span style={{ fontSize: 10, color: femaBusy ? C.gold : C.green }}>{femaMsg}</span>}
+                            <button style={S.btn(femaBusy ? "dim" : "gold")} onClick={fetchFEMA} disabled={femaBusy}>
+                                {femaBusy ? "Lookup..." : "🌎 FEMA Auto-Lookup"}
+                            </button>
+                        </div>
+                    </div>
                     <div style={S.g3}>
-                        {[["Site Address", "address", "123 Main St"], ["APN / Parcel Number", "apn", "000-000-000"], ["Gross Acres", "grossAcres", ""], ["Net Developable Acres", "netAcres", ""], ["Jurisdiction", "jurisdiction", "City of..."], ["County", "county", ""], ["State", "state", "CA"], ["General Plan", "generalPlan", "Low Density Residential"], ["Existing Use", "existingUse", "Vacant Land"], ["Proposed Use", "proposedUse", ""], ["Street Frontage (ft)", "frontage", ""], ["Site Access", "access", ""]].map(([l, k, ph]) => (
+                        {[["Site Address", "address", "123 Main St"], ["APN / Parcel Number", "apn", "000-000-000"], ["Gross Acres", "grossAcres", ""], ["Net Developable Acres", "netAcres", ""], ["Jurisdiction", "jurisdiction", "City of..."], ["County", "county", ""], ["State", "state", "CA"], ["General Plan", "generalPlan", "Low Density Residential"], ["Existing Use", "existingUse", "Vacant Land"], ["Proposed Use", "proposedUse", ""], ["Street Frontage (ft)", "frontage", ""], ["Site Access", "access", ""], ["FEMA Flood Zone", "floodZone", "X"]].map(([l, k, ph]) => (
                             <Field key={k} label={l}><input style={S.inp} value={site[k] || ""} onChange={su(k)} placeholder={ph || ""} /></Field>
                         ))}
                         <Field label="Parcel Shape"><select style={S.sel} value={site.shape} onChange={su("shape")}>{["Rectangular", "Irregular", "Flag Lot", "Triangular", "L-Shaped", "Corner Lot", "Other"].map(o => <option key={o}>{o}</option>)}</select></Field>

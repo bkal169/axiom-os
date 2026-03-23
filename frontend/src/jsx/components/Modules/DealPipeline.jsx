@@ -21,6 +21,27 @@ export default function DealPipeline() {
     const [nd, setNd] = useState({ name: "", address: "", stage: "sourcing", value: "", profit: "", lots: "", type: "SFR Subdivision", assignee: "", notes: "" });
     const [showForm, setShowForm] = useState(false);
     const [selectedDeal, setSelectedDeal] = useState(null);
+    const [speckleStatus, setSpeckleStatus] = useState("");
+
+    const handleSpeckleLoad = async (deal) => {
+        setSpeckleStatus("Authenticating with Speckle...");
+        try {
+            const keys = JSON.parse(localStorage.getItem('axiom_keys') || '{}');
+            const p = keys.proxyUrl || 'https://ubdhpacoqmlxudcvhyuu.supabase.co/functions/v1';
+            let headers = { "Content-Type": "application/json" };
+            if (keys.anonKey) headers["Authorization"] = `Bearer ${keys.anonKey}`;
+            
+            const r = await fetch(`${p.replace(/\/+$/, '')}/speckle-ingestor`, {
+                method: "POST", headers, body: JSON.stringify({ action: "auth", project_id: deal.id })
+            });
+            const d = await r.json();
+            if (d.error) throw new Error(d.error);
+            setSpeckleStatus("BIM Model Stream Loaded ✓");
+            setTimeout(() => setSpeckleStatus(""), 3000);
+        } catch(e) {
+            setSpeckleStatus(`Error: ${e.message}`);
+        }
+    };
 
     const addDeal = () => { if (!nd.name) return; setDeals([...deals, { ...nd, id: Date.now(), value: +nd.value || 0, profit: +nd.profit || 0, lots: +nd.lots || 0, updated: new Date().toISOString().split("T")[0] }]); setNd({ name: "", address: "", stage: "sourcing", value: "", profit: "", lots: "", type: "SFR Subdivision", assignee: "", notes: "" }); setShowForm(false); };
     const moveDeal = (id, dir) => { const d = deals.find(x => x.id === id); if (!d) return; const ci = STAGES.indexOf(d.stage); const ni = dir === "next" ? ci + 1 : ci - 1; if (ni < 0 || ni >= STAGES.length) return; setDeals(deals.map(x => x.id === id ? { ...x, stage: STAGES[ni], updated: new Date().toISOString().split("T")[0] } : x)); };
@@ -71,6 +92,27 @@ export default function DealPipeline() {
                         </div>
                         <div style={{ display: "flex", gap: 8 }}><button style={S.btn("gold")} onClick={addDeal}>Create Deal</button><button style={S.btn()} onClick={() => setShowForm(false)}>Cancel</button></div>
                     </Card>
+                )}
+
+                {selectedDeal && (
+                    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ width: 600, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 24, boxShadow: "0 12px 40px rgba(0,0,0,0.5)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                                <h3 style={{ margin: 0, color: C.text }}>{selectedDeal.name}</h3>
+                                <button style={S.btn()} onClick={() => setSelectedDeal(null)}>Close</button>
+                            </div>
+                            <div style={{ marginBottom: 16, color: C.dim, fontSize: 13 }}>{selectedDeal.address} • {SL[selectedDeal.stage]} • {fmt.M(selectedDeal.value)}</div>
+                            <Card title="BIM & Arch Integration">
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                    <button style={S.btn("blue")} onClick={() => handleSpeckleLoad(selectedDeal)}>🏗️ Load Speckle BIM Data</button>
+                                    {speckleStatus && <span style={{ fontSize: 12, color: speckleStatus.includes("Error") ? C.red : C.green }}>{speckleStatus}</span>}
+                                </div>
+                                <div style={{ marginTop: 12, padding: 12, border: `1px dashed ${C.border2}`, borderRadius: 4, height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: C.dim, fontSize: 11 }}>
+                                    {speckleStatus.includes("Loaded") ? "Speckle Viewer Stream Active (Simulated)" : "3D Viewer Container (Awaiting Stream)"}
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
                 )}
             </div>
         </Tabs>
