@@ -46,6 +46,13 @@ const BillingPlans     = lazy(() => import('./components/Modules/BillingPlans'))
 const Legal            = lazy(() => import('./components/Modules/Legal'));
 const SystemSettings   = lazy(() => import('./components/Modules/SystemSettings'));
 
+// V5 feature sections
+const AgentPipelineSection     = lazy(() => import('./sections/AgentPipelineSection'));
+const RiskCalibrationSection   = lazy(() => import('./sections/RiskCalibrationSection'));
+const TaxIntelSection          = lazy(() => import('./sections/TaxIntelSection'));
+const PortfolioGovernanceSection = lazy(() => import('./sections/PortfolioGovernanceSection'));
+const SiteMap3DSection         = lazy(() => import('./sections/SiteMap3DSection'));
+
 // Component reference map — do NOT pre-construct JSX here.
 // The active module is resolved and rendered inside <Suspense> below.
 const SECTIONS = {
@@ -59,6 +66,11 @@ const SECTIONS = {
     sheets: Spreadsheets,    workflows: Workflows,      resources: ResourceCenter,
     reports: ReportsBinder,  agents: AgentHub,          copilot: CopilotPanel, neural: NeuralNet,
     billing: BillingPlans,   legal: Legal,              settings: SystemSettings,
+    agent_pipeline: AgentPipelineSection,
+    risk_calibration: RiskCalibrationSection,
+    tax_intel: TaxIntelSection,
+    portfolio_governance: PortfolioGovernanceSection,
+    site_map_3d: SiteMap3DSection,
 };
 
 const ModuleFallback = () => (

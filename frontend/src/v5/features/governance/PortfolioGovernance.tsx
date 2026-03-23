@@ -17,14 +17,33 @@ export function PortfolioGovernance({ orgId, supabase }: { orgId: string; supaba
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.table('portfolio_governance').select('*').eq('org_id', orgId).single()
-      .then(({ data }: any) => { if (data) { setMode(data.autonomy_mode || 'assisted'); setMaxCost(data.max_auto_cost_impact ?? 50000); setThreshold(data.escalation_threshold ?? 0.75); } })
-      .catch(() => {}).finally(() => setLoading(false));
+    if (!supabase) return;
+    const fetchData = async () => {
+      try {
+        const { data } = await supabase
+          .from('portfolio_governance')
+          .select('*')
+          .eq('org_id', orgId)
+          .single();
+        if (data) {
+          setMode(data.autonomy_mode || 'assisted');
+          setMaxCost(data.max_auto_cost_impact ?? 50000);
+          setThreshold(data.escalation_threshold ?? 0.75);
+        }
+      } catch (_) {}
+      finally { setLoading(false); }
+    };
+    fetchData();
   }, [orgId, supabase]);
 
-  const handleSave = () => {
-    supabase.table('portfolio_governance').upsert({ org_id: orgId, autonomy_mode: mode, max_auto_cost_impact: maxCost, escalation_threshold: threshold, updated_at: new Date().toISOString() })
-      .then(() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }).catch(console.error);
+  const handleSave = async () => {
+    try {
+      await supabase
+        .from('portfolio_governance')
+        .upsert({ org_id: orgId, autonomy_mode: mode, max_auto_cost_impact: maxCost, escalation_threshold: threshold, updated_at: new Date().toISOString() });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) { console.error(err); }
   };
 
   if (loading) return <div style={{ color: C.textMid, padding: 24 }}>Loading...</div>;

@@ -12,8 +12,6 @@ export function Agent({ id, system, placeholder }) {
     // Per-agent model selection — BUG-H2 fix (was global "axiom_agent_model" key shared by all instances)
     const [model, setModel] = useLS(`axiom_agent_model_${id}`, "claude-sonnet-4-20250514");
 
-    const [model, setModel] = useLS(`axiom_agent_model_${id}`, "claude-sonnet-4-20250514");
-
     const mem = useAgentMemory({ tenantId: '00000000-0000-0000-0000-000000000000', agentId: id, domain: 'general' });
 
     const send = useCallback(async () => {

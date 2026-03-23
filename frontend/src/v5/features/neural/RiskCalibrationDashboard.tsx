@@ -14,11 +14,25 @@ export function RiskCalibrationDashboard({ supabase }: { supabase: any }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.table('risk_events').select('*').not('brier_score', 'is', null).order('created_at', { ascending: false }).limit(50).execute()
-      .then(({ data }: any) => {
+    if (!supabase) return;
+    const fetchData = async () => {
+      try {
+        const { data } = await supabase
+          .from('risk_events')
+          .select('*')
+          .not('brier_score', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(50);
         setEvents(data || []);
-        if (data?.length > 0) setAvgBrier(Math.round(data.reduce((s: number, e: any) => s + (e.brier_score ?? 0), 0) / data.length * 1000) / 1000);
-      }).catch(() => {}).finally(() => setLoading(false));
+        if (data?.length > 0) {
+          setAvgBrier(
+            Math.round(data.reduce((s: number, e: any) => s + (e.brier_score ?? 0), 0) / data.length * 1000) / 1000
+          );
+        }
+      } catch (_) {}
+      finally { setLoading(false); }
+    };
+    fetchData();
   }, [supabase]);
 
   const baseline = 0.24;

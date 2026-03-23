@@ -29,7 +29,7 @@ STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 ALLOWED_ORIGINS = [
     "https://axiom-os.vercel.app",
     "https://axiom-os-git-main-axiom-by-juniper-rose.vercel.app",
-    "http://localhost:5173",  # Vite dev server
+    "http://localhost:8008",  # Vite dev server
     "http://localhost:3000",
 ]
 
@@ -91,6 +91,24 @@ app.include_router(copilot_v2.router)
 app.include_router(scenarios.router)
 app.include_router(tax_router)
 
+try:
+    from routers import agents as agents_router
+    app.include_router(agents_router.router)
+except Exception as e:
+    logger.warning(f"[V5] agents router not loaded: {e}")
+
+try:
+    from routers import risk as risk_router
+    app.include_router(risk_router.router)
+except Exception as e:
+    logger.warning(f"[V5] risk router not loaded: {e}")
+
+try:
+    from routers import semantic as semantic_router
+    app.include_router(semantic_router.router)
+except Exception as e:
+    logger.warning(f"[V5] semantic router not loaded: {e}")
+
 # Stripe Webhook (kept in app.py or moved? Let's keep it here or misc. It's unique.)
 # It depends on load_db/save_db. Let's keep it in app.py for now to avoid over-fragmentation,
 # or move to routers/webhooks.py later. For now, I'll inline it to ensure I don't break it
@@ -106,12 +124,8 @@ async def stripe_webhook(request: Request, stripe_signature: str | None = Header
     try:
         verify_stripe_signature(raw, stripe_signature, STRIPE_WEBHOOK_SECRET)
     except Exception as e:
-        # FAILSAFE FOR LOCAL TESTING: If using the placeholder secret, allow it but log warning
-        # This allows developers to test webhook logic without a real Stripe CLI tunnel if needed,
-        # or if the secret in .env is just a placeholder.
-    except Exception as e:
-        logger.warning(f"Stripe webhook signature failed: {e} — DEV secret in use, allowing.")
-
+        if not STRIPE_WEBHOOK_SECRET or STRIPE_WEBHOOK_SECRET == "whsec_placeholder":
+            logger.warning(f"Stripe webhook signature failed: {e} — DEV secret in use, allowing.")
         else:
             return JSONResponse(status_code=400, content={"error": "SIGNATURE_VERIFY_FAILED", "detail": str(e)})
 

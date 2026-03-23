@@ -128,3 +128,29 @@ CREATE TABLE IF NOT EXISTS public.tax_1031_exchanges (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_1031_org_id ON public.tax_1031_exchanges(org_id);
+
+-- Find Opportunity Zone by coordinates
+CREATE OR REPLACE FUNCTION find_oz_by_coordinates(p_lat FLOAT, p_lng FLOAT)
+RETURNS TABLE(
+  census_tract TEXT,
+  state_fips TEXT,
+  county_fips TEXT,
+  oz_type TEXT,
+  designation_year INTEGER
+) LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    oz.census_tract,
+    oz.state_fips,
+    oz.county_fips,
+    oz.oz_type,
+    oz.designation_year
+  FROM opportunity_zones oz
+  WHERE ST_Contains(
+    oz.geometry,
+    ST_SetSRID(ST_Point(p_lng, p_lat), 4326)
+  )
+  LIMIT 1;
+END;
+$$;

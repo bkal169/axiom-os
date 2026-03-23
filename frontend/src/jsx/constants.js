@@ -49,6 +49,11 @@ export const NAV = [
     { id: "billing", label: "Billing & Plans", group: "System" },
     { id: "legal", label: "Legal & Compliance", group: "System" },
     { id: "settings", label: "Settings", group: "System" },
+    { id: "agent_pipeline", label: "Agent Pipeline", icon: "🤖", group: "V5", tier: "core" },
+    { id: "risk_calibration", label: "Risk Intelligence", icon: "⚡", group: "V5", tier: "core" },
+    { id: "tax_intel", label: "Tax Intelligence", icon: "💰", group: "V5", tier: "core" },
+    { id: "portfolio_governance", label: "Portfolio Gov", icon: "🏛", group: "V5", tier: "core" },
+    { id: "site_map_3d", label: "3D Site Map", icon: "🗺", group: "V5", tier: "core" },
 ];
 
 // Derived from NAV — maps each module id to its display title for the top bar.
