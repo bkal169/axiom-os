@@ -68,19 +68,25 @@ Deno.serve(async (req) => {
         }
 
         // --- STANDARD CHECKOUT ---
-        let price_id = body.price_id || "price_H5ggYwtDq4fbrJ";
+        // Map tier name → Stripe price ID (set these env vars in Supabase dashboard)
+        const PRICE_MAP: Record<string, string> = {
+            pro:          Deno.env.get("STRIPE_PRO_PRICE_ID") ?? "",
+            pro_plus:     Deno.env.get("STRIPE_PRO_PLUS_PRICE_ID") ?? "",
+        };
+
+        const tier = body.tier as string | undefined;
+        const price_id = body.price_id || (tier ? PRICE_MAP[tier] : "") || Deno.env.get("STRIPE_PRO_PRICE_ID") || "";
+
+        if (!price_id) throw new Error(`No Stripe price configured for tier: ${tier ?? "unknown"}. Set STRIPE_PRO_PRICE_ID / STRIPE_PRO_PLUS_PRICE_ID in Supabase secrets.`);
+
         const { customerId } = body;
 
         const sessionConfig: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ["card"],
-            line_items: [
-                { price: price_id, quantity: 1 },
-                // Inject the variable passthrough meter alongside the base seat price for Enterprise
-                { price: "price_1Pk_Axiom_Tier2_Compute_Metered" }
-            ],
+            line_items: [{ price: price_id, quantity: 1 }],
             mode: "subscription",
-            success_url: `${origin}/sys?success=true`,
-            cancel_url: `${origin}/sys?canceled=true`,
+            success_url: `${origin}/billing?success=true`,
+            cancel_url: `${origin}/billing?canceled=true`,
         };
 
         if (customerId) {

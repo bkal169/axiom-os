@@ -48,15 +48,19 @@ serve(async (req) => {
             const priceId = subscription.items.data[0].price.id;
             const status = subscription.status; // 'active', 'past_due', 'canceled', etc.
 
-            // Map Price ID to our internal Tiers
+            // Map Price ID to our internal Tiers — all 6 tiers
+            const PRICE_TO_TIER: Record<string, string> = {
+                [Deno.env.get("STRIPE_PRO_PRICE_ID") ?? "__none__"]:          "pro",
+                [Deno.env.get("STRIPE_PRO_PLUS_PRICE_ID") ?? "__none__"]:     "pro_plus",
+                [Deno.env.get("STRIPE_BOUTIQUE_PRICE_ID") ?? "__none__"]:     "boutique",
+                [Deno.env.get("STRIPE_ENTERPRISE_PRICE_ID") ?? "__none__"]:   "enterprise",
+                [Deno.env.get("STRIPE_ENTERPRISE_PLUS_PRICE_ID") ?? "__none__"]: "enterprise_plus",
+            };
+
             let tier = "free";
             if (status === "active" || status === "trialing") {
-                if (priceId === Deno.env.get("STRIPE_PRO_PRICE_ID")) tier = "pro";
-                else if (priceId === Deno.env.get("STRIPE_PRO_PLUS_PRICE_ID")) tier = "pro_plus";
-                else if (priceId === Deno.env.get("STRIPE_ENTERPRISE_PRICE_ID")) tier = "enterprise";
-                else {
-                    console.warn(`Unknown price_id mapped to free: ${priceId}`);
-                }
+                tier = PRICE_TO_TIER[priceId] ?? "free";
+                if (!PRICE_TO_TIER[priceId]) console.warn(`Unknown price_id mapped to free: ${priceId}`);
             } else {
                 // If canceled or past_due, revert to free
                 tier = "free";
