@@ -2,19 +2,16 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthGate } from './components/Auth/AuthGate';
 import { LoginPage } from './pages/LoginPage';
-import { LandingPage } from './pages/LandingPage';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
 import { RefundPolicy } from './pages/RefundPolicy';
+import { PricingPage } from './components/Billing/PricingPage';
 
-// Modular AxiomOS app (JSX architecture)
-// @ts-expect-error: JSX module, not typed
+// Modular AxiomOS app (JSX architecture) — typed via src/types/jsx-modules.d.ts
 import AxiomModular from './jsx/AxiomApp';
 
 // Marketing components
-// @ts-expect-error: JSX module, not typed
 import VanguardLanding from './jsx/components/Marketing/VanguardLanding';
-// @ts-expect-error: JSX module, not typed
 import MicropageRenderer from './jsx/components/Marketing/MicropageRenderer';
 
 // ---------------------------------------------------------------------------
@@ -43,9 +40,6 @@ const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
 // ---------------------------------------------------------------------------
 export const App: React.FC = () => {
   // ── APP SHELL: app.buildaxiom.dev ──────────────────────────────────────
-  // Login page is public; every other path requires authentication.
-  // AxiomModular owns its own internal sidebar navigation, so mounting it
-  // at /* works: React Router v6 just hands it the full URL, which it ignores.
   if (IS_APP_DOMAIN) {
     return (
       <Routes>
@@ -63,19 +57,19 @@ export const App: React.FC = () => {
   }
 
   // ── MARKETING SITE: www.buildaxiom.dev ────────────────────────────────
-  // Purely public. Session lives on the app domain, not here.
-  // Login CTA in VanguardLanding links directly to app.buildaxiom.dev.
   return (
     <Routes>
       <Route path="/" element={<VanguardLanding />} />
-      <Route path="/v1" element={<LandingPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
       <Route path="/use-cases/:slug" element={<MicropageRenderer />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/refund" element={<RefundPolicy />} />
 
-      {/* If someone lands on /login on the marketing domain,
-          hard-redirect to the app domain's login page. */}
+      {/* /v1 was the old landing page — redirect to current home */}
+      <Route path="/v1" element={<Navigate to="/" replace />} />
+
+      {/* /login on marketing domain → hard-redirect to app domain */}
       <Route
         path="/login"
         element={<ExternalRedirect to="https://app.buildaxiom.dev/login" />}

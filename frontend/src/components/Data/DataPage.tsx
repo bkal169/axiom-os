@@ -58,7 +58,6 @@ const LiveMarketSection: React.FC = () => {
                         <span className="text-2xl font-bold text-slate-900">{stats.rates.treasury_10yr}%</span>
                         <div className="ml-2 flex flex-col justify-end pb-1">
                             <span className="text-[10px] text-slate-400 leading-none mb-0.5">{stats.rates.date}</span>
-                            {/* @ts-ignore */}
                             {stats.rates.source === 'fred' && (
                                 <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded font-bold w-fit">FRED API</span>
                             )}

@@ -37,16 +37,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     useEffect(() => {
-        console.log('AuthProvider: Initializing...');
+        if (import.meta.env.DEV) console.log('AuthProvider: Initializing...');
         let mounted = true;
 
-        // Safety timeout in case Supabase hangs
+        // Safety timeout — reduced to 3s; better UX on slow connections
         const timeoutId = setTimeout(() => {
             if (mounted) {
-                console.warn('AuthProvider: Supabase timed out, forcing loading=false');
+                if (import.meta.env.DEV) console.warn('AuthProvider: Supabase timed out, forcing loading=false');
                 setLoading(false);
             }
-        }, 5000);
+        }, 3000);
 
         // Initial session check — awaits profile before releasing the loading gate
         const initAuth = async () => {
@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const { data: { session }, error } = await supabase.auth.getSession();
                 // FIX: mounted guard prevents state updates on an unmounted component
                 if (!mounted) return;
-                console.log('AuthProvider: getSession result', { session, error });
+                if (import.meta.env.DEV) console.log('AuthProvider: getSession result', { session, error });
 
                 setUser(session?.user ?? null);
 
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // so consumers never see loading=false with a null profile mid-flight.
                 if (mounted) {
                     setLoading(false);
-                    console.log('AuthProvider: init complete');
+                    if (import.meta.env.DEV) console.log('AuthProvider: init complete');
                 }
             }
         };
@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (_event === 'INITIAL_SESSION') return;
             if (!mounted) return;
 
-            console.log('AuthProvider: Auth state change', _event, session?.user?.id);
+            if (import.meta.env.DEV) console.log('AuthProvider: Auth state change', _event, session?.user?.id);
             setUser(session?.user ?? null);
 
             if (session?.user) {

@@ -1,15 +1,32 @@
 import React, { useState } from 'react';
 import { C, S } from '../../constants';
+import { supabase } from '../../../lib/supabase';
 
 export default function LeadForm({ title = "Download the E-Book", subtitle = "Mastering Spatial Intelligence in CRE" }) {
     const [form, setForm] = useState({ name: '', email: '', role: '', company: '' });
-    const [submitted, setSubmitted] = useState(false);
+    const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("[Marketing] Lead Captured:", form);
-        setSubmitted(true);
+        setStatus('loading');
+        try {
+            const { error } = await supabase
+                .from('beta_requests')
+                .insert({
+                    email:   form.email,
+                    name:    form.name,
+                    company: form.company,
+                    role:    form.role,
+                    source:  'ebook_form',
+                });
+            if (error) throw error;
+            setStatus('success');
+        } catch (err) {
+            if (import.meta.env.DEV) console.error('[Marketing] Lead capture failed:', err);
+            setStatus('error');
+        }
     };
+    const submitted = status === 'success';
 
     if (submitted) {
         return (
@@ -53,7 +70,14 @@ export default function LeadForm({ title = "Download the E-Book", subtitle = "Ma
                         value={form.company} onChange={e => setForm({ ...form, company: e.target.value })}
                     />
                 </div>
-                <button type="submit" style={{ ...S.btn("gold"), width: '100%', padding: '14px' }}>Send me the E-Book</button>
+                <button type="submit" disabled={status === 'loading'} style={{ ...S.btn("gold"), width: '100%', padding: '14px', opacity: status === 'loading' ? 0.7 : 1, cursor: status === 'loading' ? 'not-allowed' : 'pointer' }}>
+                    {status === 'loading' ? 'Sending...' : 'Send me the E-Book'}
+                </button>
+                {status === 'error' && (
+                    <p style={{ color: '#f87171', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+                        Something went wrong. Email <a href="mailto:support@buildaxiom.dev" style={{ color: C.gold }}>support@buildaxiom.dev</a> directly.
+                    </p>
+                )}
             </form>
         </div>
     );

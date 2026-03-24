@@ -10,7 +10,7 @@ import { DebugErrorBoundary } from './components/DebugErrorBoundary';
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
-console.log('Axiom: mounting router shell');
+if (import.meta.env.DEV) console.log('Axiom: mounting router shell');
 
 createRoot(rootElement).render(
   <StrictMode>
@@ -33,7 +33,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/service-worker.js')
-      .then((reg) => console.log('SW registered:', reg.scope))
+      .then((reg) => { if (import.meta.env.DEV) console.log('SW registered:', reg.scope); })
       .catch((err) => console.warn('SW registration failed:', err));
   });
 }

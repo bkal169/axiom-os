@@ -9,15 +9,13 @@ export default function MicropageRenderer() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In a real app, this would fetch from a CMS or local MD files
-        // For this prototype, we'll simulate the content based on the slug
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (!slug) { setLoading(false); return; }
         setLoading(true);
         setTimeout(() => {
-            const parts = slug.split('-');
+            const parts = slug.split('-').filter(Boolean);
+            if (parts.length < 2) { setContent(null); setLoading(false); return; }
             const asset = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
             const city = parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1);
-
             setContent({
                 title: `${asset} Underwriting & Zoning Software in ${city}`,
                 asset,
@@ -29,6 +27,15 @@ export default function MicropageRenderer() {
     }, [slug]);
 
     if (loading) return <div style={{ padding: 100, textAlign: 'center', color: C.dim }}>Loading Intelligence...</div>;
+
+    if (!content) return (
+        <div style={{ background: C.bg, minHeight: '100vh', color: C.text, fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            <div style={{ fontSize: 48, opacity: 0.3 }}>⬡</div>
+            <h1 style={{ fontSize: 24, fontWeight: 700 }}>Page Not Found</h1>
+            <p style={{ color: C.muted, fontSize: 15 }}>This use-case page doesn't exist yet.</p>
+            <a href="/" style={{ color: C.gold, textDecoration: 'none', fontWeight: 600 }}>← Back to AxiomOS</a>
+        </div>
+    );
 
     return (
         <div style={{ background: C.bg, minHeight: '100vh', color: C.text, fontFamily: 'Inter, sans-serif' }}>

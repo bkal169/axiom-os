@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const API_URL = 'http://localhost:8001'; // Changed to 8001 due to port conflict
+const API_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8001';
 
 export interface MarketIntel {
     census: {

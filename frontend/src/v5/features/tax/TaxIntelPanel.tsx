@@ -7,7 +7,7 @@ const C = { bg: '#07070e', surface: '#0d0d1a', surfaceHi: '#12121f', border: 'rg
 type Tab = 'codes' | 'property' | 'oz' | 'depreciation' | '1031';
 const TABS = [{ id: 'codes' as Tab, label: 'Tax Codes' }, { id: 'property' as Tab, label: 'Property Tax' }, { id: 'oz' as Tab, label: 'Opp. Zones' }, { id: 'depreciation' as Tab, label: 'Depreciation' }, { id: '1031' as Tab, label: '1031 Exchange' }];
 
-const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL ?? (import.meta as any).env?.DEV ? 'http://localhost:8000' : '';
 
 export function TaxIntelPanel({ dealId, lat, lng }: { dealId?: string; projectId?: string; lat?: number; lng?: number }) {
   const [activeTab, setActiveTab] = useState<Tab>('codes');

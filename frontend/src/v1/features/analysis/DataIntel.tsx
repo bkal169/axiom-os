@@ -54,10 +54,13 @@ export function DataIntel() {
 
     const loadLiveMetrics = async () => {
         try {
-            // @ts-ignore - bypassing wrapper limitations
-            const r = await fetch(`${supa.url || import.meta.env.VITE_SUPABASE_URL || "http://127.0.0.1:54321"}/rest/v1/signals?select=*&order=created_at.desc&limit=8`, {
-                // @ts-ignore
-                headers: supa.headers()
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? "http://127.0.0.1:54321";
+            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? "";
+            const r = await fetch(`${supabaseUrl}/rest/v1/signals?select=*&order=created_at.desc&limit=8`, {
+                headers: {
+                    "apikey": supabaseKey,
+                    "Authorization": `Bearer ${supabaseKey}`,
+                }
             });
             const data: any[] = await r.json();
 
