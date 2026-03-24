@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
         const PRICE_MAP: Record<string, string> = {
             pro:          Deno.env.get("STRIPE_PRO_PRICE_ID") ?? "",
             pro_plus:     Deno.env.get("STRIPE_PRO_PLUS_PRICE_ID") ?? "",
+            boutique:     Deno.env.get("STRIPE_BOUTIQUE_PRICE_ID") ?? "",
             enterprise:   Deno.env.get("STRIPE_ENTERPRISE_PRICE_ID") ?? "",
         };
 

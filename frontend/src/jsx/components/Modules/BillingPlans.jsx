@@ -34,7 +34,7 @@ const TIERS = [
     {
         id: "pro",
         name: "Pro",
-        price: "$79",
+        price: "$100",
         period: "/mo",
         sub: "Billed monthly",
         seats: "1 user",
@@ -60,7 +60,7 @@ const TIERS = [
     {
         id: "pro_plus",
         name: "Pro+",
-        price: "$99",
+        price: "$200",
         period: "/mo",
         sub: "Billed monthly",
         seats: "Up to 3 users",
@@ -86,12 +86,12 @@ const TIERS = [
     {
         id: "boutique",
         name: "Boutique",
-        price: "From $1,500",
+        price: "$500",
         period: "/mo",
-        sub: "$1,500–$2,500/mo",
+        sub: "Billed monthly",
         seats: "Up to 5 users",
         color: "var(--c-amber)",
-        cta: "Request Access",
+        cta: "Upgrade to Boutique",
         badge: null,
         gates: {
             "Active deals": "Unlimited",
@@ -112,7 +112,7 @@ const TIERS = [
     {
         id: "enterprise",
         name: "Enterprise",
-        price: "$499",
+        price: "$1,500",
         period: "/mo",
         sub: "Billed monthly",
         seats: "10–25 users",
@@ -192,8 +192,8 @@ export default function BillingPlans() {
 
     const handleCTA = async (tier) => {
         if (tier.id === "free") return;
-        // High-touch tiers → sales email only (no Stripe price configured)
-        if (["boutique", "enterprise_plus"].includes(tier.id)) {
+        // Enterprise+ → sales/white glove only
+        if (["enterprise_plus"].includes(tier.id)) {
             window.open(`mailto:enterprise@axiom-os.com?subject=${encodeURIComponent(tier.name + ' Inquiry — Axiom OS')}`, "_blank");
             return;
         }
