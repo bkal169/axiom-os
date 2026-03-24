@@ -11,6 +11,7 @@ export interface MarketIntel {
     rates: {
         treasury_10yr: number;
         date: string;
+        source?: string;
     };
 }
 
