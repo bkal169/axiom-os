@@ -3,7 +3,7 @@ import uuid
 from typing import Dict, Any, Optional
 
 import jwt
-from passlib.hash import bcrypt
+import bcrypt as _bcrypt
 
 JWT_SECRET = "CHANGE_ME_NOW"   # later: env var
 JWT_ALG = "HS256"
@@ -13,10 +13,10 @@ def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 def hash_pw(pw: str) -> str:
-    return bcrypt.hash(pw)
+    return _bcrypt.hashpw(pw.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
 
 def verify_pw(pw: str, pw_hash: str) -> bool:
-    return bcrypt.verify(pw, pw_hash)
+    return _bcrypt.checkpw(pw.encode("utf-8"), pw_hash.encode("utf-8"))
 
 def make_token(claims: Dict[str, Any]) -> str:
     now = int(time.time())
