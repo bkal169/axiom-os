@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 from typing import Dict, Any, Optional
@@ -5,7 +6,18 @@ from typing import Dict, Any, Optional
 import jwt
 import bcrypt as _bcrypt
 
-JWT_SECRET = "CHANGE_ME_NOW"   # later: env var
+_raw_secret = os.environ.get("JWT_SECRET", "")
+if not _raw_secret:
+    import warnings
+    warnings.warn(
+        "JWT_SECRET env var is not set — using insecure fallback. "
+        "Set JWT_SECRET in your .env / deployment secrets.",
+        RuntimeWarning,
+        stacklevel=1,
+    )
+    _raw_secret = "axiom-change-me-set-JWT_SECRET-env-var"
+
+JWT_SECRET = _raw_secret
 JWT_ALG = "HS256"
 JWT_EXP_SECONDS = 60 * 60 * 24  # 24h
 

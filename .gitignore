@@ -43,3 +43,4 @@ frontend/AxiomOS_v*.jsx
 frontend/src/pages/fix.js
 frontend/src/pages/fix_axiom.py
 verification_test.py
+.vercel
