@@ -3,13 +3,15 @@
 // Env vars: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (set in Vercel)
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
+const supabaseUrl = (
     import.meta.env.VITE_SUPABASE_URL ||
-    "https://ubdhpacoqmlxudcvhyuu.supabase.co";
+    "https://ubdhpacoqmlxudcvhyuu.supabase.co"
+).trim();
 
-const supabaseAnonKey =
+const supabaseAnonKey = (
     import.meta.env.VITE_SUPABASE_ANON_KEY ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGhwYWNvcW1seHVkY3ZoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjAzNDIsImV4cCI6MjA4NzAzNjM0Mn0.2qZBBWis2GUarglN6Lv2OuHpkfdQTkV25m20p3bjOwQ";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGhwYWNvcW1seHVkY3ZoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjAzNDIsImV4cCI6MjA4NzAzNjM0Mn0.2qZBBWis2GUarglN6Lv2OuHpkfdQTkV25m20p3bjOwQ"
+).trim();
 
 /**
  * Official Supabase JS client — use this for any feature that

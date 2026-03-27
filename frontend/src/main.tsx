@@ -28,12 +28,10 @@ createRoot(rootElement).render(
   </StrictMode>,
 );
 
-// Service Worker for offline support (Phase 6)
+// Unregister any stale service worker — the old cache-first SW caused white
+// screens by serving stale index.html forever. We no longer register a SW.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then((reg) => { if (import.meta.env.DEV) console.log('SW registered:', reg.scope); })
-      .catch((err) => console.warn('SW registration failed:', err));
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    for (const reg of regs) reg.unregister();
   });
 }

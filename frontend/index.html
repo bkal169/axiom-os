@@ -27,6 +27,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Purge stale service worker caches that cause white screen.
+      // Runs synchronously before React — one-time fix for axiom-v3-cache-v1.
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          names.forEach(function(name) {
+            if (name !== 'axiom-v4') caches.delete(name);
+          });
+        });
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
