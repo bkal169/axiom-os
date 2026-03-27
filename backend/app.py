@@ -112,10 +112,11 @@ async def stripe_webhook(request: Request, stripe_signature: str | None = Header
         from axiom_engine.stripe_verify import verify_stripe_signature
         verify_stripe_signature(raw, stripe_signature, STRIPE_WEBHOOK_SECRET)
     except Exception as e:
-        if not STRIPE_WEBHOOK_SECRET or STRIPE_WEBHOOK_SECRET == "whsec_placeholder":
+        _dev_mode = os.getenv("DEV_MODE", "").lower() in ("1", "true", "yes")
+        if _dev_mode and (not STRIPE_WEBHOOK_SECRET or STRIPE_WEBHOOK_SECRET == "whsec_placeholder"):
             logger.warning(f"Stripe webhook sig failed (dev mode): {e}")
         else:
-            return JSONResponse(status_code=400, content={"error": "SIGNATURE_VERIFY_FAILED", "detail": str(e)})
+            return JSONResponse(status_code=400, content={"error": "SIGNATURE_VERIFY_FAILED"})
 
     payload = await request.json()
     event_type = payload.get("type")
@@ -125,7 +126,7 @@ async def stripe_webhook(request: Request, stripe_signature: str | None = Header
         return JSONResponse(status_code=200, content=result)
     except Exception as e:
         logger.error(f"Webhook handler error: {e}")
-        return JSONResponse(status_code=500, content={"error": "Handler Error", "detail": str(e)})
+        return JSONResponse(status_code=500, content={"error": "WEBHOOK_HANDLER_ERROR"})
 
 
 # ── Market Intel ────────────────────────────────────────────────────────────
@@ -140,7 +141,7 @@ def market_intel(state_fips: str = "12"):
         return {"census": census, "rates": rates}
     except Exception as e:
         logger.warning(f"market/intel error: {e}")
-        return {"census": {}, "rates": {}, "error": str(e)}
+        return {"census": {}, "rates": {}, "error": "market_intel_unavailable"}
 
 
 # ── Runs History ────────────────────────────────────────────────────────────
@@ -150,7 +151,8 @@ def get_runs_route(limit: int = 20):
         from axiom_engine.persist import list_runs
         return list_runs(limit)
     except Exception as e:
-        return {"count": 0, "runs": [], "error": str(e)}
+        logger.warning(f"Failed to list runs: {e}")
+        return {"count": 0, "runs": [], "error": "runs_unavailable"}
 
 
 @app.get("/runs/{index}")
@@ -185,7 +187,8 @@ def run_report_route(index: int):
             md.append(f"- **{k}**: {v}")
         return {"index": index, "markdown": "\n".join(md)}
     except Exception as e:
-        return {"error": str(e), "index": index}
+        logger.warning(f"Failed to generate run report {index}: {e}")
+        return {"error": "report_unavailable", "index": index}
 
 
 @app.get("/core/55plus")

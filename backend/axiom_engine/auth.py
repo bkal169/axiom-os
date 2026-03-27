@@ -8,14 +8,20 @@ import bcrypt as _bcrypt
 
 _raw_secret = os.environ.get("JWT_SECRET", "")
 if not _raw_secret:
+    _env = os.environ.get("ENV", "").lower()
+    if _env in ("production", "prod", "staging"):
+        raise RuntimeError(
+            "JWT_SECRET env var is required in production/staging. "
+            "Set it in your deployment secrets."
+        )
     import warnings
     warnings.warn(
-        "JWT_SECRET env var is not set — using insecure fallback. "
+        "JWT_SECRET env var is not set — using insecure dev-only fallback. "
         "Set JWT_SECRET in your .env / deployment secrets.",
         RuntimeWarning,
         stacklevel=1,
     )
-    _raw_secret = "axiom-change-me-set-JWT_SECRET-env-var"
+    _raw_secret = f"dev-only-{uuid.uuid4().hex}"
 
 JWT_SECRET = _raw_secret
 JWT_ALG = "HS256"
