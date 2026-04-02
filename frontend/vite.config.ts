@@ -16,8 +16,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // React core — always cached separately
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router-dom/')) {
+          // React core + its runtime deps — always cached separately.
+          // scheduler is a direct dep of react-dom; react-router is a dep of
+          // react-router-dom.  Keeping them together avoids circular imports
+          // between vendor-react and vendor-misc that cause white-screen crashes.
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/react-router-dom/') ||
+            id.includes('node_modules/react-router/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
             return 'vendor-react';
           }
           // Recharts split into its own chunk — only loaded when a chart renders
