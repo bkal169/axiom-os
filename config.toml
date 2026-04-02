@@ -24,8 +24,13 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:5173"
-additional_redirect_urls = ["https://axiom-os.vercel.app"]
+site_url = "http://localhost:8008"
+additional_redirect_urls = [
+  "https://app.buildaxiom.dev",
+  "https://www.buildaxiom.dev",
+  "https://buildaxiom.dev",
+  "https://axiom-os.vercel.app"
+]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10

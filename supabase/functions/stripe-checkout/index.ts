@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
         const body = await req.json();
         const action = body.action || "create_checkout";
         const supa = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-        const origin = req.headers.get("origin") || "http://localhost:5173";
+        const origin = req.headers.get("origin") || "https://app.buildaxiom.dev";
 
         // --- METERED BILLING: Record API Usage Event ---
         if (action === "record_usage") {

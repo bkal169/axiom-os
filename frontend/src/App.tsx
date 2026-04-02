@@ -25,7 +25,8 @@ export const IS_APP_DOMAIN =
   hostname === 'localhost' ||
   hostname.startsWith('127.') ||
   hostname === 'app.buildaxiom.dev' ||
-  hostname.startsWith('app.');
+  hostname.startsWith('app.') ||
+  hostname.endsWith('.vercel.app');  // Vercel preview deployments → show app
 
 // Cross-domain redirect helper (React Router <Navigate> is same-origin only)
 const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {

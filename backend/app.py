@@ -25,6 +25,9 @@ logger.info("AXIOM app initialized")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
 ALLOWED_ORIGINS = [
+    "https://app.buildaxiom.dev",
+    "https://www.buildaxiom.dev",
+    "https://buildaxiom.dev",
     "https://axiom-juniper-rose.vercel.app",
     "https://axiom-os.vercel.app",
     "https://axiom-os-git-main-axiom-by-juniper-rose.vercel.app",
