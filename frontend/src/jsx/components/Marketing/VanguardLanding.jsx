@@ -48,6 +48,84 @@ export default function VanguardLanding() {
                     100% { transform: translateY(0px); }
                 }
                 .floating-ui { animation: float 4s ease-in-out infinite; }
+
+                /* Gold diagonal light streaks */
+                @keyframes goldStreak {
+                    0% { transform: translateX(-100%) rotate(-45deg); opacity: 0; }
+                    50% { opacity: 0.15; }
+                    100% { transform: translateX(200%) rotate(-45deg); opacity: 0; }
+                }
+                .axiom-hero-section::before {
+                    content: '';
+                    position: absolute;
+                    top: -50%;
+                    left: -50%;
+                    width: 200%;
+                    height: 200%;
+                    background: linear-gradient(
+                        -45deg,
+                        transparent 40%,
+                        rgba(212,168,67,0.06) 45%,
+                        rgba(212,168,67,0.12) 50%,
+                        rgba(212,168,67,0.06) 55%,
+                        transparent 60%
+                    );
+                    animation: goldStreak 8s ease-in-out infinite;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                /* Hexagonal grid pattern */
+                .axiom-hex-bg {
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23D4A843' fill-opacity='1'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                    background-size: 60px 60px;
+                    opacity: 0.03;
+                }
+
+                /* Metallic gold text gradient */
+                .axiom-gold-text {
+                    background: linear-gradient(135deg, #D4A843 0%, #F5E6B8 40%, #D4A843 60%, #A07C2E 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+
+                /* Gold glow separator */
+                .axiom-gold-divider {
+                    height: 1px;
+                    background: linear-gradient(90deg, transparent 0%, rgba(212,168,67,0.6) 50%, transparent 100%);
+                    box-shadow: 0 0 20px rgba(212,168,67,0.15);
+                    margin: 0 auto;
+                    max-width: 800px;
+                }
+
+                /* Scroll fade-in */
+                @keyframes fadeInUp {
+                    from { opacity: 0; transform: translateY(30px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .axiom-fade-in { animation: fadeInUp 0.8s ease-out both; }
+
+                /* Card ambient glow on hover */
+                .axiom-card-glow {
+                    transition: all 0.4s ease;
+                }
+                .axiom-card-glow:hover {
+                    border-color: rgba(212,168,67,0.4) !important;
+                    box-shadow: 0 0 40px rgba(212,168,67,0.08), inset 0 1px 0 rgba(212,168,67,0.1);
+                    transform: translateY(-4px);
+                }
+
+                /* Gold shimmer on CTA buttons */
+                @keyframes btnShimmer {
+                    0% { background-position: -200% center; }
+                    100% { background-position: 200% center; }
+                }
+                .gold-glow {
+                    background-size: 200% auto;
+                    animation: btnShimmer 3s linear infinite;
+                }
+
                 @media (max-width: 768px) {
                     .axiom-hero-title { font-size: 42px !important; }
                     .axiom-hero-section { padding: 80px 24px 60px !important; }
@@ -85,8 +163,11 @@ export default function VanguardLanding() {
                 maxWidth: 1000,
                 margin: '0 auto',
                 position: 'relative',
+                overflow: 'hidden',
                 backgroundImage: 'radial-gradient(circle at center, rgba(212, 168, 67, 0.05) 0%, transparent 70%)'
             }}>
+                {/* Hex grid overlay */}
+                <div className="axiom-hex-bg" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />
                 <div style={{
                     position: 'absolute',
                     top: -100,
@@ -105,14 +186,15 @@ export default function VanguardLanding() {
                 <div className="floating-ui" style={{ position: 'absolute', top: 40, left: -100, opacity: 0.1 }}>
                     <Layers size={200} color="#D4A843" />
                 </div>
-                <div style={{ display: 'inline-block', padding: '6px 12px', background: 'rgba(212, 168, 67, 0.1)', color: '#D4A843', borderRadius: 20, fontSize: 12, fontWeight: 700, letterSpacing: 2, marginBottom: 32, border: '1px solid rgba(212,168,67,0.2)' }}>
-                    AXIOM OS V3 IS ONLINE
+                <div style={{ display: 'inline-block', padding: '6px 16px', background: 'rgba(212, 168, 67, 0.1)', color: '#D4A843', borderRadius: 20, fontSize: 11, fontWeight: 700, letterSpacing: 3, marginBottom: 32, border: '1px solid rgba(212,168,67,0.2)', position: 'relative', zIndex: 1 }}>
+                    PRIVATE ACCESS — INSTITUTIONAL TIER
                 </div>
-                <h1 className="axiom-hero-title" style={{ fontSize: 72, fontWeight: 800, lineHeight: 1.05, marginBottom: 28, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
+                <h1 className="axiom-hero-title" style={{ fontSize: 84, fontWeight: 800, lineHeight: 1.05, marginBottom: 28, color: '#FFFFFF', letterSpacing: '-0.02em', fontFamily: 'Syne, Inter, sans-serif', position: 'relative', zIndex: 1 }}>
                     The Physical Asset, <br />
-                    <span style={{ color: '#D4A843' }}>Synchronized.</span>
+                    <span className="axiom-gold-text">Synchronized.</span>
                 </h1>
-                <p style={{ fontSize: 22, color: '#94A3B8', marginBottom: 56, lineHeight: 1.6, maxWidth: 800, margin: '0 auto 56px' }}>
+                <div className="axiom-gold-divider" style={{ marginBottom: 48 }} />
+                <p style={{ fontSize: 22, color: '#94A3B8', marginBottom: 56, lineHeight: 1.6, maxWidth: 800, margin: '0 auto 56px', position: 'relative', zIndex: 1 }}>
                     The first spatial intelligence and underwriting engine designed for elite real estate private equity. Eliminate the friction between the physical lot and the financial model.
                 </p>
 
@@ -132,7 +214,7 @@ export default function VanguardLanding() {
                             disabled={betaStatus === 'loading'}
                         />
                         <button type="submit" className="gold-glow" disabled={betaStatus === 'loading'} style={{ padding: '18px 36px', borderRadius: 8, background: '#D4A843', color: '#000', border: 'none', fontSize: 16, fontWeight: 700, cursor: betaStatus === 'loading' ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 10, opacity: betaStatus === 'loading' ? 0.7 : 1 }}>
-                            {betaStatus === 'loading' ? 'Submitting...' : <><span>Request Access</span> <ArrowRight size={20} /></>}
+                            {betaStatus === 'loading' ? 'Submitting...' : <><span>Apply for Access</span> <ArrowRight size={20} /></>}
                         </button>
                     </form>
                 )}
@@ -149,18 +231,22 @@ export default function VanguardLanding() {
                     </a>
                 </div>
 
-                <div style={{ marginTop: 80, opacity: 0.4, display: 'flex', justifyContent: 'center', gap: 48, fontSize: 12, letterSpacing: 2, fontWeight: 600 }}>
+                <div style={{ marginTop: 80, opacity: 0.4, display: 'flex', justifyContent: 'center', gap: 16, fontSize: 12, letterSpacing: 2, fontWeight: 600, position: 'relative', zIndex: 1 }}>
                     <span>TRUSTED BY TOP 20 REPE FIRMS</span>
+                    <span style={{ color: '#D4A843' }}>◆</span>
                     <span>SPATIAL FIRST DESIGN</span>
+                    <span style={{ color: '#D4A843' }}>◆</span>
                     <span>AI-CORE ARCHITECTURE</span>
                 </div>
             </section>
+
+            <div className="axiom-gold-divider" />
 
             {/* ─── THE CORE TRINITY ─────────────────────────────────────────────────── */}
             <section id="features" style={{ padding: '120px 48px', background: '#0F0F0F' }}>
                 <div style={{ maxWidth: 1200, margin: '0 auto' }}>
                     <div style={{ textAlign: 'center', marginBottom: 80 }}>
-                        <h2 style={{ fontSize: 40, fontWeight: 800, marginBottom: 20 }}>Unified Intelligence</h2>
+                        <h2 style={{ fontSize: 40, fontWeight: 800, marginBottom: 20, fontFamily: 'Syne, Inter, sans-serif' }}>Unified Intelligence</h2>
                         <p style={{ color: '#64748B', maxWidth: 600, margin: '0 auto' }}>One operating system for the entire lifecycle of a physical asset.</p>
                     </div>
 
@@ -170,7 +256,7 @@ export default function VanguardLanding() {
                             { icon: <MapIcon size={32} color="#D4A843" />, title: "Spatial Command", desc: "3D Mapbox GL integration. Render complex topography and zoning heuristics on high-definition satellite imagery." },
                             { icon: <Zap size={32} color="#D4A843" />, title: "The Financial Engine", desc: "AI-driven underwriting. Translate municipal codes into 10-year pro-formas with institutional precision in seconds." }
                         ].map((f, i) => (
-                            <div key={i} style={{ background: '#161616', padding: 48, borderRadius: 20, border: '1px solid #222', transition: 'all 0.3s' }}>
+                            <div key={i} className="axiom-card-glow axiom-fade-in" style={{ background: '#161616', padding: 48, borderRadius: 20, border: '1px solid #222', borderTop: '2px solid rgba(212,168,67,0.3)', transition: 'all 0.3s' }}>
                                 <div style={{ marginBottom: 28 }}>{f.icon}</div>
                                 <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>{f.title}</h3>
                                 <p style={{ color: '#94A3B8', lineHeight: 1.7, fontSize: 16 }}>{f.desc}</p>
@@ -180,11 +266,13 @@ export default function VanguardLanding() {
                 </div>
             </section>
 
+            <div className="axiom-gold-divider" />
+
             {/* ─── PRICING ─────────────────────────────────────────────────────────── */}
             <section id="pricing" style={{ padding: '120px 48px' }}>
                 <div style={{ maxWidth: 1200, margin: '0 auto' }}>
                     <div style={{ textAlign: 'center', marginBottom: 64 }}>
-                        <h2 style={{ fontSize: 40, fontWeight: 800, marginBottom: 16, color: '#F0EDE6' }}>Transparent Pricing</h2>
+                        <h2 style={{ fontSize: 40, fontWeight: 800, marginBottom: 16, color: '#F0EDE6', fontFamily: 'Syne, Inter, sans-serif' }}>Transparent Pricing</h2>
                         <p style={{ color: '#8A8578', fontSize: 18, maxWidth: 600, margin: '0 auto' }}>Start free. Scale as your portfolio grows. Cancel anytime.</p>
                     </div>
 
@@ -257,11 +345,12 @@ export default function VanguardLanding() {
                                 highlight: false,
                             },
                         ].map((plan, i) => (
-                            <div key={i} style={{
+                            <div key={i} className="axiom-card-glow" style={{
                                 background: plan.highlight ? 'linear-gradient(180deg, rgba(212,168,67,0.08) 0%, #161616 100%)' : '#161616',
                                 padding: 36,
                                 borderRadius: 16,
                                 border: plan.highlight ? '1px solid rgba(212,168,67,0.4)' : '1px solid #222',
+                                borderTop: plan.highlight ? '3px solid #D4A843' : '1px solid #222',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 position: 'relative',
@@ -333,6 +422,8 @@ export default function VanguardLanding() {
                 </div>
             </section>
 
+            <div className="axiom-gold-divider" />
+
             {/* ─── ROI CALCULATOR ──────────────────────────────────────────────────── */}
             <section id="roi" style={{ padding: '120px 48px' }}>
                 <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -340,11 +431,13 @@ export default function VanguardLanding() {
                 </div>
             </section>
 
+            <div className="axiom-gold-divider" />
+
             {/* ─── LEAD CAPTURE (E-BOOK) ────────────────────────────────────────────── */}
             <section id="ebook" style={{ padding: '120px 48px', background: '#0F0F0F' }}>
                 <div className="axiom-ebook-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
                     <div>
-                        <h2 style={{ fontSize: 48, fontWeight: 800, marginBottom: 24, lineHeight: 1.1 }}>Mastering Spatial Intelligence in CRE</h2>
+                        <h2 style={{ fontSize: 48, fontWeight: 800, marginBottom: 24, lineHeight: 1.1, fontFamily: 'Syne, Inter, sans-serif' }}>Mastering Spatial Intelligence in CRE</h2>
                         <p style={{ fontSize: 18, color: '#94A3B8', lineHeight: 1.6, marginBottom: 40 }}>
                             Download the definitive guide on how leading firms are using Axiom OS to underwrite 90% faster and mitigate entitlement risk.
                         </p>
@@ -363,7 +456,7 @@ export default function VanguardLanding() {
             </section>
 
             {/* ─── FOOTER ──────────────────────────────────────────────────────────── */}
-            <footer style={{ padding: '80px 48px', borderTop: '1px solid #222', background: '#0A0A0A' }}>
+            <footer style={{ padding: '80px 48px', borderTop: '1px solid #222', background: 'linear-gradient(180deg, transparent 0%, rgba(212,168,67,0.02) 60%, rgba(212,168,67,0.04) 100%), #0A0A0A' }}>
                 <div className="axiom-footer-top" style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '2px', color: '#fff', marginBottom: 16 }}>
