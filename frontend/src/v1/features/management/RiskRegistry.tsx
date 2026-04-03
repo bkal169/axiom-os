@@ -51,7 +51,7 @@ export function RiskRegistry({ projectId: _projectId }: { projectId: string }) {
                             <CartesianGrid stroke={GRID_STROKE} />
                             <XAxis type="number" dataKey="x" name="Probability" domain={[0, 100]} tick={AXIS_TICK} label={{ value: "Probability %", position: "insideBottom", offset: -4, style: { fontSize: 10, fill: "#6B7280" } }} />
                             <YAxis type="number" dataKey="y" name="Impact" domain={[0.5, 4.5]} ticks={[1, 2, 3, 4]} tick={AXIS_TICK} tickFormatter={(v: number) => ["", "Low", "Medium", "High", "Critical"][v] || ""} />
-                            <Tooltip {...CHART_TT} formatter={(_v: any, name: string, props: any) => name === "Probability" ? `${props.payload.x}%` : props.payload.impact} labelFormatter={() => ""} />
+                            <Tooltip {...CHART_TT} formatter={(_v: any, name: string | undefined, props: any) => name === "Probability" ? `${props.payload.x}%` : props.payload.impact} labelFormatter={() => ""} />
                             <Scatter data={(risks as Risk[]).map(r => ({ x: r.probability, y: IMPACT_Y[r.impact] || 1, title: r.title, impact: r.impact }))} name="Risks">
                                 {(risks as Risk[]).map((r, i) => (
                                     <Cell key={i} fill={IMPACT_DOT_COLORS[r.impact] || "#6B7280"} />

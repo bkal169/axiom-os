@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, Badge, Button } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 import { AgentHandoff } from "../agents/AgentHandoff";
 import { swarmEngine } from "../../services/SwarmEngine";
+
+function relativeTime(ts: number): string {
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+}
 
 interface AgentInfo {
     id: string;
@@ -30,6 +41,24 @@ export function AgentHub() {
     ];
 
     const [active, setActive] = useState<number | null>(null);
+    const [lastRuns, setLastRuns] = useState<Record<string, number>>({});
+
+    useEffect(() => {
+        const runs: Record<string, number> = {};
+        agents.forEach(a => {
+            const v = localStorage.getItem(`axiom_agent_${a.id}_last`);
+            if (v) runs[a.id] = parseInt(v, 10);
+        });
+        setLastRuns(runs);
+    }, []);
+
+    const launchAgent = (idx: number) => {
+        const a = agents[idx];
+        const now = Date.now();
+        localStorage.setItem(`axiom_agent_${a.id}_last`, String(now));
+        setLastRuns(prev => ({ ...prev, [a.id]: now }));
+        setActive(idx);
+    };
 
     const startDemoSwarm = () => {
         swarmEngine.init("Site Feasibility & Acquisition Analysis");
@@ -66,7 +95,7 @@ export function AgentHub() {
                                 <div key={i}
                                     className="axiom-bg-1 axiom-border-1 axiom-radius-4 axiom-p-14 axiom-pointer axiom-transition-12"
                                     style={{ borderLeft: `3px solid ${a.color}` }}
-                                    onClick={() => setActive(i)}
+                                    onClick={() => launchAgent(i)}
                                     title={`Launch ${a.id}`}
                                 >
                                     <div className="axiom-text-18-bold axiom-mb-6" style={{ color: a.color }}>{a.icon}</div>
@@ -74,6 +103,9 @@ export function AgentHub() {
                                     <div className="axiom-text-10-dim axiom-lh-14">{a.desc}</div>
                                     <div className="axiom-mt-10">
                                         <Badge label="Launch Agent" color="var(--c-gold)" />
+                                    </div>
+                                    <div style={{ fontSize: 10, color: "var(--c-dim)", marginTop: 4 }}>
+                                        {lastRuns[a.id] ? `Last run: ${relativeTime(lastRuns[a.id])}` : "Never used"}
                                     </div>
                                 </div>
                             ))}

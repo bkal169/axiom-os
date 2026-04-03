@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Card, Field, Badge, Button } from "../../components/ui/components";
 import { Tabs } from "../../components/ui/layout";
 import { useLS } from "../../hooks/useLS";
+import { useProject } from "../../context/ProjectContext";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -38,11 +39,39 @@ export function CalendarView() {
     const [ne, setNe] = useState({ title: "", date: "", time: "09:00", type: "Meeting", deal: "", color: "var(--c-blue)", notes: "", recurring: "" });
     const [showQuickAdd, setShowQuickAdd] = useState(false);
     const [editingEvent, setEditingEvent] = useState<number | null>(null);
+    const [showMilestones, setShowMilestones] = useState(false);
+
+    const projCtx = useProject();
+    const milestoneEvents = useMemo<CalEvent[]>(() => {
+        const milestones: CalEvent[] = [];
+        let idCounter = -1000;
+        if (projCtx?.permits) {
+            (projCtx.permits as any[]).forEach((p: any) => {
+                if (p.status && p.status !== "N/A") {
+                    const weeksMatch = p.duration?.match(/(\d+)/);
+                    const weeks = weeksMatch ? parseInt(weeksMatch[1], 10) : 4;
+                    const d = new Date();
+                    d.setDate(d.getDate() + weeks * 7);
+                    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    milestones.push({ id: idCounter--, title: `${p.name}`, date: dateStr, time: "00:00", type: "Milestone", deal: "", color: "var(--c-gold)", notes: `Agency: ${p.agency || ""}`, recurring: "" });
+                }
+            });
+        }
+        if (projCtx?.events) {
+            (projCtx.events as any[]).forEach((e: any) => {
+                if (e.type === "Milestone" || e.type === "Submittal") {
+                    milestones.push({ id: idCounter--, title: e.title, date: e.date, time: "00:00", type: "Milestone", deal: "", color: "var(--c-gold)", notes: e.notes || "", recurring: "" });
+                }
+            });
+        }
+        return milestones;
+    }, [projCtx?.permits, projCtx?.events]);
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1).getDay();
     const dStr = useCallback((d: number) => `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`, [year, month]);
-    const dayEvents = useCallback((d: number) => (events as CalEvent[]).filter(e => e.date === dStr(d)), [events, dStr]);
+    const mergedEvents = useMemo(() => showMilestones ? [...(events as CalEvent[]), ...milestoneEvents] : (events as CalEvent[]), [events, milestoneEvents, showMilestones]);
+    const dayEvents = useCallback((d: number) => mergedEvents.filter(e => e.date === dStr(d)), [mergedEvents, dStr]);
 
     const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else setMonth(m => m - 1); };
     const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else setMonth(m => m + 1); };
@@ -59,7 +88,7 @@ export function CalendarView() {
 
     const onDayClick = (d: number) => { setSelDay(d); setShowQuickAdd(true); setNe(prev => ({ ...prev, date: dStr(d) })); setEditingEvent(null); };
     const selEvents = dayEvents(selDay);
-    const upcomingEvents = (events as CalEvent[]).filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+    const upcomingEvents = mergedEvents.filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
 
     return (
         <Tabs tabs={["Month View", "Week View", "Agenda", "Add Event"]}>
@@ -70,6 +99,10 @@ export function CalendarView() {
                     <div style={{ fontSize: 18, color: "var(--c-gold)", fontWeight: 700 }}>{MONTHS[month]} {year}</div>
                     <Button label="Next →" onClick={nextMonth} />
                 </div>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--c-dim)", marginBottom: 10, cursor: "pointer" }}>
+                    <input type="checkbox" checked={showMilestones} onChange={e => setShowMilestones(e.target.checked)} />
+                    Show project milestones
+                </label>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 1, marginBottom: 14 }}>
                     {DAYS.map(d => <div key={d} style={{ padding: 6, textAlign: "center", fontSize: 9, color: "var(--c-dim)", letterSpacing: 2, textTransform: "uppercase", background: "var(--c-bg2)" }}>{d}</div>)}
                     {Array.from({ length: firstDay }, (_, i) => <div key={"e" + i} style={{ background: "var(--c-bg2)", minHeight: 80 }} />)}
