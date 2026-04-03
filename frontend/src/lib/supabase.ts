@@ -3,11 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-console.log('Supabase Config:', {
-  url: supabaseUrl ? 'Found' : 'Missing',
-  key: supabaseAnonKey ? 'Found' : 'Missing',
-});
-
 // FIX: Throw early with a clear message instead of passing empty strings to
 // createClient(), which silently succeeds but causes all requests to fail with
 // cryptic network/auth errors that are hard to trace back to config.

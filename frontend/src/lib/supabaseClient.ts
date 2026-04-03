@@ -3,15 +3,15 @@
 // Env vars: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (set in Vercel)
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = (
-    import.meta.env.VITE_SUPABASE_URL ||
-    "https://ubdhpacoqmlxudcvhyuu.supabase.co"
-).trim();
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || "";
 
-const supabaseAnonKey = (
-    import.meta.env.VITE_SUPABASE_ANON_KEY ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGhwYWNvcW1seHVkY3ZoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NjAzNDIsImV4cCI6MjA4NzAzNjM0Mn0.2qZBBWis2GUarglN6Lv2OuHpkfdQTkV25m20p3bjOwQ"
-).trim();
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn(
+        "[Axiom] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is not set. " +
+        "Set these in .env.local or configure in Vercel dashboard."
+    );
+}
 
 /**
  * Official Supabase JS client — use this for any feature that

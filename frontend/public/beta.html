@@ -1414,15 +1414,30 @@
 </div>
 
 <script>
-  function show(id) {
+  function show(id, pushState) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    const n = document.getElementById('n-' + id);
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.classList.add('active');
+    var n = document.getElementById('n-' + id);
     if(n) n.classList.add('active');
     window.scrollTo(0,0);
     if(id === 'build' || id === 'market') animateAll();
+    if(pushState !== false) history.pushState(null, '', '#' + id);
   }
+
+  // Handle back/forward navigation
+  window.addEventListener('popstate', function() {
+    var id = location.hash.replace('#','') || 'hero';
+    show(id, false);
+  });
+
+  // Load section from URL hash on page load
+  (function() {
+    var id = location.hash.replace('#','');
+    if(id && document.getElementById(id)) show(id, false);
+  })();
 
   function animateAll() {
     // progress bars
