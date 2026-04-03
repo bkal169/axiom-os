@@ -77,8 +77,18 @@ export const App: React.FC = () => {
         element={<ExternalRedirect to="https://app.buildaxiom.dev/login" />}
       />
 
-      {/* Catch-all → home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* 404 */}
+      <Route path="*" element={
+        <div style={{ backgroundColor: '#0A0A0A', color: '#ECECEC', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif', textAlign: 'center', padding: 48 }}>
+          <div style={{ fontSize: 72, fontWeight: 800, fontFamily: 'Syne, Inter, sans-serif', marginBottom: 16 }}>
+            4<span style={{ color: '#D4A843' }}>0</span>4
+          </div>
+          <p style={{ color: '#64748B', fontSize: 18, marginBottom: 32 }}>This page doesn't exist.</p>
+          <a href="/" style={{ padding: '14px 32px', borderRadius: 8, background: '#D4A843', color: '#000', fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>
+            Back to Home
+          </a>
+        </div>
+      } />
     </Routes>
   );
 };

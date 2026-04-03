@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowRight, ChevronRight, Layers, Map as MapIcon, Zap, Smartphone, Download, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, ChevronRight, Layers, Map as MapIcon, Zap, Smartphone, Download, ShieldCheck, Menu, X } from 'lucide-react';
 import { C, S } from '../../constants';
 import { supabase } from '../../../lib/supabase';
 import ROICalculator from './ROICalculator';
@@ -14,6 +14,14 @@ const APP_ORIGIN = window.location.hostname === 'localhost'
 export default function VanguardLanding() {
     const [email, setEmail] = useState('');
     const [betaStatus, setBetaStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [showFloatingCta, setShowFloatingCta] = useState(false);
+
+    useEffect(() => {
+        const onScroll = () => setShowFloatingCta(window.scrollY > 600);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     const handleRequestBeta = async (e) => {
         e.preventDefault();
@@ -133,6 +141,7 @@ export default function VanguardLanding() {
                     .axiom-hero-form input { width: 100% !important; }
                     .axiom-nav { padding: 16px 24px !important; }
                     .axiom-nav-links { display: none !important; }
+                    .axiom-mobile-menu-btn { display: block !important; }
                     .axiom-features-grid { grid-template-columns: 1fr !important; }
                     .axiom-pricing-grid { grid-template-columns: 1fr !important; }
                     .axiom-ebook-grid { grid-template-columns: 1fr !important; }
@@ -168,7 +177,20 @@ export default function VanguardLanding() {
                     <a href={`${APP_ORIGIN}/login`} style={{ color: '#888', textDecoration: 'none', fontSize: 14, fontWeight: 500 }}>Log In</a>
                     <a href={`${APP_ORIGIN}/login`} className="gold-glow" style={{ ...S.btn("gold"), padding: '8px 20px', textDecoration: 'none', display: 'inline-block' }}>Launch App →</a>
                 </div>
+                <button className="axiom-mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ display: 'none', background: 'none', border: 'none', color: '#D4A843', cursor: 'pointer', padding: 4 }}>
+                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
             </nav>
+            {mobileMenuOpen && (
+                <div className="axiom-mobile-menu" style={{ background: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #222', padding: '24px', display: 'flex', flexDirection: 'column', gap: 20, position: 'sticky', top: 73, zIndex: 99 }}>
+                    <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ color: '#ccc', textDecoration: 'none', fontSize: 16, fontWeight: 500 }}>Features</a>
+                    <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ color: '#ccc', textDecoration: 'none', fontSize: 16, fontWeight: 500 }}>Pricing</a>
+                    <a href="#roi" onClick={() => setMobileMenuOpen(false)} style={{ color: '#ccc', textDecoration: 'none', fontSize: 16, fontWeight: 500 }}>ROI Calculator</a>
+                    <a href="#ebook" onClick={() => setMobileMenuOpen(false)} style={{ color: '#ccc', textDecoration: 'none', fontSize: 16, fontWeight: 500 }}>E-Book</a>
+                    <a href={`${APP_ORIGIN}/login`} style={{ color: '#ccc', textDecoration: 'none', fontSize: 16, fontWeight: 500 }}>Log In</a>
+                    <a href={`${APP_ORIGIN}/login`} className="gold-glow" style={{ ...S.btn("gold"), padding: '12px 20px', textDecoration: 'none', display: 'inline-block', textAlign: 'center' }}>Launch App →</a>
+                </div>
+            )}
 
             {/* ─── HERO SECTION ────────────────────────────────────────────────────── */}
             <section className="axiom-hero-section" style={{
@@ -189,11 +211,8 @@ export default function VanguardLanding() {
                     transform: 'translateX(-50%)',
                     width: '120%',
                     height: '100%',
-                    backgroundImage: 'url(/src/assets/v3_hero.png)',
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
-                    opacity: 0.15,
+                    background: 'radial-gradient(ellipse at 50% 40%, rgba(212,168,67,0.12) 0%, rgba(212,168,67,0.04) 40%, transparent 70%)',
+                    opacity: 1,
                     zIndex: -1,
                     filter: 'blur(40px)'
                 }} />
@@ -245,12 +264,14 @@ export default function VanguardLanding() {
                     </a>
                 </div>
 
-                <div style={{ marginTop: 80, opacity: 0.4, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, fontSize: 12, letterSpacing: 2, fontWeight: 600, position: 'relative', zIndex: 1 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14} color="#D4A843" /> TRUSTED BY TOP 20 REPE FIRMS</span>
+                <div style={{ marginTop: 80, opacity: 0.5, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, fontSize: 11, letterSpacing: 2, fontWeight: 600, position: 'relative', zIndex: 1, flexWrap: 'wrap' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14} color="#D4A843" /> SOC 2 COMPLIANT</span>
                     <span style={{ color: '#D4A843' }}>◆</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14} color="#D4A843" /> SPATIAL FIRST DESIGN</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14} color="#D4A843" /> 256-BIT ENCRYPTION</span>
                     <span style={{ color: '#D4A843' }}>◆</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14} color="#D4A843" /> AI-CORE ARCHITECTURE</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14} color="#D4A843" /> INSTITUTIONAL GRADE</span>
+                    <span style={{ color: '#D4A843' }}>◆</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ShieldCheck size={14} color="#D4A843" /> 99.9% UPTIME SLA</span>
                 </div>
             </section>
 
@@ -279,6 +300,14 @@ export default function VanguardLanding() {
                     </div>
                 </div>
             </section>
+
+            {/* ─── MID-PAGE CTA ──────────────────────────────────────────────────── */}
+            <div style={{ padding: '48px 24px', textAlign: 'center', background: 'linear-gradient(180deg, #0F0F0F 0%, rgba(212,168,67,0.04) 50%, #0A0A0A 100%)' }}>
+                <p style={{ color: '#94A3B8', fontSize: 18, marginBottom: 20 }}>Ready to see it in action?</p>
+                <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="gold-glow" style={{ ...S.btn("gold"), padding: '14px 36px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 16, fontWeight: 700 }}>
+                    Apply for Access <ArrowRight size={18} />
+                </a>
+            </div>
 
             <div className="axiom-gold-divider" />
 
@@ -502,6 +531,34 @@ export default function VanguardLanding() {
                     © 2026 AXIOM OS · JUNIPER ROSE INTELLIGENCE LLC · SARASOTA, FL 34233
                 </div>
             </footer>
+
+            {/* ─── FLOATING CTA ──────────────────────────────────────────────────── */}
+            {showFloatingCta && (
+                <a
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className="gold-glow"
+                    style={{
+                        position: 'fixed',
+                        bottom: 24,
+                        right: 24,
+                        padding: '12px 24px',
+                        borderRadius: 8,
+                        background: '#D4A843',
+                        color: '#000',
+                        fontSize: 14,
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        zIndex: 200,
+                        boxShadow: '0 4px 24px rgba(212,168,67,0.3)',
+                    }}
+                >
+                    Apply for Access <ArrowRight size={16} />
+                </a>
+            )}
 
         </div>
     );

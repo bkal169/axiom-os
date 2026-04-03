@@ -53,6 +53,11 @@ export default function ROICalculator() {
                     </div>
                 </div>
             </div>
+            <div style={{ marginTop: 24, textAlign: 'center', paddingTop: 20, borderTop: `1px solid ${C.border}` }}>
+                <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ color: '#D4A843', textDecoration: 'none', fontSize: 15, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    See these savings in your portfolio → Apply for Access
+                </a>
+            </div>
         </Card>
     );
 }

@@ -34,7 +34,7 @@ export default function LeadForm({ title = "Download the E-Book", subtitle = "Ma
                 <div style={{ fontSize: 32, marginBottom: 10 }}>📥</div>
                 <div style={{ fontSize: 18, color: C.text, fontWeight: 700, marginBottom: 8 }}>Thank you!</div>
                 <div style={{ fontSize: 14, color: C.muted, marginBottom: 20 }}>Your download link has been sent to {form.email}.</div>
-                <button style={S.btn("gold")} onClick={() => setSubmitted(false)}>Back</button>
+                <button style={S.btn("gold")} onClick={() => setStatus('idle')}>Back</button>
             </div>
         );
     }
