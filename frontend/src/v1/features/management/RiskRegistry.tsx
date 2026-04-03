@@ -30,10 +30,10 @@ export function RiskRegistry({ projectId: _projectId }: { projectId: string }) {
     const addRisk = () => {
         if (!nr.title) return;
         setRisks([...(risks as Risk[]), { ...nr, id: Date.now() }]);
-        setNr({ title: "", impact: "Medium", probability: 50, owner: "", status: "Identified" });
+        setNr({ title: "", impact: "Medium", probability: 50, owner: "Unassigned", status: "Identified" });
     };
 
-    const avgProb = risks.length > 0 ? (risks as Risk[]).reduce((s, r) => s + r.probability, 0) / risks.length : 0;
+    const avgProb = risks.length > 0 ? (risks as Risk[]).reduce((s, r) => s + (r.probability || 0), 0) / risks.length : 0;
     const criticalCount = (risks as Risk[]).filter(r => r.impact === "Critical" || r.impact === "High").length;
 
     return (

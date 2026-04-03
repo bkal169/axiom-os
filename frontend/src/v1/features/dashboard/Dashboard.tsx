@@ -5,6 +5,7 @@ import { useProject, type ProjectContextType } from "../../context/ProjectContex
 import { fmt } from "../../lib/utils";
 import { DEFAULT_FIN, DEFAULT_RISKS, DEFAULT_PERMITS } from "../../lib/defaults";
 import { buildMonthlyCashFlows, calcIRR } from "../../lib/math";
+import { calcFinancials } from "../../lib/finance";
 import { CHART_TT, CHART_TT_BAR } from "../../lib/chartTheme";
 import {
     AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -30,24 +31,18 @@ export function Dashboard({ projectId }: Props) {
 
     // ── Snapshot calcs ────────────────────────────────────────
     const snap = useMemo(() => {
-        const hard = fin.totalLots * fin.hardCostPerLot;
-        const soft = hard * (fin.softCostPct / 100);
-        const fees = fin.planningFees + (fin.permitFeePerLot + fin.schoolFee + fin.impactFeePerLot) * fin.totalLots;
-        const cont = (hard + soft) * (fin.contingencyPct / 100);
-        const landCost = fin.landCost + fin.closingCosts;
-        const totalCost = landCost + hard + soft + cont + fees;
-        const revenue = fin.totalLots * fin.salesPricePerLot;
-        const profit = revenue * 0.97 - totalCost;
-        const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+        const fc = calcFinancials(fin);
+        const landCost = (fin.landCost || 0) + (fin.closingCosts || 0);
+        const { totalProjectCost: totalCost, revenue, profit, margin } = fc;
         const { flows, constMonths } = buildMonthlyCashFlows(fin);
         const irr = (Math.pow(1 + (calcIRR(flows) || 0), 12) - 1) * 100;
 
         const costBreakdown = [
             { name: "Land", value: Math.round(landCost / 1000) },
-            { name: "Hard Cost", value: Math.round(hard / 1000) },
-            { name: "Soft Cost", value: Math.round(soft / 1000) },
-            { name: "Fees", value: Math.round(fees / 1000) },
-            { name: "Contingency", value: Math.round(cont / 1000) },
+            { name: "Hard Cost", value: Math.round(fc.hardCosts / 1000) },
+            { name: "Soft Cost", value: Math.round(fc.softCosts / 1000) },
+            { name: "Fees", value: Math.round(fc.fees / 1000) },
+            { name: "Contingency", value: Math.round(fc.contingency / 1000) },
         ];
 
         const cashFlowData = flows.slice(0, 24).map((v, i) => ({
@@ -62,8 +57,8 @@ export function Dashboard({ projectId }: Props) {
             { name: "Bull", revenue: revenue * 1.15, cost: totalCost * 0.95 },
         ].map(s => ({
             ...s,
-            profit: Math.round((s.revenue * 0.97 - s.cost) / 1000),
-            margin: Math.round(((s.revenue * 0.97 - s.cost) / s.revenue) * 100),
+            profit: Math.round((s.revenue - s.cost) / 1000),
+            margin: s.revenue > 0 ? Math.round(((s.revenue - s.cost) / s.revenue) * 100) : 0,
         }));
 
         return { totalCost, revenue, profit, margin, irr, constMonths, landCost, costBreakdown, cashFlowData, scenarios };
@@ -83,7 +78,7 @@ export function Dashboard({ projectId }: Props) {
     const avgMonthlyCF = snap.cashFlowData.length > 0
         ? Math.round(snap.cashFlowData.reduce((s, d) => s + d.cashFlow, 0) / snap.cashFlowData.length)
         : 0;
-    const totalReturnPct = snap.landCost > 0
+    const totalReturnPct = snap.landCost > 0 && isFinite(snap.profit)
         ? ((snap.profit / snap.landCost) * 100).toFixed(1)
         : "0.0";
 

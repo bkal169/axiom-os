@@ -7,14 +7,18 @@ export function PortfolioDashboard() {
 
     const totalProjects = allProjects.length;
     const activeCount = allProjects.filter((p: any) => p.stage !== "completed" && p.stage !== "disposed").length;
+    const pipelineValue = allProjects.reduce((sum: number, p: any) => sum + (p.financials?.revenue || 0), 0);
+    const totalRisks = allProjects.reduce((sum: number, p: any) => sum + (p.risks?.length || 0), 0);
+    const avgRiskCount = totalProjects > 0 ? (totalRisks / totalProjects).toFixed(1) : "0";
+    const fmtPipeline = pipelineValue > 0 ? `$${(pipelineValue / 1_000_000).toFixed(1)}M` : "$0";
 
     return (
         <Card title="Portfolio Overview">
             <div className="axiom-grid-4 axiom-mb-24">
                 <KPI label="Total Projects" value={totalProjects} />
                 <KPI label="Active" value={activeCount} color="var(--c-green)" />
-                <KPI label="Pipeline Value" value="--" color="var(--c-blue)" sub="Aggregated" />
-                <KPI label="Avg. Risk Score" value="--" color="var(--c-amber)" sub="Weighted" />
+                <KPI label="Pipeline Value" value={fmtPipeline} color="var(--c-blue)" sub="Aggregated" />
+                <KPI label="Avg. Risk Count" value={avgRiskCount} color="var(--c-amber)" sub="Per Project" />
             </div>
             <AxiomTable headers={["Project", "Stage", "Revenue", "Profit", "Risk Count", "Status"]} emptyMessage="No projects in portfolio. Create a project to get started.">
                 {allProjects.map((proj: any, i: number) => (
