@@ -217,7 +217,7 @@ export default function VanguardLanding() {
                     zIndex: -1,
                     filter: 'blur(40px)'
                 }} />
-                <div className="floating-ui" style={{ position: 'absolute', top: 40, left: -100, opacity: 0.1 }}>
+                <div className="floating-ui" style={{ position: 'absolute', top: 40, left: 20, opacity: 0.1 }}>
                     <Layers size={200} color="#D4A843" />
                 </div>
                 <div style={{ display: 'inline-block', padding: '6px 16px', background: 'rgba(212, 168, 67, 0.1)', color: '#D4A843', borderRadius: 20, fontSize: 11, fontWeight: 700, letterSpacing: 3, marginBottom: 32, border: '1px solid rgba(212,168,67,0.2)', position: 'relative', zIndex: 1 }}>
