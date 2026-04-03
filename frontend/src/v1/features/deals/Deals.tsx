@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Card, KPI, Field, Badge, Button, FileAttachment } from "../../components/ui/components";
 import { Agent } from "../agents/Agent";
 import { Tabs } from "../../components/ui/layout";
@@ -151,31 +151,58 @@ export function Deals() {
                     {syncing && <div className="axiom-text-9-gold-mt8">syncing with cloud...</div>}
                 </div>
                 <div className="axiom-flex-gap-10 axiom-pb-10 axiom-overflow-x-auto">
-                    {STAGES.map(stage => {
+                    {STAGES.map((stage, stageIdx) => {
                         const stageDeals = deals.filter((d: Deal) => d.stage === stage);
+                        const isLast = stageIdx === STAGES.length - 1;
                         return (
-                            <div key={stage} className="axiom-pipeline-column">
-                                <div className="axiom-pipeline-header">
-                                    <span className="axiom-text-10-b-up-ls2" style={{ color: SCOL[stage] } as React.CSSProperties}>{SL[stage]}</span>
-                                    <span className="axiom-badge-dim">{stageDeals.length}</span>
+                            <React.Fragment key={stage}>
+                                <div className="axiom-pipeline-column">
+                                    <div className="axiom-pipeline-header">
+                                        <span className="axiom-text-10-b-up-ls2" style={{ color: SCOL[stage] } as React.CSSProperties}>{SL[stage]}</span>
+                                        <span className="axiom-badge-dim">{stageDeals.length}</span>
+                                    </div>
+                                    <div className="axiom-pipeline-body">
+                                        {stageDeals.map((deal: Deal) => {
+                                            const ci = STAGES.indexOf(deal.stage);
+                                            const canAdvance = ci < STAGES.length - 1;
+                                            return (
+                                                <div key={deal.id} className="axiom-deal-card" style={{ borderLeftColor: SCOL[stage] } as React.CSSProperties} onClick={() => setSelectedDeal(deal)}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                        <div>
+                                                            <div className="axiom-text-13-bold axiom-mb-4">{deal.name}</div>
+                                                            <div className="axiom-text-10-dim">{deal.address}</div>
+                                                        </div>
+                                                        {canAdvance && (
+                                                            <button
+                                                                onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "next"); }}
+                                                                title={`Advance to ${SL[STAGES[ci + 1]]}`}
+                                                                style={{ background: 'var(--c-gold)', color: '#07070e', border: 'none', borderRadius: 6, width: 32, height: 28, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'transform 0.15s, box-shadow 0.15s' }}
+                                                                onMouseEnter={(e) => { (e.target as HTMLElement).style.transform = 'scale(1.1)'; (e.target as HTMLElement).style.boxShadow = '0 2px 8px rgba(232,184,75,0.4)'; }}
+                                                                onMouseLeave={(e) => { (e.target as HTMLElement).style.transform = 'scale(1)'; (e.target as HTMLElement).style.boxShadow = 'none'; }}
+                                                            >
+                                                                {'\u2192'}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div className="axiom-flex-sb-center axiom-mt-8">
+                                                        <span className="axiom-text-12-gold">{fmt.M(deal.value)}</span>
+                                                        <span className="axiom-text-10-green">{deal.lots} lots</span>
+                                                    </div>
+                                                    <div className="axiom-flex-gap-6 axiom-mt-10">
+                                                        <Button label="\u2190" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "prev"); }} className="axiom-btn-icon" />
+                                                        <Button label="\u2192" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "next"); }} className="axiom-btn-icon" />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                                <div className="axiom-pipeline-body">
-                                    {stageDeals.map((deal: Deal) => (
-                                        <div key={deal.id} className="axiom-deal-card" style={{ borderLeftColor: SCOL[stage] } as React.CSSProperties} onClick={() => setSelectedDeal(deal)}>
-                                            <div className="axiom-text-13-bold axiom-mb-4">{deal.name}</div>
-                                            <div className="axiom-text-10-dim">{deal.address}</div>
-                                            <div className="axiom-flex-sb-center axiom-mt-8">
-                                                <span className="axiom-text-12-gold">{fmt.M(deal.value)}</span>
-                                                <span className="axiom-text-10-green">{deal.lots} lots</span>
-                                            </div>
-                                            <div className="axiom-flex-gap-6 axiom-mt-10">
-                                                <Button label="—" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "prev"); }} className="axiom-btn-icon" />
-                                                <Button label="→" onClick={(e: any) => { e.stopPropagation(); moveDeal(deal.id, "next"); }} className="axiom-btn-icon" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                                {!isLast && (
+                                    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, padding: '0 2px' }}>
+                                        <div style={{ width: 4, height: '60%', minHeight: 60, borderRadius: 2, background: 'rgba(232,184,75,0.10)', border: '1px dashed rgba(232,184,75,0.25)', transition: 'background 0.2s' }} title={`Drop zone: ${SL[STAGES[stageIdx]]} \u2192 ${SL[STAGES[stageIdx + 1]]}`} />
+                                    </div>
+                                )}
+                            </React.Fragment>
                         );
                     })}
                 </div>
