@@ -42,6 +42,9 @@ export default function VanguardLanding() {
     return (
         <div className="axiom-landing-wrapper" style={{ backgroundColor: '#0A0A0A', color: '#ECECEC', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
 
+            {/* Full-page hex grid */}
+            <div className="axiom-hex-bg" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }} />
+
             {/* Styles Hook */}
             <style>{`
                 .gold-glow:hover {
@@ -202,8 +205,6 @@ export default function VanguardLanding() {
                 overflow: 'hidden',
                 backgroundImage: 'radial-gradient(circle at center, rgba(212, 168, 67, 0.05) 0%, transparent 70%)'
             }}>
-                {/* Hex grid overlay */}
-                <div className="axiom-hex-bg" style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />
                 <div style={{
                     position: 'absolute',
                     top: -100,
