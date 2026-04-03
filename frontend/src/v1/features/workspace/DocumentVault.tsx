@@ -31,7 +31,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export function DocumentVault() {
     const [docs, setDocs] = useLS<Document[]>("axiom_documents", []);
     const [showForm, setShowForm] = useState(false);
-    const [newDoc, setNewDoc] = useState({ name: "", category: CATEGORIES[0], phase: PHASES[0] });
+    const [newDoc, setNewDoc] = useState<{ name: string; category: string; phase: string }>({ name: "", category: CATEGORIES[0], phase: PHASES[0] });
     const [activePhase, setActivePhase] = useState<string>("Due Diligence");
 
     const addDoc = () => {

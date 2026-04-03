@@ -1,3 +1,4 @@
+import React from "react";
 import { Card } from "../../components/ui/components";
 import { useProject } from "../../context/ProjectContext";
 
@@ -91,5 +92,3 @@ export function GanttTimeline() {
         </Card>
     );
 }
-
-import React from "react";

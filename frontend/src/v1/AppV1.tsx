@@ -44,6 +44,10 @@ const ResourceCenter = lazy(() => import("./features/workspace/ResourceCenter").
 const JurisdictionIntel = lazy(() => import("./features/analysis/JurisdictionIntel").then(m => ({ default: m.JurisdictionIntel })));
 const ProspectingEngine = lazy(() => import("./features/prospecting/ProspectingEngine").then(m => ({ default: m.ProspectingEngine })));
 const FieldDashboard = lazy(() => import("./features/field/FieldDashboard"));
+const PortfolioDashboard = lazy(() => import("./features/dashboard/PortfolioDashboard").then(m => ({ default: m.PortfolioDashboard })));
+const GanttTimeline = lazy(() => import("./features/execution/GanttTimeline").then(m => ({ default: m.GanttTimeline })));
+const DocumentVault = lazy(() => import("./features/workspace/DocumentVault").then(m => ({ default: m.DocumentVault })));
+const LPReport = lazy(() => import("./features/output/LPReport").then(m => ({ default: m.LPReport })));
 
 // V5 feature sections
 const AgentPipelineSection = lazy(() => import("../v5/features/neural/AgentHandoff").then(m => ({ default: m.AgentHandoff })));
@@ -75,6 +79,7 @@ const NAV_GROUPS = [
         items: [
             { id: "dashboard", label: "⬡ Command Center" },
             { id: "connectors", label: "⬡ Connectors & APIs" },
+            { id: "portfolio", label: "⬡ Portfolio Dashboard" },
         ],
     },
     {
@@ -126,6 +131,7 @@ const NAV_GROUPS = [
             { id: "vendors", label: "⬡ Vendor Network" },
             { id: "network", label: "⬡ Professional Network" },
             { id: "reports", label: "⬡ Reports & Binder" },
+            { id: "gantt", label: "⬡ Project Timeline" },
         ],
     },
     {
@@ -137,6 +143,7 @@ const NAV_GROUPS = [
             { id: "sheets", label: "⬡ Spreadsheets" },
             { id: "workflows", label: "⬡ Workflows" },
             { id: "resources", label: "⬡ Resource Center" },
+            { id: "documents", label: "⬡ Document Vault" },
         ],
     },
     {
@@ -147,6 +154,7 @@ const NAV_GROUPS = [
             { id: "hub", label: "⬡ AI Agent Hub" },
             { id: "agentpipe", label: "⬡ Agent Pipeline" },
             { id: "governance", label: "⬡ Portfolio Governance" },
+            { id: "lpreport", label: "⬡ LP Report" },
         ],
     },
     {
@@ -313,6 +321,11 @@ function renderView(view: string, activeProjectId: string) {
         case "sheets": return <Spreadsheets />;
         case "workflows": return <WorkflowHub />;
         case "resources": return <ResourceCenter />;
+        // ─── SPRINT 4+5 ─────────────────────────────
+        case "portfolio": return <PortfolioDashboard />;
+        case "gantt": return <GanttTimeline />;
+        case "documents": return <DocumentVault />;
+        case "lpreport": return <LPReport />;
         default: return <ComingSoon name={view} />;
     }
 }
