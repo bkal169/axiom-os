@@ -65,7 +65,7 @@ export const RefundPolicy: React.FC = () => (
             <p style={S.p}>We respond within 2 business days. Approved refunds are returned to your original payment method within 5–10 business days depending on your bank.</p>
 
             <h2 style={S.h2}>Enterprise & Boutique Plans</h2>
-            <p style={S.p}>Enterprise and Enterprise+ contracts may have custom refund terms outlined in your agreement. Contact <a href="mailto:enterprise@buildaxiom.dev" style={{ color: '#D4A843' }}>enterprise@buildaxiom.dev</a> for assistance.</p>
+            <p style={S.p}>Enterprise and Enterprise+ contracts may have custom refund terms outlined in your agreement. Contact <a href="mailto:support@buildaxiom.dev" style={{ color: '#D4A843' }}>support@buildaxiom.dev</a> for assistance.</p>
 
             <h2 style={S.h2}>Contact</h2>
             <p style={S.p}>

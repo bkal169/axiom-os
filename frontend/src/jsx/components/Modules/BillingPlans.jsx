@@ -194,7 +194,7 @@ export default function BillingPlans() {
         if (tier.id === "free") return;
         // Enterprise+ → sales/white glove only
         if (["enterprise_plus"].includes(tier.id)) {
-            window.open(`mailto:enterprise@buildaxiom.dev?subject=${encodeURIComponent(tier.name + ' Inquiry — Axiom OS')}`, "_blank");
+            window.open(`mailto:support@buildaxiom.dev?subject=${encodeURIComponent(tier.name + ' Inquiry — Axiom OS')}`, "_blank");
             return;
         }
         setError(null); setLoading(tier.id);
@@ -205,7 +205,7 @@ export default function BillingPlans() {
             if (e) throw new Error(e.message);
             if (data?.url) { window.location.href = data.url; return; }
         } catch { /* fall through to email */ }
-        window.open(`mailto:enterprise@buildaxiom.dev?subject=${encodeURIComponent(tier.name + ' Access — Axiom OS')}`, "_blank");
+        window.open(`mailto:support@buildaxiom.dev?subject=${encodeURIComponent(tier.name + ' Access — Axiom OS')}`, "_blank");
         setLoading(null);
     };
 
@@ -322,7 +322,7 @@ export default function BillingPlans() {
                     <span style={{ fontSize: 11, fontWeight: 700, color: C.text }}>Data Marketplace </span>
                     <span style={{ fontSize: 11, color: C.dim }}>— ATTOM / CoStar / Anthropic compute billed at cost + 15% passthrough. No seat charge, usage-based.</span>
                 </div>
-                <button style={{ ...S.btn(), fontSize: 9, whiteSpace: "nowrap" }} onClick={() => window.open("mailto:enterprise@buildaxiom.dev?subject=Data%20Marketplace", "_blank")}>Learn More</button>
+                <button style={{ ...S.btn(), fontSize: 9, whiteSpace: "nowrap" }} onClick={() => window.open("mailto:support@buildaxiom.dev?subject=Data%20Marketplace", "_blank")}>Learn More</button>
             </div>
 
             {profile?.stripe_customer_id && current !== "free" && (
@@ -336,7 +336,7 @@ export default function BillingPlans() {
             <div style={{ textAlign: "center", fontSize: 10, color: C.dim }}>
                 <a href="mailto:support@buildaxiom.dev" style={{ color: C.dim, textDecoration: "none" }}>support@buildaxiom.dev</a>
                 <span style={{ margin: "0 8px" }}>·</span>
-                <a href="mailto:enterprise@buildaxiom.dev" style={{ color: C.gold, textDecoration: "none" }}>enterprise@buildaxiom.dev</a>
+                <a href="mailto:support@buildaxiom.dev" style={{ color: C.gold, textDecoration: "none" }}>support@buildaxiom.dev</a>
                 <span style={{ margin: "0 8px" }}>·</span>
                 Axiom OS by Juniper Rose Intelligence · Sarasota, FL
             </div>

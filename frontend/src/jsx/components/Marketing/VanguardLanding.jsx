@@ -138,7 +138,7 @@ export default function VanguardLanding() {
                 )}
                 {betaStatus === 'error' && (
                     <p style={{ textAlign: 'center', color: '#f87171', fontSize: 13, marginTop: 12 }}>
-                        Something went wrong. Email us directly at <a href="mailto:enterprise@buildaxiom.dev" style={{ color: '#D4A843' }}>enterprise@buildaxiom.dev</a>
+                        Something went wrong. Email us directly at <a href="mailto:support@buildaxiom.dev" style={{ color: '#D4A843' }}>support@buildaxiom.dev</a>
                     </p>
                 )}
 
@@ -253,7 +253,7 @@ export default function VanguardLanding() {
                                 badge: null,
                                 features: ['Unlimited Seats', 'On-Premise Deployment', 'White Glove Integration', 'Custom SLA & Compliance', 'Dedicated Engineering'],
                                 cta: 'Contact Sales',
-                                href: 'mailto:enterprise@buildaxiom.dev',
+                                href: 'mailto:support@buildaxiom.dev',
                                 highlight: false,
                             },
                         ].map((plan, i) => (
@@ -381,7 +381,7 @@ export default function VanguardLanding() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>Support</span>
                             <a href="mailto:support@buildaxiom.dev" style={{ color: '#64748B', textDecoration: 'none', fontSize: 14 }}>support@buildaxiom.dev</a>
-                            <a href="mailto:enterprise@buildaxiom.dev" style={{ color: '#64748B', textDecoration: 'none', fontSize: 14 }}>Contact Sales</a>
+                            <a href="mailto:support@buildaxiom.dev" style={{ color: '#64748B', textDecoration: 'none', fontSize: 14 }}>Contact Sales</a>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <span style={{ color: '#fff', fontWeight: 600, fontSize: 14 }}>Legal</span>

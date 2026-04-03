@@ -48,7 +48,7 @@ const TIERS: Tier[] = [
         desc: "White glove onboarding and dedicated infrastructure.",
         features: ["White Glove Onboarding", "On-Prem Deployment", "Custom AI Training", "Dedicated Infrastructure"],
         cta: "Contact Sales",
-        ctaHref: "mailto:enterprise@buildaxiom.dev",
+        ctaHref: "mailto:support@buildaxiom.dev",
     },
 ];
 

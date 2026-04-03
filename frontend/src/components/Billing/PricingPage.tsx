@@ -112,7 +112,7 @@ export const PricingPage: React.FC = () => {
 
     const handleSubscribe = async (tierId: string) => {
         if (tierId === 'enterprise_plus') {
-            window.location.href = 'mailto:enterprise@buildaxiom.dev?subject=Enterprise%2B%20Inquiry';
+            window.location.href = 'mailto:support@buildaxiom.dev?subject=Enterprise%2B%20Inquiry';
             return;
         }
         if (!user) {
@@ -124,7 +124,7 @@ export const PricingPage: React.FC = () => {
         try {
             const priceId = TIER_PRICE_IDS[tierId];
             if (!priceId) {
-                alert('This plan is not yet available for purchase. Contact enterprise@buildaxiom.dev');
+                alert('This plan is not yet available for purchase. Contact support@buildaxiom.dev');
                 setLoading(null);
                 return;
             }
@@ -143,7 +143,7 @@ export const PricingPage: React.FC = () => {
             }
         } catch (err: any) {
             console.error('Checkout error:', err);
-            window.location.href = `mailto:enterprise@buildaxiom.dev?subject=Checkout%20Issue&body=Plan:%20${tierId}`;
+            window.location.href = `mailto:support@buildaxiom.dev?subject=Checkout%20Issue&body=Plan:%20${tierId}`;
         } finally {
             setLoading(null);
         }
@@ -294,7 +294,7 @@ export const PricingPage: React.FC = () => {
                     <a href="/terms" style={{ color: 'var(--c-gold)', textDecoration: 'none' }}>Terms of Service</a>
                     <a href="/privacy" style={{ color: 'var(--c-gold)', textDecoration: 'none' }}>Privacy Policy</a>
                     <a href="/refund" style={{ color: 'var(--c-gold)', textDecoration: 'none' }}>Refund Policy</a>
-                    <a href="mailto:enterprise@buildaxiom.dev" style={{ color: 'var(--c-gold)', textDecoration: 'none' }}>Contact Sales</a>
+                    <a href="mailto:support@buildaxiom.dev" style={{ color: 'var(--c-gold)', textDecoration: 'none' }}>Contact Sales</a>
                 </div>
             </div>
         </div>

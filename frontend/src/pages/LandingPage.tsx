@@ -110,7 +110,7 @@ export const LandingPage: React.FC = () => {
                     <a href="/terms" style={{ color: '#666', textDecoration: 'none' }}>Terms of Service</a>
                     <a href="/refund" style={{ color: '#666', textDecoration: 'none' }}>Refund Policy</a>
                     <a href="mailto:support@buildaxiom.dev" style={{ color: '#666', textDecoration: 'none' }}>Support</a>
-                    <a href="mailto:enterprise@buildaxiom.dev" style={{ color: '#666', textDecoration: 'none' }}>Contact Sales</a>
+                    <a href="mailto:support@buildaxiom.dev" style={{ color: '#666', textDecoration: 'none' }}>Contact Sales</a>
                 </div>
             </footer>
 
